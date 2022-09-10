@@ -1,5 +1,5 @@
 // Doxygen Dokumentation
-/*! \file 	hardware.Def.h
+/*! \file 	hardwareDef.h
  *  \brief  Ueberschrift
  *  
  *  Test
@@ -16,8 +16,8 @@
  *
  *************************************************************/
 
-#ifndef _hardware.Def_H_
-#define _hardware.Def_H_
+#ifndef _hardwareDef_H_
+#define _hardwareDef_H_
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //      -----  allgemeine Definitionen ----
@@ -27,4 +27,4 @@
 
 
 
-#endif // _hardware.Def_H_
+#endif // _hardwareDef_H_
