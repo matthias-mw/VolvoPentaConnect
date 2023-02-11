@@ -26,6 +26,8 @@
 // Handle NMEA2000 Bus
 #include <process_n2k.h>
 
+#include <datapoint.h>
+
 void setup() {
 
   // Wait that all Sensors can settle
@@ -35,20 +37,34 @@ void setup() {
   Serial.begin(115200);
 
   // Setup the LED
-  pinMode(STATUS_LED,OUTPUT);
+  // pinMode(STATUS_LED,OUTPUT);
 
-  // Setup NMEA2000 Interface
-  setupN2K();
+  // // Setup NMEA2000 Interface
+  // setupN2K();
 
-  // List all devices an 1Wire
-  listOneWireDevices(Serial);
+  // // List all devices an 1Wire
+  // listOneWireDevices(Serial);
 
 }
 
 
+tDataPoint dp = tDataPoint(senType_ds1820,"Channel 1","s");
+uint32_t k=0;
 
 void loop() {
 
-  SendN2kEngineParm();
-  NMEA2000.ParseMessages();
+  Serial.println("Test...");
+
+  //SendN2kEngineParm();
+  //NMEA2000.ParseMessages();
+
+  dp.updateValue(k,millis());
+  dp.printDatapoint();
+
+  k++;
+  delay(1000);
+
+
+
+
 }
