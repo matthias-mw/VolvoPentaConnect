@@ -5,5 +5,16 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"cSpell.words": [
+			"GNSS",
+			"Hecto",
+			"Kave",
+			"Lappalainen",
+			"MMSI",
+			"mothership",
+			"NMEA",
+			"Peukert"
+		]
+	}
 }
