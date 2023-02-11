@@ -1,6 +1,6 @@
 // Doxygen Dokumentation
 /*! \file 	hardwareDef.h
- *  \brief  Ueberschrift
+ *  \brief  Definition of Hardware Interfaces
  *  
  *  Test
  *
@@ -19,11 +19,26 @@
 #ifndef _hardwareDef_H_
 #define _hardwareDef_H_
 
+#include <Arduino.h>
+
+
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//      -----  allgemeine Definitionen ----
+//      -----  generell Definitions ----
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+// GPIO where the LED ist connected to
 #define STATUS_LED  32
+
+// --------> OneWire <---------------------
+
+// GPIO where the DS18B20 is connected to
+const int oneWireBus = 27;
+
+
+// --------> NMEA2000 <---------------------
+#define ESP32_CAN_TX_PIN GPIO_NUM_16
+#define ESP32_CAN_RX_PIN GPIO_NUM_4
+
 
 
 
