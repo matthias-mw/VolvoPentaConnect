@@ -32,7 +32,7 @@
 // --------> OneWire <---------------------
 
 // GPIO where the DS18B20 is connected to
-const int oneWireBus = 27;
+#define ONEWIRE_PIN 27
 
 
 // --------> NMEA2000 <---------------------

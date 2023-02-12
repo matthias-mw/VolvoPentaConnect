@@ -90,25 +90,28 @@ bool tDataPoint::updateValue(double new_value, uint32_t new_timestamp)
 bool tDataPoint::printDatapoint()
 {
 
-  String str = String(this->timestamp) + "";
+  String str = "";
+  
+  // Add Timestamp
+  str = str + String(this->timestamp) + " -> ";
 
   // Add Name
-  str = "Name: " + this->signalName;
+  str = str + "Name: " + this->signalName;
   // Add Sensortype
   switch (this->sensorTyp)
   {
   case senType_ds1820:
-    str = str + "DS18S20";
+    str = str + " - DS18S20";
     break;
   case senType_virtual:
-    str = str + "virtual";
+    str = str + " - virtual";
     break;
   case senType_ads1115:
-    str = str + "ADS1115";
+    str = str + " - ADS1115";
     break;
 
   default:
-    str = str + "------";
+    str = str + " ------";
     break;
   }
 
