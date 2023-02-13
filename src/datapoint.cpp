@@ -22,9 +22,9 @@ tDataPoint::tDataPoint(tSensorTyp senType, String name, String unit)
   this->signalName = name;
   this->signalUnit = unit;
 
-  for (i = 0; i < HISTORY_LENGTH; i++)
+  for (i = 0; i < MAX_HISTORY_BUFFER_SIZE; i++)
   {
-    this->value_history[i] = 0xFFFF;
+    this->value_history[i] = 0;
   }
 }
 
@@ -51,47 +51,49 @@ void tDataPoint::setUnit(String unit)
   }
 }
 
-bool tDataPoint::getName(String &name)
+String tDataPoint::getName()
 {
-  if (this->signalName == "na")
-  {
-    return false;
-  }
-  else
-  {
-    name = this->signalName;
-    return true;
-  }
+  return this->signalName;
 }
 
-bool tDataPoint::getUnit(String &unit)
+String tDataPoint::getUnit()
 {
-  {
-    if (this->signalUnit == "-")
-    {
-      return false;
-    }
-    else
-    {
-      unit = this->signalUnit;
-      return true;
-    }
-  }
+  return this->signalUnit;
 }
 
 bool tDataPoint::updateValue(double new_value, uint32_t new_timestamp)
 {
-  // save the value
+  uint8_t k;
+  double mean = 0;
+  double tmp = 0;
+
+  // Move History to next point
+  for (k = (MAX_HISTORY_BUFFER_SIZE - 1); k > 0; k--)
+  {
+    this->value_history[k] = this->value_history[k - 1];
+  }
+
+  // save the value and timestamp
   this->value = new_value;
+  this->value_history[0] = new_value;
   this->timestamp = new_timestamp;
+
+  // Calculate mean value
+  for (k = 0; k < this->mean_cnt; k++)
+  {
+    mean = mean + this->value_history[k];
+  }
+  this->value_mean = mean / this->mean_cnt;
+
   return true;
 }
 
-bool tDataPoint::printDatapoint()
+bool tDataPoint::printDatapointFull()
 {
 
+  uint8_t k;
   String str = "";
-  
+
   // Add Timestamp
   str = str + String(this->timestamp) + " -> ";
 
@@ -115,10 +117,20 @@ bool tDataPoint::printDatapoint()
     break;
   }
 
-  // Add Serial
-  str = str + " - " + this->sensorSerial;
   // Add Value
-  str = str + "     Value: " + String(this->value) + " " + this->signalUnit;
+  str = str + " -> Value: " + String(this->value) + " " + this->signalUnit;
+
+  // Add Mean
+  str = str + " -> Mean: " + String(this->value_mean) + " " + this->signalUnit;
+
+  // Add Mean
+  str = str + " -> History: ";
+
+  for (k = 0; k < MAX_HISTORY_BUFFER_SIZE; k++)
+  {
+
+    str = str + String(this->value_history[k]) + " ";
+  }
 
   // print
   Serial.println(str);
