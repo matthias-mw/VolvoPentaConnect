@@ -29,10 +29,16 @@
 // GPIO where the LED ist connected to
 #define STATUS_LED  32
 
-// --------> OneWire <---------------------
+// GPIO where the LED ist connected to
+#define BUTTON1  23
 
+
+// --------> OneWire <---------------------
 // GPIO where the DS18B20 is connected to
 #define ONEWIRE_PIN 27
+
+// ------------> I2C <---------------------
+#define ADS1115_I2C_ADDRESS  0x48
 
 
 // --------> NMEA2000 <---------------------

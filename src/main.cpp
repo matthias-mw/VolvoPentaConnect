@@ -27,6 +27,9 @@
 #include <acquire_data.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <ADS1115_WE.h>
+#include <Wire.h>
+
 
 
 tAcquireData data;
@@ -42,9 +45,15 @@ void setup()
 
   // Setup the LED
   pinMode(STATUS_LED,OUTPUT);
+  pinMode(BUTTON1,INPUT);
+
+  // Start I2C 
+  Wire.begin();
 
   // Start the DS18B20 sensor
   oneWireSensors.begin();
+  // Start ADS1115
+  data._setUpADS1115();
 
   // // Setup NMEA2000 Interface
   // setupN2K();
@@ -63,6 +72,10 @@ void loop()
 
   Serial.println("Test...");
 
+  if(!digitalRead(BUTTON1)){
+    Serial.println("Button pressed...");
+  }
+
   // SendN2kEngineParm();
   // NMEA2000.ParseMessages();
 
@@ -71,10 +84,12 @@ void loop()
 
   //data.listOneWireDevices();
   data.measure_onewire();
+  data.measure_voltage();
   data.show_data();
 
+
   k++;
-  delay(1000);
+  //delay(1000);
   
 
   

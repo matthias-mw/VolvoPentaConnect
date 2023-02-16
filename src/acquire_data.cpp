@@ -19,8 +19,13 @@ OneWire oneWire(ONEWIRE_PIN);
 // Pass our oneWire reference to Dallas Temperature sensor
 DallasTemperature oneWireSensors(&oneWire);
 
+ADS1115_WE objAD1115 = ADS1115_WE(ADS1115_I2C_ADDRESS);
+
+
 tAcquireData::tAcquireData()
 {
+
+  // Setup ADS1115
 
 
 }
@@ -55,14 +60,26 @@ void tAcquireData::measure_onewire()
 
 }
 
+void tAcquireData::measure_voltage(){
+
+  double voltage;
+
+  voltage = objAD1115.getResult_V();
+  this->_store_data(this->uBat,voltage,millis());
+  
+}
+
+
+
 //****************************************
 // 
 void tAcquireData::show_data(){
 
 
-  tCoolWall.printDatapoint();
-  tGearbox.printDatapoint();
-  tEngRoom.printDatapoint();
+  tCoolWall.printDatapointFull();
+  tGearbox.printDatapointFull();
+  tEngRoom.printDatapointFull();
+  uBat.printDatapointFull();
 
 }
 
@@ -104,4 +121,16 @@ void tAcquireData::listOneWireDevices()
     }
     Serial.println("");
   }
+}
+
+void  tAcquireData::_setUpADS1115(void){
+  
+    if(!objAD1115.init()){
+      Serial.print("ADS1115 not connected!");
+   }
+    objAD1115.setVoltageRange_mV(ADS1115_RANGE_6144);
+    objAD1115.setCompareChannels(ADS1115_COMP_0_GND);
+    objAD1115.setMeasureMode(ADS1115_CONTINUOUS); 
+
+
 }

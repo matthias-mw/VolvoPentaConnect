@@ -21,12 +21,15 @@
 #include <DallasTemperature.h>
 
 #include <datapoint.h>
+#include <ADS1115_WE.h>
+
 
 // Setup a oneWire instance to communicate with any OneWire devices
 extern OneWire oneWire;
 // Pass our oneWire reference to Dallas Temperature sensor
 extern DallasTemperature oneWireSensors;
 
+extern ADS1115_WE objAD1115;
 
 class tAcquireData
 {
@@ -36,6 +39,8 @@ class tAcquireData
 public:
   tAcquireData();
   void show_data();
+  
+  
 
   /************************************************************************//**
    * \brief List all OneWire devices
@@ -52,6 +57,10 @@ public:
    */
   void measure_onewire();
 
+
+  void measure_voltage();
+  void _setUpADS1115(void);
+
 private:
 
   // Define specific OneWire sensors
@@ -62,6 +71,10 @@ private:
   tDataPoint tCoolWall = tDataPoint(senType_ds1820, "tCoolWall", "GrdC");
   tDataPoint tEngRoom = tDataPoint(senType_ds1820, "tEngRoom", "GrdC");
   tDataPoint tGearbox = tDataPoint(senType_ds1820, "tGearbox", "GrdC");
+  tDataPoint uBat = tDataPoint(senType_ads1115, "Ubat", "V");
+
+
+
 
 
   /************************************************************************//**
@@ -76,6 +89,7 @@ private:
   void _store_data(tDataPoint &db, double value, uint32_t timestamp);
 
 
+  
 
 };
 
