@@ -31,7 +31,6 @@
 #include <Wire.h>
 
 
-
 tAcquireData data;
 
 void setup()
@@ -52,20 +51,17 @@ void setup()
 
   // Start the DS18B20 sensor
   oneWireSensors.begin();
+
   // Start ADS1115
-  data._setUpADS1115();
+  data.setUpADS1115();
 
   // // Setup NMEA2000 Interface
   // setupN2K();
 
-  // // List all devices an 1Wire
-  // listOneWireDevices(Serial);
 }
 
 tDataPoint dp = tDataPoint(senType_ds1820, "Channel 1", "s");
 uint32_t k = 0;
-
-
 
 void loop()
 {
@@ -82,10 +78,11 @@ void loop()
   //dp.updateValue(k, millis());
   //dp.printDatapoint();
 
-  //data.listOneWireDevices();
-  data.measure_onewire();
-  data.measure_voltage();
-  data.show_data();
+  data.listOneWireDevices();
+
+  data.measureOnewire();
+  data.measureVoltage();
+  data.showDataOnTerminal();
 
 
   k++;

@@ -118,7 +118,7 @@ bool tDataPoint::printDatapointFull()
   }
 
   // Add Value
-  str = str + " -> Value: " + String(this->value) + " " + this->signalUnit;
+  str = str + " -> Value: " + String(this->value,3U) + " " + this->signalUnit;
 
   // Add Mean
   str = str + " -> Mean: " + String(this->value_mean) + " " + this->signalUnit;

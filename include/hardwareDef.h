@@ -35,7 +35,13 @@
 
 // --------> OneWire <---------------------
 // GPIO where the DS18B20 is connected to
-#define ONEWIRE_PIN 27
+#define ONEWIRE_PIN 13
+
+// --------> Analog PINs <-----------------
+// Analog Channel für ...
+#define UBAT1_ADC_PIN 34
+// Analog Channel für ... 
+#define UBAT2_ADC_PIN 35
 
 // ------------> I2C <---------------------
 #define ADS1115_I2C_ADDRESS  0x48
