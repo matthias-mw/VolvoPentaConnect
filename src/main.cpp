@@ -27,7 +27,6 @@
 #include <acquire_data.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <ADS1115_WE.h>
 #include <Wire.h>
 
 tAcquireData data;
@@ -48,9 +47,38 @@ void setup()
   // Start Serial Output/Input
   Serial.begin(115200);
 
-  // Setup the LED
-  pinMode(STATUS_LED, OUTPUT);
-  pinMode(BUTTON1, INPUT);
+  // Init all the PINs
+  pinMode(STATUS_LED_PIN, OUTPUT);
+  digitalWrite(STATUS_LED_PIN, LOW);
+  pinMode(BUTTON1_PIN, INPUT);
+  pinMode(BUTTON2_PIN, INPUT);
+
+  pinMode(WARNING_OUTPUT_PIN, OUTPUT);
+  digitalWrite(WARNING_OUTPUT_PIN, LOW);
+  pinMode(RELAY_OUTPUT_PIN, OUTPUT);
+  digitalWrite(RELAY_OUTPUT_PIN, LOW);
+
+  pinMode(CONTACT1_PIN, INPUT);
+  pinMode(CONTACT2_PIN, INPUT);
+  pinMode(CONTACT3_PIN, INPUT);
+
+  pinMode(LT_ON_PIN, OUTPUT);
+  digitalWrite(LT_ON_PIN, LOW);
+  pinMode(NOT_CS_THERMO_PIN, OUTPUT);
+  digitalWrite(NOT_CS_THERMO_PIN, HIGH);
+  pinMode(NOT_CS_ADC_PIN, OUTPUT);
+  digitalWrite(NOT_CS_ADC_PIN, HIGH);
+
+  pinMode(ONEWIRE_PIN, INPUT);
+  
+  pinMode(ENGINE_RPM_PIN, INPUT);
+  pinMode(SHAFT_RPM_PIN, INPUT);
+  pinMode(ALTERNATOR1_RPM_PIN, INPUT);
+  pinMode(ALTERNATOR2_RPM_PIN, INPUT);
+
+  pinMode(ESP32_CAN_TX_PIN, OUTPUT);
+  pinMode(ESP32_CAN_RX_PIN, INPUT);
+
 
   // Start I2C
   Wire.begin();
@@ -58,8 +86,7 @@ void setup()
   // Start the DS18B20 sensor
   oneWireSensors.begin();
 
-  // Start ADS1115
-  data.setUpADS1115();
+
 
   // // Setup NMEA2000 Interface
   // setupN2K();
@@ -72,7 +99,7 @@ void setup()
 
   //*****************************************************************************
   // Only for frequency simulation in loop()
-  ledcAttachPin(26, 1); // sets GPIO26 as signal output (for simulation only)
+  ledcAttachPin(WARNING_OUTPUT_PIN, 1); 
   //*****************************************************************************
 
 }
@@ -80,6 +107,7 @@ void setup()
 tDataPoint dp = tDataPoint(senType_ds1820, "Channel 1", "s");
 uint32_t k = 0;
 
+bool ledStatus = false; 
 void loop()
 {
 
@@ -87,10 +115,22 @@ void loop()
 
   //Serial.println("Test...");
 
-  if (!digitalRead(BUTTON1))
+  if (digitalRead(BUTTON2_PIN))
   {
     Serial.println("Button pressed...");
   }
+
+
+
+  digitalWrite(STATUS_LED_PIN,LOW);
+  delay(250);
+
+  digitalWrite(STATUS_LED_PIN,HIGH);
+
+
+  digitalWrite(RELAY_OUTPUT_PIN,ledStatus);
+  ledStatus = !ledStatus;
+  delay(750);
 
   // SendN2kEngineParm();
   // NMEA2000.ParseMessages();
@@ -104,15 +144,15 @@ void loop()
   data.measureVoltage();
   //data.showDataOnTerminal();
 
-  EngineRPM = data.calcNumberOfRevs(&data.engSpeedCalc);
-  Serial.printf("Engine RPM  :%4.0f rev/min \n", EngineRPM);
+  // EngineRPM = data.calcNumberOfRevs(&data.engSpeedCalc);
+  // Serial.printf("Engine RPM  :%4.0f rev/min \n", EngineRPM);
 
   
-  EngineRPM = data.calcNumberOfRevs(&data.alternator1SpeedCalc);
-  Serial.printf("Alternator1 RPM  :%4.0f rev/min \n", EngineRPM);
+  // EngineRPM = data.calcNumberOfRevs(&data.alternator1SpeedCalc);
+  // Serial.printf("Alternator1 RPM  :%4.0f rev/min \n", EngineRPM);
 
-  EngineRPM = data.calcNumberOfRevs(&data.alternator2SpeedCalc);
-  Serial.printf("Alternator2 RPM  :%4.0f rev/min \n", EngineRPM);
+  // EngineRPM = data.calcNumberOfRevs(&data.alternator2SpeedCalc);
+  // Serial.printf("Alternator2 RPM  :%4.0f rev/min \n", EngineRPM);
 
 
   // For frequency simulation only
@@ -120,7 +160,7 @@ void loop()
   static unsigned long timer = 0;
   if (millis() > timer  + 100) {
     timer = millis();
-    ledcSetup(1, analogRead(34), 7);
+    ledcSetup(1, analogRead(UBAT_ADC_PIN), 7);
     ledcWrite(1, 64);
   }
   //***********************************

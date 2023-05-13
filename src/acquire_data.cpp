@@ -18,8 +18,7 @@
 OneWire oneWire(ONEWIRE_PIN);
 // Pass our oneWire reference to Dallas Temperature sensor
 DallasTemperature oneWireSensors(&oneWire);
-// Object for the AD1115 voltage sensor
-ADS1115_WE objAD1115 = ADS1115_WE(ADS1115_I2C_ADDRESS);
+
 
 extern tAcquireData data;
 
@@ -67,21 +66,14 @@ void tAcquireData::measureVoltage()
 
   double voltage;
 
-  // measure at the AD1115 sensor
-  voltage = objAD1115.getResult_V();
-  this->_StoreData(this->uBat, voltage, millis());
 
   // measure ESP32 AD-Channel
-  voltage = analogRead(UBAT1_ADC_PIN);
+  voltage = analogRead(UBAT_ADC_PIN);
   voltage = ADC_CH34_LUT[(int)voltage];
   voltage = voltage / 4096 * ACH_CH34_FACTOR + ACH_CH34_OFFSET;
   this->_StoreData(this->uTest, voltage, millis());
 
-  // measure ESP32 AD-Channel
-  voltage = analogRead(UBAT2_ADC_PIN);
-  voltage = ADC_CH35_LUT[(int)voltage];
-  voltage = voltage / 4096 * ACH_CH35_FACTOR + ACH_CH35_OFFSET;
-  this->_StoreData(this->uTest2, voltage, millis());
+
 }
 
 //****************************************
@@ -142,23 +134,7 @@ void tAcquireData::listOneWireDevices()
     Serial.println("");
   }
 }
-//*************************************
-// Setup the AD115 device for voltage measuring
-void tAcquireData::setUpADS1115(void)
-{
 
-  if (!objAD1115.init())
-  {
-    Serial.print("ADS1115 not connected!");
-  }
-  else
-  {
-
-    objAD1115.setVoltageRange_mV(ADS1115_RANGE_6144);
-    objAD1115.setCompareChannels(ADS1115_COMP_0_GND);
-    objAD1115.setMeasureMode(ADS1115_CONTINUOUS);
-  }
-}
 
 //**********************************************
 // Set up the Engine speed timer and interrupt

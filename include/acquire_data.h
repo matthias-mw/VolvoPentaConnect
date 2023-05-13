@@ -19,7 +19,6 @@
 #include <hardwareDef.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <ADS1115_WE.h>
 
 #include <adc_calib.h>
 #include <datapoint.h>
@@ -30,8 +29,7 @@
 extern OneWire oneWire;
 /** Object for our oneWire Dallas Temperature sensors */
 extern DallasTemperature oneWireSensors;
-/** Object for the AD1115 voltage sensor */
-extern ADS1115_WE objAD1115;
+
 
 
 
@@ -125,13 +123,6 @@ public:
    */
   void measureOnewire();
 
-  /************************************************************************//**
-   * \brief Setup the the ADS 1115 sensor on the i2c bus
-   *
-   * This method has to be run once in the setup routine to configure all
-   * necessary options on the ADS1115 chip
-   */
-  void setUpADS1115(void);
 
   /************************************************************************//**
    * \brief  Measure all the voltages
