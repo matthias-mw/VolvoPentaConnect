@@ -30,8 +30,14 @@
 #include <ADS1115_WE.h>
 #include <Wire.h>
 
-
 tAcquireData data;
+
+
+
+
+
+
+
 
 void setup()
 {
@@ -43,10 +49,10 @@ void setup()
   Serial.begin(115200);
 
   // Setup the LED
-  pinMode(STATUS_LED,OUTPUT);
-  pinMode(BUTTON1,INPUT);
+  pinMode(STATUS_LED, OUTPUT);
+  pinMode(BUTTON1, INPUT);
 
-  // Start I2C 
+  // Start I2C
   Wire.begin();
 
   // Start the DS18B20 sensor
@@ -58,6 +64,17 @@ void setup()
   // // Setup NMEA2000 Interface
   // setupN2K();
 
+  data._setUpEngineSpeedInt();
+  data._setUpAlternator1SpeedInt();
+  data._setUpAlternator2SpeedInt();
+
+  
+
+  //*****************************************************************************
+  // Only for frequency simulation in loop()
+  ledcAttachPin(26, 1); // sets GPIO26 as signal output (for simulation only)
+  //*****************************************************************************
+
 }
 
 tDataPoint dp = tDataPoint(senType_ds1820, "Channel 1", "s");
@@ -66,31 +83,48 @@ uint32_t k = 0;
 void loop()
 {
 
-  Serial.println("Test...");
+  static double EngineRPM = 0;
 
-  if(!digitalRead(BUTTON1)){
+  //Serial.println("Test...");
+
+  if (!digitalRead(BUTTON1))
+  {
     Serial.println("Button pressed...");
   }
 
   // SendN2kEngineParm();
   // NMEA2000.ParseMessages();
 
-  //dp.updateValue(k, millis());
-  //dp.printDatapoint();
+  // dp.updateValue(k, millis());
+  // dp.printDatapoint();
 
-  data.listOneWireDevices();
+  //data.listOneWireDevices();
 
-  data.measureOnewire();
+  //data.measureOnewire();
   data.measureVoltage();
-  data.showDataOnTerminal();
+  //data.showDataOnTerminal();
 
+  EngineRPM = data.calcNumberOfRevs(&data.engSpeedCalc);
+  Serial.printf("Engine RPM  :%4.0f rev/min \n", EngineRPM);
+
+  
+  EngineRPM = data.calcNumberOfRevs(&data.alternator1SpeedCalc);
+  Serial.printf("Alternator1 RPM  :%4.0f rev/min \n", EngineRPM);
+
+  EngineRPM = data.calcNumberOfRevs(&data.alternator2SpeedCalc);
+  Serial.printf("Alternator2 RPM  :%4.0f rev/min \n", EngineRPM);
+
+
+  // For frequency simulation only
+  //**********************************
+  static unsigned long timer = 0;
+  if (millis() > timer  + 100) {
+    timer = millis();
+    ledcSetup(1, analogRead(34), 7);
+    ledcWrite(1, 64);
+  }
+  //***********************************
 
   k++;
-  //delay(1000);
-  
-
-  
+   delay(100);
 }
-
-
-

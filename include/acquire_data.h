@@ -33,6 +33,60 @@ extern DallasTemperature oneWireSensors;
 /** Object for the AD1115 voltage sensor */
 extern ADS1115_WE objAD1115;
 
+
+
+ // ------------------------------------------------------------------
+  // variables for engine speed calculation
+  // ------------------------------------------------------------------
+/************************************************************************//**
+ * \struct tSpeedCalc
+ * \brief Structure that handles all values to determine the time difference
+ * in between of two interrupts *
+ */
+typedef struct speedCalc{
+    /** Start value for tick counts in between two interrupt events on GPIO pin.  */
+  volatile uint64_t StartValue = 0;                   
+  /** Period duration in between two interrupt events of the  GPIO pin. 
+   * As the corresponding timer is set with a prescaler, one count 
+   * represents 1ns  */
+  volatile uint64_t PeriodCount = 0;                  
+  /** Timestamp for the last interrupt   */
+  volatile unsigned long TimestampLastInt = 0;           
+  /** Pointer for the timer of of the signal */
+  hw_timer_t *Timer = NULL;                           
+  /** mux to lock/unlock engine speed timer interrupt 
+   * \sa https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/freertos_idf.html?highlight=portmux_type
+  */
+  portMUX_TYPE muxTMR = portMUX_INITIALIZER_UNLOCKED;
+
+} tSpeedCalc;
+
+
+
+/************************************************************************//**
+ * \brief Handle the interrupt triggered by the engine speed
+ *
+ * This method is called by the interrupt of the engine speed pin and 
+ * determins the duration in between 2 events.
+ */
+void IRAM_ATTR handleEngineSpeedInterrupt();
+
+/************************************************************************//**
+ * \brief Handle the interrupt triggered by the alternator 1 speed
+ *
+ * This method is called by the interrupt of the alternator 1  speed pin and 
+ * determins the duration in between 2 events.
+ */
+void IRAM_ATTR handleAlternator1SpeedInterrupt();
+
+/************************************************************************//**
+ * \brief Handle the interrupt triggered by the alternator 2 speed
+ *
+ * This method is called by the interrupt of the alternator 2  speed pin and 
+ * determins the duration in between 2 events.
+ */
+void IRAM_ATTR handleAlternator2SpeedInterrupt();
+
 class tAcquireData
 {
   /** max depth of the data history of each data point*/
@@ -72,6 +126,14 @@ public:
   void measureOnewire();
 
   /************************************************************************//**
+   * \brief Setup the the ADS 1115 sensor on the i2c bus
+   *
+   * This method has to be run once in the setup routine to configure all
+   * necessary options on the ADS1115 chip
+   */
+  void setUpADS1115(void);
+
+  /************************************************************************//**
    * \brief  Measure all the voltages
    *
    * This method measures all voltages and stores the value in the 
@@ -80,12 +142,59 @@ public:
   void measureVoltage();
 
   /************************************************************************//**
-   * \brief Setup the the ADS 1115 sensor on the i2c bus
+   * \brief  Calculate Revolutions per Minute
+   * 
+   * This method calculates the revolutions per minute out of the measured
+   * timer values
+   * 
+   * \param tmrValues Pointer to timer values \ref tSpeedCalc
+   * 
+   * \return res [1/min]
    *
-   * This method has to be run once in the setup routine to configure all
-   * necessary options on the ADS1115 chip
    */
-  void setUpADS1115(void);
+  double calcNumberOfRevs(tSpeedCalc *tmrValues);
+
+  /************************************************************************//**
+   * \brief Set up the Engine speed timer and interrupt
+   *
+   * The engine speed calculation is using the timer0 and and interrupt. With
+   * the timer0 prescaler ( \ref TIMER_PRESCALER_FOR_1NS) adjusted, that one tick 
+   * is 1ns.
+   * The GPIO \ref ENGINE_RPM_PIN is attached as external interrupt.
+   * 
+   */
+  void _setUpEngineSpeedInt();
+
+  /************************************************************************//**
+   * \brief Set up the Alternator1 speed timer and interrupt
+   *
+   * The engine speed calculation is using the timer1 and and interrupt. With
+   * the timer0 prescaler ( \ref TIMER_PRESCALER_FOR_1NS) adjusted, that one tick 
+   * is 1ns.
+   * The GPIO \ref ALTERNATOR1_RPM_PIN is attached as external interrupt.
+   * 
+   */
+  void _setUpAlternator1SpeedInt(void);
+
+  /************************************************************************//**
+   * \brief Set up the Alternator2 speed timer and interrupt
+   *
+   * The engine speed calculation is using the timer2 and and interrupt. With
+   * the timer0 prescaler ( \ref TIMER_PRESCALER_FOR_1NS) adjusted, that one tick 
+   * is 1ns.
+   * The GPIO \ref ALTERNATOR2_RPM_PIN is attached as external interrupt.
+   * 
+   */
+  void _setUpAlternator2SpeedInt(void);
+
+  /** Structure with all timer values for the engine speed calculation*/
+  tSpeedCalc engSpeedCalc;
+ 
+  /** Structure with all timer values for the alternator 1 speed calculation*/
+  tSpeedCalc alternator1SpeedCalc;
+
+  /** Structure with all timer values for the alternator 2 speed calculation*/
+  tSpeedCalc alternator2SpeedCalc;
 
 private:
 
@@ -118,5 +227,6 @@ private:
   
 
 };
+
 
 #endif //_acquire_data_h_

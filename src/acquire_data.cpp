@@ -21,12 +21,14 @@ DallasTemperature oneWireSensors(&oneWire);
 // Object for the AD1115 voltage sensor
 ADS1115_WE objAD1115 = ADS1115_WE(ADS1115_I2C_ADDRESS);
 
+extern tAcquireData data;
 
 //****************************************
 // Construct a new tAcquireDataobject
 tAcquireData::tAcquireData()
 {
 
+  
 }
 
 //****************************************
@@ -86,7 +88,7 @@ void tAcquireData::measureVoltage()
 //
 void tAcquireData::showDataOnTerminal()
 {
-  uint8_t i = 20;
+  uint8_t i = 1;
 
   // clear the terminal
   while (i-- > 0)
@@ -151,9 +153,137 @@ void tAcquireData::setUpADS1115(void)
   }
   else
   {
-    
+
     objAD1115.setVoltageRange_mV(ADS1115_RANGE_6144);
     objAD1115.setCompareChannels(ADS1115_COMP_0_GND);
     objAD1115.setMeasureMode(ADS1115_CONTINUOUS);
   }
+}
+
+//**********************************************
+// Set up the Engine speed timer and interrupt
+void tAcquireData::_setUpEngineSpeedInt(void)
+{
+  // Init the PIN for engine speed frequency
+  pinMode(ENGINE_RPM_PIN, INPUT_PULLUP);    
+  // attache the pin on falling edge to an interrupt and specify ISR 
+  attachInterrupt(digitalPinToInterrupt(ENGINE_RPM_PIN), handleEngineSpeedInterrupt, FALLING); 
+
+  // set up the engine speed timer
+  // - the associated timer is TMR0
+  // - prescaler of 80 gives 1ns as time per tick at 80Mhz
+  // - timer counts upward 
+  data.engSpeedCalc.Timer= timerBegin(0, TIMER_PRESCALER_FOR_1NS, true);                                            
+
+  // start the timer
+  timerStart(data.engSpeedCalc.Timer);
+}
+
+//**********************************************
+// Set up the Alternator 1 speed timer and interrupt
+void tAcquireData::_setUpAlternator1SpeedInt(void)
+{
+  // Init the PIN for engine speed frequency
+  pinMode(ALTERNATOR1_RPM_PIN, INPUT_PULLUP);    
+  // attache the pin on falling edge to an interrupt and specify ISR 
+  attachInterrupt(digitalPinToInterrupt(ALTERNATOR1_RPM_PIN), handleAlternator1SpeedInterrupt, FALLING); 
+
+  // set up the engine speed timer
+  // - the associated timer is TMR1
+  // - prescaler of 80 gives 1ns as time per tick at 80Mhz
+  // - timer counts upward 
+  data.alternator1SpeedCalc.Timer= timerBegin(1, TIMER_PRESCALER_FOR_1NS, true);                                            
+
+  // start the timer
+  timerStart(data.alternator1SpeedCalc.Timer);
+}
+
+//**********************************************
+// Set up the Alternator 2 speed timer and interrupt
+void tAcquireData::_setUpAlternator2SpeedInt(void)
+{
+  // Init the PIN for engine speed frequency
+  pinMode(ALTERNATOR2_RPM_PIN, INPUT_PULLUP);    
+  // attache the pin on falling edge to an interrupt and specify ISR 
+  attachInterrupt(digitalPinToInterrupt(ALTERNATOR2_RPM_PIN), handleAlternator2SpeedInterrupt, FALLING); 
+
+  // set up the engine speed timer
+  // - the associated timer is TMR2
+  // - prescaler of 80 gives 1ns as time per tick at 80Mhz
+  // - timer counts upward 
+  data.alternator2SpeedCalc.Timer= timerBegin(1, TIMER_PRESCALER_FOR_1NS, true);                                            
+
+  // start the timer
+  timerStart(data.alternator2SpeedCalc.Timer);
+}
+
+//****************************************************
+// Handle the interrupt triggered by the engine speed
+void IRAM_ATTR handleEngineSpeedInterrupt()
+{
+  // Lock the RAM and prevent other tasks from reading/writing
+  taskENTER_CRITICAL_ISR(&data.engSpeedCalc.muxTMR);
+  // value of timer at interrupt
+  uint64_t TempVal = timerRead(data.engSpeedCalc.Timer);        
+  // period count between falling edges in 0.000001 of a second
+  data.engSpeedCalc.PeriodCount = TempVal - data.engSpeedCalc.StartValue; 
+  // puts latest reading as start for next calculation
+  data.engSpeedCalc.StartValue = TempVal; 
+  data.engSpeedCalc.TimestampLastInt = millis();
+  // Unlock the RAM
+  taskEXIT_CRITICAL_ISR(&data.engSpeedCalc.muxTMR);
+}
+
+//****************************************************
+// Handle the interrupt triggered by the engine speed
+void IRAM_ATTR handleAlternator1SpeedInterrupt()
+{
+  // Lock the RAM and prevent other tasks from reading/writing
+  taskENTER_CRITICAL_ISR(&data.alternator1SpeedCalc.muxTMR);
+  // value of timer at interrupt
+  uint64_t TempVal = timerRead(data.alternator1SpeedCalc.Timer);        
+  // period count between falling edges in 0.000001 of a second
+  data.alternator1SpeedCalc.PeriodCount = TempVal - data.alternator1SpeedCalc.StartValue; 
+  // puts latest reading as start for next calculation
+  data.alternator1SpeedCalc.StartValue = TempVal; 
+  data.alternator1SpeedCalc.TimestampLastInt = millis();
+  // Unlock the RAM
+  taskEXIT_CRITICAL_ISR(&data.alternator1SpeedCalc.muxTMR);
+}
+
+//****************************************************
+// Handle the interrupt triggered by the engine speed
+void IRAM_ATTR handleAlternator2SpeedInterrupt()
+{
+  // Lock the RAM and prevent other tasks from reading/writing
+  taskENTER_CRITICAL_ISR(&data.alternator2SpeedCalc.muxTMR);
+  // value of timer at interrupt
+  uint64_t TempVal = timerRead(data.alternator2SpeedCalc.Timer);        
+  // period count between falling edges in 0.000001 of a second
+  data.alternator2SpeedCalc.PeriodCount = TempVal - data.alternator2SpeedCalc.StartValue; 
+  // puts latest reading as start for next calculation
+  data.alternator2SpeedCalc.StartValue = TempVal; 
+  data.alternator2SpeedCalc.TimestampLastInt = millis();
+  // Unlock the RAM
+  taskEXIT_CRITICAL_ISR(&data.alternator2SpeedCalc.muxTMR);
+}
+
+//***********************************************
+// Calculate rotational speed
+double tAcquireData::calcNumberOfRevs(tSpeedCalc *tmrValues)
+{
+  double RPM = 0;
+  // Lock the RAM and prevent other tasks from reading/writing
+  taskENTER_CRITICAL(&tmrValues->muxTMR);
+  if (tmrValues->PeriodCount != 0)
+    // PeriodCount in 0.000001 of a second
+    RPM = 1000000.00 / tmrValues->PeriodCount;
+  // prevent div by zero if there is no signal
+  if (millis() > tmrValues->TimestampLastInt + 500)
+    RPM = 0; // No signals RPM=0;
+
+  // Unlock the RAM
+  taskEXIT_CRITICAL(&tmrValues->muxTMR);
+
+  return (RPM);
 }

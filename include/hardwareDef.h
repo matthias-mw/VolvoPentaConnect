@@ -43,6 +43,14 @@
 // Analog Channel für ... 
 #define UBAT2_ADC_PIN 35
 
+// ---------> Speed Counter <--------------
+
+#define TIMER_PRESCALER_FOR_1NS 80
+
+#define ENGINE_RPM_PIN 27
+#define ALTERNATOR1_RPM_PIN 25
+#define ALTERNATOR2_RPM_PIN 14
+
 // ------------> I2C <---------------------
 #define ADS1115_I2C_ADDRESS  0x48
 
