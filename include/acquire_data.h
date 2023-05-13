@@ -70,6 +70,14 @@ typedef struct speedCalc{
 void IRAM_ATTR handleEngineSpeedInterrupt();
 
 /************************************************************************//**
+ * \brief Handle the interrupt triggered by the shaft speed
+ *
+ * This method is called by the interrupt of the shaft speed pin and 
+ * determins the duration in between 2 events.
+ */
+void IRAM_ATTR handleShaftSpeedInterrupt();
+
+/************************************************************************//**
  * \brief Handle the interrupt triggered by the alternator 1 speed
  *
  * This method is called by the interrupt of the alternator 1  speed pin and 
@@ -157,6 +165,17 @@ public:
   void _setUpEngineSpeedInt();
 
   /************************************************************************//**
+   * \brief Set up the Shaft speed timer and interrupt
+   *
+   * The engine speed calculation is using the timer0 and and interrupt. With
+   * the timer0 prescaler ( \ref TIMER_PRESCALER_FOR_1NS) adjusted, that one tick 
+   * is 1ns.
+   * The GPIO \ref SHAFT_RPM_PIN is attached as external interrupt.
+   * 
+   */
+  void _setUpShaftSpeedInt();
+
+  /************************************************************************//**
    * \brief Set up the Alternator1 speed timer and interrupt
    *
    * The engine speed calculation is using the timer1 and and interrupt. With
@@ -181,6 +200,9 @@ public:
   /** Structure with all timer values for the engine speed calculation*/
   tSpeedCalc engSpeedCalc;
  
+   /** Structure with all timer values for the shaft speed calculation*/
+  tSpeedCalc shaftSpeedCalc;
+
   /** Structure with all timer values for the alternator 1 speed calculation*/
   tSpeedCalc alternator1SpeedCalc;
 

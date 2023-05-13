@@ -156,6 +156,24 @@ void tAcquireData::_setUpEngineSpeedInt(void)
 }
 
 //**********************************************
+// Set up the Engine speed timer and interrupt
+void tAcquireData::_setUpShaftSpeedInt(void)
+{
+  // Init the PIN for engine speed frequency
+  pinMode(SHAFT_RPM_PIN, INPUT_PULLUP);    
+  // attache the pin on falling edge to an interrupt and specify ISR 
+  attachInterrupt(digitalPinToInterrupt(SHAFT_RPM_PIN), handleShaftSpeedInterrupt, FALLING); 
+
+  // set up the engine speed timer
+  // - the associated timer is TMR0
+  // - prescaler of 80 gives 1ns as time per tick at 80Mhz
+  // - timer counts upward 
+  data.shaftSpeedCalc.Timer= timerBegin(0, TIMER_PRESCALER_FOR_1NS, true);                                            
+
+  // start the timer
+  timerStart(data.shaftSpeedCalc.Timer);
+}
+//**********************************************
 // Set up the Alternator 1 speed timer and interrupt
 void tAcquireData::_setUpAlternator1SpeedInt(void)
 {
@@ -208,6 +226,23 @@ void IRAM_ATTR handleEngineSpeedInterrupt()
   data.engSpeedCalc.TimestampLastInt = millis();
   // Unlock the RAM
   taskEXIT_CRITICAL_ISR(&data.engSpeedCalc.muxTMR);
+}
+
+//****************************************************
+// Handle the interrupt triggered by the shaft speed
+void IRAM_ATTR handleShaftSpeedInterrupt()
+{
+  // Lock the RAM and prevent other tasks from reading/writing
+  taskENTER_CRITICAL_ISR(&data.shaftSpeedCalc.muxTMR);
+  // value of timer at interrupt
+  uint64_t TempVal = timerRead(data.shaftSpeedCalc.Timer);        
+  // period count between falling edges in 0.000001 of a second
+  data.shaftSpeedCalc.PeriodCount = TempVal - data.shaftSpeedCalc.StartValue; 
+  // puts latest reading as start for next calculation
+  data.shaftSpeedCalc.StartValue = TempVal; 
+  data.shaftSpeedCalc.TimestampLastInt = millis();
+  // Unlock the RAM
+  taskEXIT_CRITICAL_ISR(&data.shaftSpeedCalc.muxTMR);
 }
 
 //****************************************************

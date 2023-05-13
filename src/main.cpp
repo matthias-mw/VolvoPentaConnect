@@ -92,6 +92,7 @@ void setup()
   // setupN2K();
 
   data._setUpEngineSpeedInt();
+  data._setUpShaftSpeedInt();
   data._setUpAlternator1SpeedInt();
   data._setUpAlternator2SpeedInt();
 
@@ -124,13 +125,12 @@ void loop()
 
   digitalWrite(STATUS_LED_PIN,LOW);
   delay(250);
-
   digitalWrite(STATUS_LED_PIN,HIGH);
 
 
   digitalWrite(RELAY_OUTPUT_PIN,ledStatus);
   ledStatus = !ledStatus;
-  delay(750);
+  
 
   // SendN2kEngineParm();
   // NMEA2000.ParseMessages();
@@ -144,15 +144,14 @@ void loop()
   data.measureVoltage();
   //data.showDataOnTerminal();
 
-  // EngineRPM = data.calcNumberOfRevs(&data.engSpeedCalc);
-  // Serial.printf("Engine RPM  :%4.0f rev/min \n", EngineRPM);
-
-  
-  // EngineRPM = data.calcNumberOfRevs(&data.alternator1SpeedCalc);
-  // Serial.printf("Alternator1 RPM  :%4.0f rev/min \n", EngineRPM);
-
-  // EngineRPM = data.calcNumberOfRevs(&data.alternator2SpeedCalc);
-  // Serial.printf("Alternator2 RPM  :%4.0f rev/min \n", EngineRPM);
+  EngineRPM = data.calcNumberOfRevs(&data.engSpeedCalc);
+  Serial.printf("Engine RPM  :%4.0f rev/min \n", EngineRPM);
+  EngineRPM = data.calcNumberOfRevs(&data.shaftSpeedCalc);
+  Serial.printf("Shaft RPM  :%4.0f rev/min \n", EngineRPM);
+  EngineRPM = data.calcNumberOfRevs(&data.alternator1SpeedCalc);
+  Serial.printf("Alternator1 RPM  :%4.0f rev/min \n", EngineRPM);
+  EngineRPM = data.calcNumberOfRevs(&data.alternator2SpeedCalc);
+  Serial.printf("Alternator2 RPM  :%4.0f rev/min \n", EngineRPM);
 
 
   // For frequency simulation only
