@@ -29,6 +29,8 @@
 #include <DallasTemperature.h>
 #include <Wire.h>
 #include <max6675.h>
+#include <MCP_ADC.h>
+
 
 tAcquireData data;
 
@@ -36,7 +38,15 @@ tAcquireData data;
 MAX6675 thermocouple(MAX6675_CLK_PIN, NOT_CS_THERMO_PIN, MAX6675_DO_PIN);
 
 
+// For VSPI (id = 2):
+//   CLK:  18,
+//   MOSI: 23,
+//   MISO: 19,
 
+
+MCP3204 mcp1(19, 23, 18);      // ESP32 use SWSPI  dataIn, dataOut, Clock
+// MCP3008 mcp1;               // use HWSPI  on ESP32 (apparently VSPI)
+// MCP3008 mcp1(6, 7, 8);      // UNO   use SWSPI  dataIn, dataOut, Clock
 
 
 
@@ -98,7 +108,14 @@ void setup()
   data._setUpAlternator1SpeedInt();
   data._setUpAlternator2SpeedInt();
 
-  
+  mcp1.begin(5);
+
+  Serial.println();
+  Serial.println("ADC\tCHAN\tMAXVALUE");
+  Serial.print("mcp1\t");
+  Serial.print(mcp1.channels());
+  Serial.print("\t");
+  Serial.println(mcp1.maxValue());
 
   //*****************************************************************************
   // Only for frequency simulation in loop()
@@ -155,9 +172,22 @@ void loop()
   EngineRPM = data.calcNumberOfRevs(&data.alternator2SpeedCalc);
   Serial.printf("Alternator2 RPM  :%4.0f rev/min \n", EngineRPM);
 
-   Serial.print("C = "); 
-   Serial.println(thermocouple.readCelsius());
+  Serial.print("C = "); 
+  Serial.println(thermocouple.readCelsius());
+  delay(250);
 
+  digitalWrite(NOT_CS_ADC_PIN,LOW);
+  Serial.print(millis());
+  Serial.print("\tmcp1:\t");
+  for (int channel = 0 ; channel < mcp1.channels(); channel++)
+  {
+    uint16_t val = mcp1.analogRead(channel);
+    Serial.print(val);
+    Serial.print("\t");
+    delay(1);       // added so single reads are better visible on a scope
+  }
+  Serial.println();
+  digitalWrite(NOT_CS_ADC_PIN,HIGH);
 
 
   // For frequency simulation only
