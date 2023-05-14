@@ -28,10 +28,12 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Wire.h>
+#include <max6675.h>
 
 tAcquireData data;
 
 
+MAX6675 thermocouple(MAX6675_CLK_PIN, NOT_CS_THERMO_PIN, MAX6675_DO_PIN);
 
 
 
@@ -153,6 +155,10 @@ void loop()
   EngineRPM = data.calcNumberOfRevs(&data.alternator2SpeedCalc);
   Serial.printf("Alternator2 RPM  :%4.0f rev/min \n", EngineRPM);
 
+   Serial.print("C = "); 
+   Serial.println(thermocouple.readCelsius());
+
+
 
   // For frequency simulation only
   //**********************************
@@ -165,5 +171,5 @@ void loop()
   //***********************************
 
   k++;
-   delay(100);
+  delay(750);
 }

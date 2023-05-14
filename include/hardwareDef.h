@@ -59,6 +59,10 @@
 /// GPIO where the ChipSelect for ADC is connected (Active Low)
 #define NOT_CS_ADC_PIN 5
 
+#define MAX6675_DO_PIN 19
+
+#define MAX6675_CLK_PIN 18
+
 
 // --------> OneWire <---------------------
 /// GPIO where the DS18B20 is connected to
