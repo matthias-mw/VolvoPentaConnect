@@ -59,13 +59,11 @@
 /// GPIO where the ChipSelect for ADC is connected (Active Low)
 #define NOT_CS_ADC_PIN 5
 
-#define MAX6675_DO_PIN 19
+#define SPI_MISO_PIN  19
+#define SPI_MOSI_PIN  23
+#define SPI_CLK_PIN   18
 
-#define SPI_MISO_PIN 19
-#define SPI_MOSI_PIN 23
-#define SPI_CLK_PIN 18
 
-#define MAX6675_CLK_PIN 18
 
 
 // --------> OneWire <---------------------

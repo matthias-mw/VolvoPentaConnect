@@ -22,7 +22,7 @@
 
 #include <adc_calib.h>
 #include <datapoint.h>
-
+#include <max6675.h>
 
 
 /** oneWire instance to communicate with any OneWire devices */
@@ -149,6 +149,15 @@ public:
   void measureSpeed();
 
   /************************************************************************//**
+   * \brief  Measure Exhaust Temperature
+   *
+   * This method measures the exhaust temperature while using an NiCr-Ni
+   * thermocouple and the MAX6675 Chip
+   */
+  void measureExhaustTemperature();
+
+
+  /************************************************************************//**
    * \brief  Setup all the measurement channels
    *
    * This method handles all setup functions necessary for the config of
@@ -170,7 +179,11 @@ public:
   /** Structure with all timer values for the alternator 2 speed calculation*/
   tSpeedCalc alternator2SpeedCalc;
 
+  
+
 private:
+
+  MAX6675 thermoNiCr_Ni = MAX6675(SPI_CLK_PIN, NOT_CS_THERMO_PIN, SPI_MISO_PIN);
 
   // Define specific OneWire sensors
   DeviceAddress oWtCoolWall = {0x28, 0xE8, 0xF7, 0xAA, 0x03, 0x00, 0x00, 0x37};
@@ -185,6 +198,7 @@ private:
   tDataPoint nShaft = tDataPoint(senType_RPM, "nShaft", "rpm");
   tDataPoint nAlternator1 = tDataPoint(senType_RPM, "nAlternator1", "rpm");
   tDataPoint nAlternator2 = tDataPoint(senType_RPM, "nAlternator2", "rpm");
+  tDataPoint tExhaust = tDataPoint(senType_NiCr_Ni, "tExhaust", "GrdC");
 
 
 

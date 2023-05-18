@@ -62,6 +62,7 @@ void tAcquireData::showDataOnTerminal()
   nShaft.printDatapointFull();
   nAlternator1.printDatapointFull();
   nAlternator2.printDatapointFull();
+  tExhaust.printDatapointFull();
 
 }
 //****************************************
@@ -71,6 +72,18 @@ void tAcquireData::_StoreData(tDataPoint &db, double value, uint32_t timestamp)
   // Update the Value of the Datapoint
   db.updateValue(value, timestamp);
 }
+
+//****************************************
+// Measure Exhaust Temperature
+void tAcquireData::measureExhaustTemperature(){
+  
+  double tMeasure = -200;
+
+  tMeasure = thermoNiCr_Ni.readCelsius();
+  this->_StoreData(this->tExhaust, tMeasure, millis());
+
+}
+
 
 
 //****************************************
@@ -142,17 +155,17 @@ void tAcquireData::measureOnewire()
   // Measure Wall Sensor Cooling
   oneWireSensors.requestTemperaturesByAddress(oWtCoolWall);
   double temp = oneWireSensors.getTempC(oWtCoolWall);
-  _StoreData(tCoolWall, temp, millis());
+  this->_StoreData(this->tCoolWall, temp, millis());
 
   // Measure Engine Room Sensor
   oneWireSensors.requestTemperaturesByAddress(oWtEngRoom);
   temp = oneWireSensors.getTempC(oWtEngRoom);
-  _StoreData(tEngRoom, temp, millis());
+  this->_StoreData(this->tEngRoom, temp, millis());
 
   // Measure Gearbox Sensor
   oneWireSensors.requestTemperaturesByAddress(oWtGearbox);
   temp = oneWireSensors.getTempC(oWtGearbox);
-  _StoreData(tGearbox, temp, millis());
+  this->_StoreData(this->tGearbox, temp, millis());
 }
 
 //==============================================================================

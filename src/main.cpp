@@ -35,7 +35,7 @@
 tAcquireData data;
 
 
-MAX6675 thermocouple(SPI_CLK_PIN, NOT_CS_THERMO_PIN, SPI_MISO_PIN);
+//MAX6675 thermocouple(SPI_CLK_PIN, NOT_CS_THERMO_PIN, SPI_MISO_PIN);
 MCP3204 mcp1(SPI_MISO_PIN, SPI_MOSI_PIN, SPI_CLK_PIN);  
 
 
@@ -141,6 +141,7 @@ void loop()
   //data.measureOnewire();
   data.measureVoltage();
   data.measureSpeed();
+  data.measureExhaustTemperature();
   data.showDataOnTerminal();
 
   // EngineRPM = data.calcNumberOfRevs(&data.engSpeedCalc);
@@ -152,9 +153,7 @@ void loop()
   // EngineRPM = data.calcNumberOfRevs(&data.alternator2SpeedCalc);
   // Serial.printf("Alternator2 RPM  :%4.0f rev/min \n", EngineRPM);
 
-  Serial.print("C = "); 
-  Serial.println(thermocouple.readCelsius());
-  delay(250);
+
 
 
 
