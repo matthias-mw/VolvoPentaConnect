@@ -35,18 +35,8 @@
 tAcquireData data;
 
 
-MAX6675 thermocouple(MAX6675_CLK_PIN, NOT_CS_THERMO_PIN, MAX6675_DO_PIN);
-
-
-// For VSPI (id = 2):
-//   CLK:  18,
-//   MOSI: 23,
-//   MISO: 19,
-
-
-MCP3204 mcp1(19, 23, 18);      // ESP32 use SWSPI  dataIn, dataOut, Clock
-// MCP3008 mcp1;               // use HWSPI  on ESP32 (apparently VSPI)
-// MCP3008 mcp1(6, 7, 8);      // UNO   use SWSPI  dataIn, dataOut, Clock
+MAX6675 thermocouple(SPI_CLK_PIN, NOT_CS_THERMO_PIN, SPI_MISO_PIN);
+MCP3204 mcp1(SPI_MISO_PIN, SPI_MOSI_PIN, SPI_CLK_PIN);  
 
 
 
@@ -75,7 +65,7 @@ void setup()
   pinMode(CONTACT3_PIN, INPUT);
 
   pinMode(LT_ON_PIN, OUTPUT);
-  digitalWrite(LT_ON_PIN, LOW);
+  digitalWrite(LT_ON_PIN, HIGH);
   pinMode(NOT_CS_THERMO_PIN, OUTPUT);
   digitalWrite(NOT_CS_THERMO_PIN, HIGH);
   pinMode(NOT_CS_ADC_PIN, OUTPUT);
@@ -92,36 +82,25 @@ void setup()
   pinMode(ESP32_CAN_RX_PIN, INPUT);
 
 
+
   // Start I2C
   Wire.begin();
 
   // Start the DS18B20 sensor
   oneWireSensors.begin();
 
-
+  // Start the MCP3204 Chip for ADC Conversation
+  mcp1.selectVSPI();
+  mcp1.begin(NOT_CS_ADC_PIN);
+  mcp1.setSPIspeed(500000);
 
   // // Setup NMEA2000 Interface
   // setupN2K();
 
-  data._setUpEngineSpeedInt();
-  data._setUpShaftSpeedInt();
-  data._setUpAlternator1SpeedInt();
-  data._setUpAlternator2SpeedInt();
+  // Setup all Measurement Channels
+  data.setUpMeasurementChannels();
 
-  mcp1.begin(5);
-
-  Serial.println();
-  Serial.println("ADC\tCHAN\tMAXVALUE");
-  Serial.print("mcp1\t");
-  Serial.print(mcp1.channels());
-  Serial.print("\t");
-  Serial.println(mcp1.maxValue());
-
-  //*****************************************************************************
-  // Only for frequency simulation in loop()
-  ledcAttachPin(WARNING_OUTPUT_PIN, 1); 
-  //*****************************************************************************
-
+ 
 }
 
 tDataPoint dp = tDataPoint(senType_ds1820, "Channel 1", "s");
@@ -138,6 +117,9 @@ void loop()
   if (digitalRead(BUTTON2_PIN))
   {
     Serial.println("Button pressed...");
+    digitalWrite(WARNING_OUTPUT_PIN, HIGH);
+  }else{
+    digitalWrite(WARNING_OUTPUT_PIN, LOW);
   }
 
 
@@ -146,10 +128,7 @@ void loop()
   delay(250);
   digitalWrite(STATUS_LED_PIN,HIGH);
 
-
-  digitalWrite(RELAY_OUTPUT_PIN,ledStatus);
-  ledStatus = !ledStatus;
-  
+ 
 
   // SendN2kEngineParm();
   // NMEA2000.ParseMessages();
@@ -161,22 +140,24 @@ void loop()
 
   //data.measureOnewire();
   data.measureVoltage();
-  //data.showDataOnTerminal();
+  data.measureSpeed();
+  data.showDataOnTerminal();
 
-  EngineRPM = data.calcNumberOfRevs(&data.engSpeedCalc);
-  Serial.printf("Engine RPM  :%4.0f rev/min \n", EngineRPM);
-  EngineRPM = data.calcNumberOfRevs(&data.shaftSpeedCalc);
-  Serial.printf("Shaft RPM  :%4.0f rev/min \n", EngineRPM);
-  EngineRPM = data.calcNumberOfRevs(&data.alternator1SpeedCalc);
-  Serial.printf("Alternator1 RPM  :%4.0f rev/min \n", EngineRPM);
-  EngineRPM = data.calcNumberOfRevs(&data.alternator2SpeedCalc);
-  Serial.printf("Alternator2 RPM  :%4.0f rev/min \n", EngineRPM);
+  // EngineRPM = data.calcNumberOfRevs(&data.engSpeedCalc);
+  // Serial.printf("Engine RPM  :%4.0f rev/min \n", EngineRPM);
+  // EngineRPM = data.calcNumberOfRevs(&data.shaftSpeedCalc);
+  // Serial.printf("Shaft RPM  :%4.0f rev/min \n", EngineRPM);
+  // EngineRPM = data.calcNumberOfRevs(&data.alternator1SpeedCalc);
+  // Serial.printf("Alternator1 RPM  :%4.0f rev/min \n", EngineRPM);
+  // EngineRPM = data.calcNumberOfRevs(&data.alternator2SpeedCalc);
+  // Serial.printf("Alternator2 RPM  :%4.0f rev/min \n", EngineRPM);
 
   Serial.print("C = "); 
   Serial.println(thermocouple.readCelsius());
   delay(250);
 
-  digitalWrite(NOT_CS_ADC_PIN,LOW);
+
+
   Serial.print(millis());
   Serial.print("\tmcp1:\t");
   for (int channel = 0 ; channel < mcp1.channels(); channel++)
@@ -187,18 +168,9 @@ void loop()
     delay(1);       // added so single reads are better visible on a scope
   }
   Serial.println();
-  digitalWrite(NOT_CS_ADC_PIN,HIGH);
 
 
-  // For frequency simulation only
-  //**********************************
-  static unsigned long timer = 0;
-  if (millis() > timer  + 100) {
-    timer = millis();
-    ledcSetup(1, analogRead(UBAT_ADC_PIN), 7);
-    ledcWrite(1, 64);
-  }
-  //***********************************
+
 
   k++;
   delay(750);

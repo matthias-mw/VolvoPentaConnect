@@ -32,6 +32,9 @@ typedef enum
     /** xxxx. */
     senType_ads1115,
 
+    /** xxxx. */
+    senType_RPM,
+
     /** */
     senType_virtual,
     /**  */

@@ -141,6 +141,65 @@ public:
   void measureVoltage();
 
   /************************************************************************//**
+   * \brief  Measure all Speeds
+   *
+   * This method measures all rotational speeds and stores the value in the 
+   * corresponding datapoint.
+   */
+  void measureSpeed();
+
+  /************************************************************************//**
+   * \brief  Setup all the measurement channels
+   *
+   * This method handles all setup functions necessary for the config of
+   * all measurements channels.
+   */
+  void setUpMeasurementChannels();
+
+
+
+  /** Structure with all timer values for the engine speed calculation*/
+  tSpeedCalc engSpeedCalc;
+ 
+   /** Structure with all timer values for the shaft speed calculation*/
+  tSpeedCalc shaftSpeedCalc;
+
+  /** Structure with all timer values for the alternator 1 speed calculation*/
+  tSpeedCalc alternator1SpeedCalc;
+
+  /** Structure with all timer values for the alternator 2 speed calculation*/
+  tSpeedCalc alternator2SpeedCalc;
+
+private:
+
+  // Define specific OneWire sensors
+  DeviceAddress oWtCoolWall = {0x28, 0xE8, 0xF7, 0xAA, 0x03, 0x00, 0x00, 0x37};
+  DeviceAddress oWtEngRoom = {0x28, 0xBF, 0xCA, 0xAA, 0x03, 0x00, 0x00, 0xF4};
+  DeviceAddress oWtGearbox = {0x28, 0xBF, 0xCA, 0xAA, 0x03, 0x00, 0x00, 0xF4};
+
+  tDataPoint tCoolWall = tDataPoint(senType_ds1820, "tCoolWall", "GrdC");
+  tDataPoint tEngRoom = tDataPoint(senType_ds1820, "tEngRoom", "GrdC");
+  tDataPoint tGearbox = tDataPoint(senType_ds1820, "tGearbox", "GrdC");
+  tDataPoint uBat = tDataPoint(senType_ads1115, "Ubat", "V");
+  tDataPoint nMot = tDataPoint(senType_RPM, "nMot", "rpm");
+  tDataPoint nShaft = tDataPoint(senType_RPM, "nShaft", "rpm");
+  tDataPoint nAlternator1 = tDataPoint(senType_RPM, "nAlternator1", "rpm");
+  tDataPoint nAlternator2 = tDataPoint(senType_RPM, "nAlternator2", "rpm");
+
+
+
+  /************************************************************************//**
+   * \brief Stores the data into a Datapoint
+   *
+   * Stores the measured value of a signal into a datapoint.
+   * 
+   * \param db        Datapoint in which it should be stored
+   * \param value     Measured Value
+   * \param timestamp Timestamp in ms of the measurement
+   */
+  void _StoreData(tDataPoint &db, double value, uint32_t timestamp);
+
+  /************************************************************************//**
    * \brief  Calculate Revolutions per Minute
    * 
    * This method calculates the revolutions per minute out of the measured
@@ -151,9 +210,9 @@ public:
    * \return res [1/min]
    *
    */
-  double calcNumberOfRevs(tSpeedCalc *tmrValues);
+  double _calcNumberOfRevs(tSpeedCalc *tmrValues);
 
-  /************************************************************************//**
+    /************************************************************************//**
    * \brief Set up the Engine speed timer and interrupt
    *
    * The engine speed calculation is using the timer0 and and interrupt. With
@@ -196,47 +255,6 @@ public:
    * 
    */
   void _setUpAlternator2SpeedInt(void);
-
-  /** Structure with all timer values for the engine speed calculation*/
-  tSpeedCalc engSpeedCalc;
- 
-   /** Structure with all timer values for the shaft speed calculation*/
-  tSpeedCalc shaftSpeedCalc;
-
-  /** Structure with all timer values for the alternator 1 speed calculation*/
-  tSpeedCalc alternator1SpeedCalc;
-
-  /** Structure with all timer values for the alternator 2 speed calculation*/
-  tSpeedCalc alternator2SpeedCalc;
-
-private:
-
-  // Define specific OneWire sensors
-  DeviceAddress oWtCoolWall = {0x28, 0xE8, 0xF7, 0xAA, 0x03, 0x00, 0x00, 0x37};
-  DeviceAddress oWtEngRoom = {0x28, 0xBF, 0xCA, 0xAA, 0x03, 0x00, 0x00, 0xF4};
-  DeviceAddress oWtGearbox = {0x28, 0xBF, 0xCA, 0xAA, 0x03, 0x00, 0x00, 0xF4};
-
-  tDataPoint tCoolWall = tDataPoint(senType_ds1820, "tCoolWall", "GrdC");
-  tDataPoint tEngRoom = tDataPoint(senType_ds1820, "tEngRoom", "GrdC");
-  tDataPoint tGearbox = tDataPoint(senType_ds1820, "tGearbox", "GrdC");
-  tDataPoint uBat = tDataPoint(senType_ads1115, "Ubat", "V");
-  tDataPoint uTest = tDataPoint(senType_ads1115, "U_Test", "V");
-  tDataPoint uTest2 = tDataPoint(senType_ads1115, "U_Test2", "V");
-
-
-
-  /************************************************************************//**
-   * \brief Stores the data into a Datapoint
-   *
-   * Stores the measured value of a signal into a datapoint.
-   * 
-   * \param db        Datapoint in which it should be stored
-   * \param value     Measured Value
-   * \param timestamp Timestamp in ms of the measurement
-   */
-  void _StoreData(tDataPoint &db, double value, uint32_t timestamp);
-
-
   
 
 };

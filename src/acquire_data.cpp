@@ -28,51 +28,19 @@ tAcquireData::tAcquireData()
 {
 
   
+  
 }
 
 //****************************************
-// Stores the data into a Datapoint
-void tAcquireData::_StoreData(tDataPoint &db, double value, uint32_t timestamp)
-{
-  // Update the Value of the Datapoint
-  db.updateValue(value, timestamp);
-}
-
-//****************************************
-// Measure all OneWire Sensors
-void tAcquireData::measureOnewire()
-{
-
-  // Measure Wall Sensor Cooling
-  oneWireSensors.requestTemperaturesByAddress(oWtCoolWall);
-  double temp = oneWireSensors.getTempC(oWtCoolWall);
-  _StoreData(tCoolWall, temp, millis());
-
-  // Measure Engine Room Sensor
-  oneWireSensors.requestTemperaturesByAddress(oWtEngRoom);
-  temp = oneWireSensors.getTempC(oWtEngRoom);
-  _StoreData(tEngRoom, temp, millis());
-
-  // Measure Gearbox Sensor
-  oneWireSensors.requestTemperaturesByAddress(oWtGearbox);
-  temp = oneWireSensors.getTempC(oWtGearbox);
-  _StoreData(tGearbox, temp, millis());
-}
-
-//****************************************
-// Measure all voltages
-void tAcquireData::measureVoltage()
-{
-
-  double voltage;
+// Setup all the measurement channels
+void tAcquireData::setUpMeasurementChannels(){
 
 
-  // measure ESP32 AD-Channel
-  voltage = analogRead(UBAT_ADC_PIN);
-  voltage = ADC_CH34_LUT[(int)voltage];
-  voltage = voltage / 4096 * ACH_CH34_FACTOR + ACH_CH34_OFFSET;
-  this->_StoreData(this->uTest, voltage, millis());
-
+  // Setup the Interrupts for Speed Measurement
+  _setUpEngineSpeedInt();
+  _setUpShaftSpeedInt();
+  _setUpAlternator1SpeedInt();
+  _setUpAlternator2SpeedInt();
 
 }
 
@@ -90,9 +58,40 @@ void tAcquireData::showDataOnTerminal()
   tGearbox.printDatapointFull();
   tEngRoom.printDatapointFull();
   uBat.printDatapointFull();
-  uTest.printDatapointFull();
-  uTest2.printDatapointFull();
+  nMot.printDatapointFull();
+  nShaft.printDatapointFull();
+  nAlternator1.printDatapointFull();
+  nAlternator2.printDatapointFull();
+
 }
+//****************************************
+// Stores the data into a Datapoint
+void tAcquireData::_StoreData(tDataPoint &db, double value, uint32_t timestamp)
+{
+  // Update the Value of the Datapoint
+  db.updateValue(value, timestamp);
+}
+
+
+//****************************************
+// Measure all voltages
+void tAcquireData::measureVoltage()
+{
+  double voltage;
+  // measure ESP32 AD-Channel UBat
+  voltage = analogRead(UBAT_ADC_PIN);
+  voltage = ADC_CH34_LUT[(int)voltage];
+  voltage = voltage / 4096 * ACH_CH34_FACTOR + ACH_CH34_OFFSET;
+  this->_StoreData(this->uBat, voltage, millis());
+}
+
+
+
+//==============================================================================
+//==============================================================================
+// method's for 1-Wire  measurement
+//==============================================================================
+//==============================================================================
 
 //****************************************
 // Listing of all OneWire Devices at the bus
@@ -135,6 +134,32 @@ void tAcquireData::listOneWireDevices()
   }
 }
 
+//****************************************
+// Measure all OneWire Sensors
+void tAcquireData::measureOnewire()
+{
+
+  // Measure Wall Sensor Cooling
+  oneWireSensors.requestTemperaturesByAddress(oWtCoolWall);
+  double temp = oneWireSensors.getTempC(oWtCoolWall);
+  _StoreData(tCoolWall, temp, millis());
+
+  // Measure Engine Room Sensor
+  oneWireSensors.requestTemperaturesByAddress(oWtEngRoom);
+  temp = oneWireSensors.getTempC(oWtEngRoom);
+  _StoreData(tEngRoom, temp, millis());
+
+  // Measure Gearbox Sensor
+  oneWireSensors.requestTemperaturesByAddress(oWtGearbox);
+  temp = oneWireSensors.getTempC(oWtGearbox);
+  _StoreData(tGearbox, temp, millis());
+}
+
+//==============================================================================
+//==============================================================================
+// Method's for Rotational Speed  measurement
+//==============================================================================
+//==============================================================================
 
 //**********************************************
 // Set up the Engine speed timer and interrupt
@@ -211,6 +236,53 @@ void tAcquireData::_setUpAlternator2SpeedInt(void)
   timerStart(data.alternator2SpeedCalc.Timer);
 }
 
+//***********************************************
+// Calculate rotational speed
+double tAcquireData::_calcNumberOfRevs(tSpeedCalc *tmrValues)
+{
+  double RPM = 0;
+  // Lock the RAM and prevent other tasks from reading/writing
+  taskENTER_CRITICAL(&tmrValues->muxTMR);
+  if (tmrValues->PeriodCount != 0)
+    // PeriodCount in 0.000001 of a second
+    RPM = 1000000.00 / tmrValues->PeriodCount;
+  // prevent div by zero if there is no signal
+  if (millis() > tmrValues->TimestampLastInt + 500)
+    RPM = 0; // No signals RPM=0;
+
+  // Unlock the RAM
+  taskEXIT_CRITICAL(&tmrValues->muxTMR);
+
+  return (RPM);
+}
+
+//****************************************
+// Measure all Speeds
+void tAcquireData::measureSpeed()
+{
+  double speed;
+
+  // measure Engine Speed
+  speed =  _calcNumberOfRevs(&engSpeedCalc);
+  this->_StoreData(this->nMot, speed, millis());
+  // measure Shaft Speed
+  speed =  _calcNumberOfRevs(&shaftSpeedCalc);
+  this->_StoreData(this->nShaft, speed, millis());
+  // measure Alternator1 Speed
+  speed =  _calcNumberOfRevs(&alternator1SpeedCalc);
+  this->_StoreData(this->nAlternator1, speed, millis());
+  // measure Alternator2 Speed
+  speed =  _calcNumberOfRevs(&alternator2SpeedCalc);
+  this->_StoreData(this->nAlternator2, speed, millis());
+}
+
+
+//==============================================================================
+//==============================================================================
+// Interrupt Service Routines for Rotational Speed  measurement
+//==============================================================================
+//==============================================================================
+
 //****************************************************
 // Handle the interrupt triggered by the engine speed
 void IRAM_ATTR handleEngineSpeedInterrupt()
@@ -279,22 +351,4 @@ void IRAM_ATTR handleAlternator2SpeedInterrupt()
   taskEXIT_CRITICAL_ISR(&data.alternator2SpeedCalc.muxTMR);
 }
 
-//***********************************************
-// Calculate rotational speed
-double tAcquireData::calcNumberOfRevs(tSpeedCalc *tmrValues)
-{
-  double RPM = 0;
-  // Lock the RAM and prevent other tasks from reading/writing
-  taskENTER_CRITICAL(&tmrValues->muxTMR);
-  if (tmrValues->PeriodCount != 0)
-    // PeriodCount in 0.000001 of a second
-    RPM = 1000000.00 / tmrValues->PeriodCount;
-  // prevent div by zero if there is no signal
-  if (millis() > tmrValues->TimestampLastInt + 500)
-    RPM = 0; // No signals RPM=0;
 
-  // Unlock the RAM
-  taskEXIT_CRITICAL(&tmrValues->muxTMR);
-
-  return (RPM);
-}
