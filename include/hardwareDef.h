@@ -63,9 +63,6 @@
 #define SPI_MOSI_PIN  23
 #define SPI_CLK_PIN   18
 
-
-
-
 // --------> OneWire <---------------------
 /// GPIO where the DS18B20 is connected to
 #define ONEWIRE_PIN 23
@@ -96,7 +93,18 @@
 /// GPIO where the CAN-RX is connected 
 #define ESP32_CAN_RX_PIN 16
 
+// --------> AD Converter <-----------------
+/// Reference voltage for MCP3204
+#define MCP3204_VREF (double)4.7
 
+/// Voltage scaler for MCHP 3204 Channel 1
+#define MCP3204_CH1_FAC (double)2.488
+/// Voltage scaler for MCHP 3204 Channel 2
+#define MCP3204_CH2_FAC (double)2.488
+/// Voltage scaler for MCHP 3204 Channel 3
+#define MCP3204_CH3_FAC (double)16.024
+/// Voltage scaler for MCHP 3204 Channel 4
+#define MCP3204_CH4_FAC (double)16.024
 
 
 #endif // _hardwareDef_H_

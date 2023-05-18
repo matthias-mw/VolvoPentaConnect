@@ -42,6 +42,11 @@ void tAcquireData::setUpMeasurementChannels(){
   _setUpAlternator1SpeedInt();
   _setUpAlternator2SpeedInt();
 
+  // Start the MCP3204 Chip for ADC Conversation
+  mcp3204.selectVSPI();
+  mcp3204.begin(NOT_CS_ADC_PIN);
+  mcp3204.setSPIspeed(500000);
+
 }
 
 //****************************************
@@ -63,6 +68,10 @@ void tAcquireData::showDataOnTerminal()
   nAlternator1.printDatapointFull();
   nAlternator2.printDatapointFull();
   tExhaust.printDatapointFull();
+  uMcp3204Ch1.printDatapointFull();
+  uMcp3204Ch2.printDatapointFull();
+  uMcp3204Ch3.printDatapointFull();
+  uMcp3204Ch4.printDatapointFull();
 
 }
 //****************************************
@@ -84,20 +93,51 @@ void tAcquireData::measureExhaustTemperature(){
 
 }
 
-
-
 //****************************************
 // Measure all voltages
 void tAcquireData::measureVoltage()
 {
   double voltage;
+  int voltageMax;
   // measure ESP32 AD-Channel UBat
   voltage = analogRead(UBAT_ADC_PIN);
-  voltage = ADC_CH34_LUT[(int)voltage];
-  voltage = voltage / 4096 * ACH_CH34_FACTOR + ACH_CH34_OFFSET;
+  voltage = ADC_CH36_LUT[(int)voltage];
+  voltage = voltage / 4096 * ACH_CH36_FACTOR + ACH_CH36_OFFSET;
   this->_StoreData(this->uBat, voltage, millis());
-}
 
+  // measure MCP3204 Channel 1
+  voltageMax = mcp3204.maxValue();
+  voltage = (double) mcp3204.analogRead(0);
+  voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH1_FAC;
+  this->_StoreData(this->uMcp3204Ch1, voltage, millis());
+
+  // measure MCP3204 Channel 2
+  voltage = (double) mcp3204.analogRead(1);
+  voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH2_FAC;
+  this->_StoreData(this->uMcp3204Ch2, voltage, millis());
+
+  // measure MCP3204 Channel 3
+  voltage = (double) mcp3204.analogRead(2);
+  voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH3_FAC;
+  this->_StoreData(this->uMcp3204Ch3, voltage, millis());
+
+  // measure MCP3204 Channel 4
+  voltage = (double) mcp3204.analogRead(3);
+  voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH4_FAC;
+  this->_StoreData(this->uMcp3204Ch4, voltage, millis());
+
+  Serial.print(millis());
+  Serial.print("\t mcp3204:\t");
+  for (int channel = 0 ; channel < mcp3204.channels(); channel++)
+  {
+    uint16_t val = mcp3204.analogRead(channel);
+    Serial.print(val);
+    Serial.print("\t");
+    delay(1);       // added so single reads are better visible on a scope
+  }
+  Serial.println();
+
+}
 
 
 //==============================================================================

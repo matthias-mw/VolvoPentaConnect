@@ -30,13 +30,16 @@ typedef enum
     senType_ds1820,
 
     /** xxxx. */
-    senType_ads1115,
-
-    /** xxxx. */
     senType_RPM,
 
     /** xxxx. */
-    senType_NiCr_Ni,
+    senType_max6675,
+
+    /** xxxx. */
+    senType_mcp3204,
+
+    /** xxxx. */
+    senType_adc,
 
     /** */
     senType_virtual,

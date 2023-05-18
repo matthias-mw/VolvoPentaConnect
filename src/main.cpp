@@ -28,15 +28,11 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Wire.h>
-#include <max6675.h>
-#include <MCP_ADC.h>
+
 
 
 tAcquireData data;
 
-
-//MAX6675 thermocouple(SPI_CLK_PIN, NOT_CS_THERMO_PIN, SPI_MISO_PIN);
-MCP3204 mcp1(SPI_MISO_PIN, SPI_MOSI_PIN, SPI_CLK_PIN);  
 
 
 
@@ -89,10 +85,7 @@ void setup()
   // Start the DS18B20 sensor
   oneWireSensors.begin();
 
-  // Start the MCP3204 Chip for ADC Conversation
-  mcp1.selectVSPI();
-  mcp1.begin(NOT_CS_ADC_PIN);
-  mcp1.setSPIspeed(500000);
+
 
   // // Setup NMEA2000 Interface
   // setupN2K();
@@ -157,16 +150,7 @@ void loop()
 
 
 
-  Serial.print(millis());
-  Serial.print("\tmcp1:\t");
-  for (int channel = 0 ; channel < mcp1.channels(); channel++)
-  {
-    uint16_t val = mcp1.analogRead(channel);
-    Serial.print(val);
-    Serial.print("\t");
-    delay(1);       // added so single reads are better visible on a scope
-  }
-  Serial.println();
+
 
 
 

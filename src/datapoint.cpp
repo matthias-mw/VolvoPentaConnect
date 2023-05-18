@@ -108,10 +108,7 @@ bool tDataPoint::printDatapointFull()
   case senType_virtual:
     str = str + " - virtual";
     break;
-  case senType_ads1115:
-    str = str + " - ADS1115";
-    break;
-
+    
   default:
     str = str + " ------";
     break;

@@ -23,7 +23,7 @@
 #include <adc_calib.h>
 #include <datapoint.h>
 #include <max6675.h>
-
+#include <MCP_ADC.h>
 
 /** oneWire instance to communicate with any OneWire devices */
 extern OneWire oneWire;
@@ -183,7 +183,12 @@ public:
 
 private:
 
+  /** Object of the NiCr-Ni Thermocouple that handles all functions */
   MAX6675 thermoNiCr_Ni = MAX6675(SPI_CLK_PIN, NOT_CS_THERMO_PIN, SPI_MISO_PIN);
+
+  /** Object of the Microchip 3204 10bit AD-Converter that handles all 
+   * functions */
+  MCP3204 mcp3204 = MCP3204(SPI_MISO_PIN, SPI_MOSI_PIN, SPI_CLK_PIN);  
 
   // Define specific OneWire sensors
   DeviceAddress oWtCoolWall = {0x28, 0xE8, 0xF7, 0xAA, 0x03, 0x00, 0x00, 0x37};
@@ -193,12 +198,16 @@ private:
   tDataPoint tCoolWall = tDataPoint(senType_ds1820, "tCoolWall", "GrdC");
   tDataPoint tEngRoom = tDataPoint(senType_ds1820, "tEngRoom", "GrdC");
   tDataPoint tGearbox = tDataPoint(senType_ds1820, "tGearbox", "GrdC");
-  tDataPoint uBat = tDataPoint(senType_ads1115, "Ubat", "V");
+  tDataPoint uBat = tDataPoint(senType_adc, "uBat", "V");
   tDataPoint nMot = tDataPoint(senType_RPM, "nMot", "rpm");
   tDataPoint nShaft = tDataPoint(senType_RPM, "nShaft", "rpm");
   tDataPoint nAlternator1 = tDataPoint(senType_RPM, "nAlternator1", "rpm");
   tDataPoint nAlternator2 = tDataPoint(senType_RPM, "nAlternator2", "rpm");
-  tDataPoint tExhaust = tDataPoint(senType_NiCr_Ni, "tExhaust", "GrdC");
+  tDataPoint tExhaust = tDataPoint(senType_max6675, "tExhaust", "GrdC");
+  tDataPoint uMcp3204Ch1 = tDataPoint(senType_adc, "uMcp3204Ch1", "V");
+  tDataPoint uMcp3204Ch2 = tDataPoint(senType_adc, "uMcp3204Ch2", "V");
+  tDataPoint uMcp3204Ch3 = tDataPoint(senType_adc, "uMcp3204Ch3", "V");
+  tDataPoint uMcp3204Ch4 = tDataPoint(senType_adc, "uMcp3204Ch4", "V");
 
 
 
