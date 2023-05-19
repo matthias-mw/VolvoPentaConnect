@@ -198,26 +198,46 @@ private:
    * functions */
   MCP3204 mcp3204 = MCP3204(SPI_MISO_PIN, SPI_MOSI_PIN, SPI_CLK_PIN);  
 
-  // Define specific OneWire sensors
+  /// OneWire Sensor Address for cooling system
   DeviceAddress oWtCoolWall = {0x28, 0xE8, 0xF7, 0xAA, 0x03, 0x00, 0x00, 0x37};
+  /// OneWire Sensor Address for engine room system
   DeviceAddress oWtEngRoom = {0x28, 0xBF, 0xCA, 0xAA, 0x03, 0x00, 0x00, 0xF4};
+  /// OneWire Sensor Address for gearbox system
   DeviceAddress oWtGearbox = {0x28, 0xBF, 0xCA, 0xAA, 0x03, 0x00, 0x00, 0xF4};
 
+  /** Temperature of the cooling system measure via a ds1820 sensor mounted 
+      at the wall of a cooling pipe*/
   tDataPoint tCoolWall = tDataPoint(senType_ds1820, "tCoolWall", "GrdC");
+  /** Temperature of the engine room measured via a ds1820 sensor*/
   tDataPoint tEngRoom = tDataPoint(senType_ds1820, "tEngRoom", "GrdC");
+  /** Temperature of the gearbox measured via a ds1820 sensor mounted 
+      at the wall of the transmission */
   tDataPoint tGearbox = tDataPoint(senType_ds1820, "tGearbox", "GrdC");
+  /** Batterie voltage measured at the main power source*/
   tDataPoint uBat = tDataPoint(senType_adc, "uBat", "V");
+  /** Engine speed measured via an hall sensor at the crankshaft*/
   tDataPoint nMot = tDataPoint(senType_RPM, "nMot", "rpm");
+  /** Shaft speed measured via an hall sensor at the pro shaft */
   tDataPoint nShaft = tDataPoint(senType_RPM, "nShaft", "rpm");
+  /** Alternator 1 speed measured via the W signal of the alternator*/
   tDataPoint nAlternator1 = tDataPoint(senType_RPM, "nAlternator1", "rpm");
+  /** Alternator 2 speed measured via the W signal of the alternator*/
   tDataPoint nAlternator2 = tDataPoint(senType_RPM, "nAlternator2", "rpm");
+  /** Exhaust gas temperature measured via a NiCr-Ni thermocouple */
   tDataPoint tExhaust = tDataPoint(senType_max6675, "tExhaust", "GrdC");
+  /** Voltage measure via an mcp3204 an AD Channel 1*/
   tDataPoint uMcp3204Ch1 = tDataPoint(senType_adc, "uMcp3204Ch1", "V");
+  /** Voltage measure via an mcp3204 an AD Channel 2*/
   tDataPoint uMcp3204Ch2 = tDataPoint(senType_adc, "uMcp3204Ch2", "V");
+  /** Voltage measure via an mcp3204 an AD Channel 3*/
   tDataPoint uMcp3204Ch3 = tDataPoint(senType_adc, "uMcp3204Ch3", "V");
+  /** Voltage measure via an mcp3204 an AD Channel 4*/
   tDataPoint uMcp3204Ch4 = tDataPoint(senType_adc, "uMcp3204Ch4", "V");
+  /** State of Contact 1 */
   tDataPoint flgContact1 = tDataPoint(senType_GPIO, "flgContact1", "-");
+  /** State of Contact 2 */
   tDataPoint flgContact2 = tDataPoint(senType_GPIO, "flgContact2", "-");
+  /** State of Contact 3 */
   tDataPoint flgContact3 = tDataPoint(senType_GPIO, "flgContact3", "-");
 
   /************************************************************************//**
