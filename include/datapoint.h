@@ -41,6 +41,9 @@ typedef enum
     /** xxxx. */
     senType_adc,
 
+    /** xxxx. */
+    senType_GPIO,
+
     /** */
     senType_virtual,
     /**  */

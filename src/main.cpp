@@ -135,7 +135,10 @@ void loop()
   data.measureVoltage();
   data.measureSpeed();
   data.measureExhaustTemperature();
+  data.checkContacts();
+  
   data.showDataOnTerminal();
+  
 
   // EngineRPM = data.calcNumberOfRevs(&data.engSpeedCalc);
   // Serial.printf("Engine RPM  :%4.0f rev/min \n", EngineRPM);

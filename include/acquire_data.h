@@ -156,6 +156,14 @@ public:
    */
   void measureExhaustTemperature();
 
+  /************************************************************************//**
+   * \brief  Checking the states of the contact
+   *
+   * This method checks the state of all 3 contacts
+   */
+  void checkContacts();
+
+
 
   /************************************************************************//**
    * \brief  Setup all the measurement channels
@@ -208,8 +216,9 @@ private:
   tDataPoint uMcp3204Ch2 = tDataPoint(senType_adc, "uMcp3204Ch2", "V");
   tDataPoint uMcp3204Ch3 = tDataPoint(senType_adc, "uMcp3204Ch3", "V");
   tDataPoint uMcp3204Ch4 = tDataPoint(senType_adc, "uMcp3204Ch4", "V");
-
-
+  tDataPoint flgContact1 = tDataPoint(senType_GPIO, "flgContact1", "-");
+  tDataPoint flgContact2 = tDataPoint(senType_GPIO, "flgContact2", "-");
+  tDataPoint flgContact3 = tDataPoint(senType_GPIO, "flgContact3", "-");
 
   /************************************************************************//**
    * \brief Stores the data into a Datapoint

@@ -72,6 +72,10 @@ void tAcquireData::showDataOnTerminal()
   uMcp3204Ch2.printDatapointFull();
   uMcp3204Ch3.printDatapointFull();
   uMcp3204Ch4.printDatapointFull();
+  flgContact1.printDatapointFull();
+  flgContact2.printDatapointFull();
+  flgContact3.printDatapointFull();
+  
 
 }
 //****************************************
@@ -92,6 +96,23 @@ void tAcquireData::measureExhaustTemperature(){
   this->_StoreData(this->tExhaust, tMeasure, millis());
 
 }
+
+//****************************************
+// Checking the states of the contact
+void tAcquireData::checkContacts(){
+
+  bool state = false;
+
+  // check the states of all contacts (Low Active)
+  state = !digitalRead(CONTACT1_PIN);
+  this->_StoreData(this->flgContact1,(double) state, millis());
+  state = !digitalRead(CONTACT2_PIN);
+  this->_StoreData(this->flgContact2,(double) state, millis());
+  state = !digitalRead(CONTACT3_PIN);
+  this->_StoreData(this->flgContact3,(double) state, millis());
+
+}
+
 
 //****************************************
 // Measure all voltages
@@ -126,16 +147,16 @@ void tAcquireData::measureVoltage()
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH4_FAC;
   this->_StoreData(this->uMcp3204Ch4, voltage, millis());
 
-  Serial.print(millis());
-  Serial.print("\t mcp3204:\t");
-  for (int channel = 0 ; channel < mcp3204.channels(); channel++)
-  {
-    uint16_t val = mcp3204.analogRead(channel);
-    Serial.print(val);
-    Serial.print("\t");
-    delay(1);       // added so single reads are better visible on a scope
-  }
-  Serial.println();
+  // Serial.print(millis());
+  // Serial.print("\t mcp3204:\t");
+  // for (int channel = 0 ; channel < mcp3204.channels(); channel++)
+  // {
+  //   uint16_t val = mcp3204.analogRead(channel);
+  //   Serial.print(val);
+  //   Serial.print("\t");
+  //   delay(1);       // added so single reads are better visible on a scope
+  // }
+  // Serial.println();
 
 }
 

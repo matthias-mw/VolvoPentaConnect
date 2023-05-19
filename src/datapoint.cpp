@@ -78,12 +78,18 @@ bool tDataPoint::updateValue(double new_value, uint32_t new_timestamp)
   this->value_history[0] = new_value;
   this->timestamp = new_timestamp;
 
-  // Calculate mean value
-  for (k = 0; k < this->mean_cnt; k++)
+  // don't calculate mean for boolean values
+  if (this->sensorTyp != senType_GPIO)
   {
-    mean = mean + this->value_history[k];
+    // Calculate mean value
+    for (k = 0; k < this->mean_cnt; k++)
+    {
+      mean = mean + this->value_history[k];
+    }
+    this->value_mean = mean / this->mean_cnt;
+  }else{
+    this->value_mean = new_value;
   }
-  this->value_mean = mean / this->mean_cnt;
 
   return true;
 }
@@ -108,14 +114,14 @@ bool tDataPoint::printDatapointFull()
   case senType_virtual:
     str = str + " - virtual";
     break;
-    
+
   default:
     str = str + " ------";
     break;
   }
 
   // Add Value
-  str = str + " -> Value: " + String(this->value,3U) + " " + this->signalUnit;
+  str = str + " -> Value: " + String(this->value, 3U) + " " + this->signalUnit;
 
   // Add Mean
   str = str + " -> Mean: " + String(this->value_mean) + " " + this->signalUnit;
