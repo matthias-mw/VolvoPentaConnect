@@ -89,9 +89,9 @@
 
 // --------> NMEA2000 <---------------------
 /// GPIO where the CAN-TX is connected 
-#define ESP32_CAN_TX_PIN 17
+#define ESP32_CAN_TX_PIN (gpio_num_t)17
 /// GPIO where the CAN-RX is connected 
-#define ESP32_CAN_RX_PIN 16
+#define ESP32_CAN_RX_PIN (gpio_num_t)16
 
 // --------> AD Converter <-----------------
 /// Reference voltage for MCP3204

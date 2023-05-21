@@ -18,11 +18,11 @@
 #include <stdint.h>
 // This will automatically choose right CAN library and create suitable
 // NMEA2000 object
-// #include <NMEA2000_CAN.h>
-// #include <N2kMessages.h>
+#include <NMEA2000_CAN.h>
+#include <N2kMessages.h>
 
 // // Handle NMEA2000 Bus
-// #include <process_n2k.h>
+ #include <process_n2k.h>
 
 #include <datapoint.h>
 #include <acquire_data.h>
@@ -89,20 +89,20 @@ void setup()
   oneWireSensors.begin();
 
   // // Setup NMEA2000 Interface
-  // setupN2K();
+  setupN2K();
 
   // Setup all Measurement Channels
   data.setUpMeasurementChannels();
+
+  data.listOneWireDevices();
 }
 
-uint32_t x1 = 0;
-uint32_t x2 = 0;
+
 
 LookUpTable1D tab(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
 
-double dRes = 0;
-double tmp = 0;
-uint32_t iRes = 0;
+VolvoPentaData VolvoDataForN2k;
+
 
 void loop()
 {
@@ -123,42 +123,25 @@ void loop()
   delay(250);
   digitalWrite(STATUS_LED_PIN, HIGH);
 
-  // SendN2kEngineParm();
+  SendN2kEngineParm(VolvoDataForN2k);
   // NMEA2000.ParseMessages();
 
-  // dp.updateValue(k, millis());
-  // dp.printDatapoint();
 
-  // data.listOneWireDevices();
-
-  // data.measureOnewire();
-  //  data.measureVoltage();
-  //  data.measureSpeed();
-  //  data.measureExhaustTemperature();
-  //  data.checkContacts();
-
-  // data.showDataOnTerminal();
-
-  k = k + 10;
-  tmp = (double)k/1000;
-
-  tab.LookUpValue(k, &iRes);
-  tab.LookUpValue(tmp, &dRes);
   
-  Serial.printf("val:  %d ---> Result: %d", k, iRes);
-  Serial.println();
 
-  Serial.printf("val:  %0.3f ---> Result: %0.3f", tmp, dRes);
-  Serial.println();
+  //data.measureOnewire();
+  data.measureVoltage();
+  data.measureSpeed();
+  data.measureExhaustTemperature();
+  data.checkContacts();
 
-  // EngineRPM = data.calcNumberOfRevs(&data.engSpeedCalc);
-  // Serial.printf("Engine RPM  :%4.0f rev/min \n", EngineRPM);
-  // EngineRPM = data.calcNumberOfRevs(&data.shaftSpeedCalc);
-  // Serial.printf("Shaft RPM  :%4.0f rev/min \n", EngineRPM);
-  // EngineRPM = data.calcNumberOfRevs(&data.alternator1SpeedCalc);
-  // Serial.printf("Alternator1 RPM  :%4.0f rev/min \n", EngineRPM);
-  // EngineRPM = data.calcNumberOfRevs(&data.alternator2SpeedCalc);
-  // Serial.printf("Alternator2 RPM  :%4.0f rev/min \n", EngineRPM);
+  //data.showDataOnTerminal();
+
+
+  Serial.println(VolvoDataForN2k.engine_room_temperature);
+
+
+  
 
   delay(250);
 }
