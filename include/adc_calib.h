@@ -20,6 +20,28 @@
 #ifndef _adc_calib_H_
 #define _adc_calib_H_
 
+#include <stdint.h>
+
+//==================================================
+// Mapping for the TCO Sensor
+//==================================================
+
+/** Size of the axis for the cooling water temperature map*/
+const uint8_t TCO_AXIS_LEN = 5;
+/** Number of decimal (precition) for the fixed point notation of the map*/
+const uint8_t TCO_MAP_PREC = 3;
+/** axis consists values in volt for the cooling water temperature map*/
+const uint32_t axis_v_tco_mes[TCO_AXIS_LEN] = {0, 500, 1000 , 1500, 2000};
+/** ALIAS for \ref axis_v_tco_mes*/
+#define AXIS_TCO_MES &axis_v_tco_mes[0]
+/** table consists values in gradC for the cooling water temperature map*/
+const uint32_t map_tco_mes[TCO_AXIS_LEN] = {190, 170, 150, 140, 130};
+/** ALIAS for \ref map_tco_mes*/
+#define MAP_TCO_MES &map_tco_mes[0]
+
+
+
+
 /** Scale factor for AD Channel 36 */
 static double ACH_CH36_FACTOR = 36.7;
 /** Offset for AD Channel 36*/
