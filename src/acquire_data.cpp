@@ -19,22 +19,18 @@ OneWire oneWire(ONEWIRE_PIN);
 // Pass our oneWire reference to Dallas Temperature sensor
 DallasTemperature oneWireSensors(&oneWire);
 
-
-extern tAcquireData data;
+extern AcquireData data;
 
 //****************************************
-// Construct a new tAcquireDataobject
-tAcquireData::tAcquireData()
+// Construct a new AcquireDataobject
+AcquireData::AcquireData()
 {
-
-  
-  
 }
 
 //****************************************
 // Setup all the measurement channels
-void tAcquireData::setUpMeasurementChannels(){
-
+void AcquireData::setUpMeasurementChannels()
+{
 
   // Setup the Interrupts for Speed Measurement
   _setUpEngineSpeedInt();
@@ -46,41 +42,64 @@ void tAcquireData::setUpMeasurementChannels(){
   mcp3204.selectVSPI();
   mcp3204.begin(NOT_CS_ADC_PIN);
   mcp3204.setSPIspeed(500000);
-
 }
 
 //****************************************
 //
-void tAcquireData::showDataOnTerminal()
+void AcquireData::showDataOnTerminal()
 {
   uint8_t i = 1;
 
   // clear the terminal
-  while (i-- > 0)
-    Serial.println();
+  // while (i-- > 0)
+  //   Serial.println();
 
-  tCoolWall.printDatapointFull();
-  tGearbox.printDatapointFull();
-  tEngRoom.printDatapointFull();
-  uBat.printDatapointFull();
-  nMot.printDatapointFull();
-  nShaft.printDatapointFull();
-  nAlternator1.printDatapointFull();
-  nAlternator2.printDatapointFull();
-  tExhaust.printDatapointFull();
-  uMcp3204Ch1.printDatapointFull();
-  uMcp3204Ch2.printDatapointFull();
-  uMcp3204Ch3.printDatapointFull();
-  uMcp3204Ch4.printDatapointFull();
-  flgContact1.printDatapointFull();
-  flgContact2.printDatapointFull();
-  flgContact3.printDatapointFull();
-  
+  // tCoolWall.printDatapointFull();
+  // tGearbox.printDatapointFull();
+  // tEngRoom.printDatapointFull();
+  // uBat.printDatapointFull();
+  // nMot.printDatapointFull();
+  // nShaft.printDatapointFull();
+  // nAlternator1.printDatapointFull();
+  // nAlternator2.printDatapointFull();
+  // tExhaust.printDatapointFull();
+  // uMcp3204Ch1.printDatapointFull();
+  // uMcp3204Ch2.printDatapointFull();
+  // uMcp3204Ch3.printDatapointFull();
+  // uMcp3204Ch4.printDatapointFull();
+  // flgContact1.printDatapointFull();
+  // flgContact2.printDatapointFull();
+  // flgContact3.printDatapointFull();
+
+  tCoolWall.printDatapointShort();
+  tGearbox.printDatapointShort();
+  tEngRoom.printDatapointShort();
+  tExhaust.printDatapointShort();
+  Serial.println();
+
+  nMot.printDatapointShort();
+  nShaft.printDatapointShort();
+  nAlternator1.printDatapointShort();
+  nAlternator2.printDatapointShort();
+  Serial.println();
+
+  uBat.printDatapointShort();
+  uMcp3204Ch1.printDatapointShort();
+  uMcp3204Ch2.printDatapointShort();
+  uMcp3204Ch3.printDatapointShort();
+  uMcp3204Ch4.printDatapointShort();
+  Serial.println();
+
+  flgContact1.printDatapointShort();
+  flgContact2.printDatapointShort();
+  flgContact3.printDatapointShort();
+  Serial.println();
+
 
 }
 //****************************************
 // Stores the data into a Datapoint
-void tAcquireData::_StoreData(tDataPoint &db, double value, uint32_t timestamp)
+void AcquireData::_StoreData(tDataPoint &db, double value, uint32_t timestamp)
 {
   // Update the Value of the Datapoint
   db.updateValue(value, timestamp);
@@ -88,35 +107,34 @@ void tAcquireData::_StoreData(tDataPoint &db, double value, uint32_t timestamp)
 
 //****************************************
 // Measure Exhaust Temperature
-void tAcquireData::measureExhaustTemperature(){
-  
+void AcquireData::measureExhaustTemperature()
+{
+
   double tMeasure = -200;
 
   tMeasure = thermoNiCr_Ni.readCelsius();
   this->_StoreData(this->tExhaust, tMeasure, millis());
-
 }
 
 //****************************************
 // Checking the states of the contact
-void tAcquireData::checkContacts(){
+void AcquireData::checkContacts()
+{
 
   bool state = false;
 
   // check the states of all contacts (Low Active)
   state = !digitalRead(CONTACT1_PIN);
-  this->_StoreData(this->flgContact1,(double) state, millis());
+  this->_StoreData(this->flgContact1, (double)state, millis());
   state = !digitalRead(CONTACT2_PIN);
-  this->_StoreData(this->flgContact2,(double) state, millis());
+  this->_StoreData(this->flgContact2, (double)state, millis());
   state = !digitalRead(CONTACT3_PIN);
-  this->_StoreData(this->flgContact3,(double) state, millis());
-
+  this->_StoreData(this->flgContact3, (double)state, millis());
 }
-
 
 //****************************************
 // Measure all voltages
-void tAcquireData::measureVoltage()
+void AcquireData::measureVoltage()
 {
   double voltage;
   int voltageMax;
@@ -128,22 +146,22 @@ void tAcquireData::measureVoltage()
 
   // measure MCP3204 Channel 1
   voltageMax = mcp3204.maxValue();
-  voltage = (double) mcp3204.analogRead(0);
+  voltage = (double)mcp3204.analogRead(0);
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH1_FAC;
   this->_StoreData(this->uMcp3204Ch1, voltage, millis());
 
   // measure MCP3204 Channel 2
-  voltage = (double) mcp3204.analogRead(1);
+  voltage = (double)mcp3204.analogRead(1);
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH2_FAC;
   this->_StoreData(this->uMcp3204Ch2, voltage, millis());
 
   // measure MCP3204 Channel 3
-  voltage = (double) mcp3204.analogRead(2);
+  voltage = (double)mcp3204.analogRead(2);
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH3_FAC;
   this->_StoreData(this->uMcp3204Ch3, voltage, millis());
 
   // measure MCP3204 Channel 4
-  voltage = (double) mcp3204.analogRead(3);
+  voltage = (double)mcp3204.analogRead(3);
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH4_FAC;
   this->_StoreData(this->uMcp3204Ch4, voltage, millis());
 
@@ -157,9 +175,7 @@ void tAcquireData::measureVoltage()
   //   delay(1);       // added so single reads are better visible on a scope
   // }
   // Serial.println();
-
 }
-
 
 //==============================================================================
 //==============================================================================
@@ -169,7 +185,7 @@ void tAcquireData::measureVoltage()
 
 //****************************************
 // Listing of all OneWire Devices at the bus
-void tAcquireData::listOneWireDevices()
+void AcquireData::listOneWireDevices()
 {
 
   uint8_t i;
@@ -210,7 +226,7 @@ void tAcquireData::listOneWireDevices()
 
 //****************************************
 // Measure all OneWire Sensors
-void tAcquireData::measureOnewire()
+void AcquireData::measureOnewire()
 {
 
   // Measure Wall Sensor Cooling
@@ -237,18 +253,18 @@ void tAcquireData::measureOnewire()
 
 //**********************************************
 // Set up the Engine speed timer and interrupt
-void tAcquireData::_setUpEngineSpeedInt(void)
+void AcquireData::_setUpEngineSpeedInt(void)
 {
   // Init the PIN for engine speed frequency
-  pinMode(ENGINE_RPM_PIN, INPUT_PULLUP);    
-  // attache the pin on falling edge to an interrupt and specify ISR 
-  attachInterrupt(digitalPinToInterrupt(ENGINE_RPM_PIN), handleEngineSpeedInterrupt, FALLING); 
+  pinMode(ENGINE_RPM_PIN, INPUT_PULLUP);
+  // attache the pin on falling edge to an interrupt and specify ISR
+  attachInterrupt(digitalPinToInterrupt(ENGINE_RPM_PIN), handleEngineSpeedInterrupt, FALLING);
 
   // set up the engine speed timer
   // - the associated timer is TMR0
   // - prescaler of 80 gives 1ns as time per tick at 80Mhz
-  // - timer counts upward 
-  data.engSpeedCalc.Timer= timerBegin(0, TIMER_PRESCALER_FOR_1NS, true);                                            
+  // - timer counts upward
+  data.engSpeedCalc.Timer = timerBegin(0, TIMER_PRESCALER_FOR_1NS, true);
 
   // start the timer
   timerStart(data.engSpeedCalc.Timer);
@@ -256,36 +272,36 @@ void tAcquireData::_setUpEngineSpeedInt(void)
 
 //**********************************************
 // Set up the Engine speed timer and interrupt
-void tAcquireData::_setUpShaftSpeedInt(void)
+void AcquireData::_setUpShaftSpeedInt(void)
 {
   // Init the PIN for engine speed frequency
-  pinMode(SHAFT_RPM_PIN, INPUT_PULLUP);    
-  // attache the pin on falling edge to an interrupt and specify ISR 
-  attachInterrupt(digitalPinToInterrupt(SHAFT_RPM_PIN), handleShaftSpeedInterrupt, FALLING); 
+  pinMode(SHAFT_RPM_PIN, INPUT_PULLUP);
+  // attache the pin on falling edge to an interrupt and specify ISR
+  attachInterrupt(digitalPinToInterrupt(SHAFT_RPM_PIN), handleShaftSpeedInterrupt, FALLING);
 
   // set up the engine speed timer
   // - the associated timer is TMR0
   // - prescaler of 80 gives 1ns as time per tick at 80Mhz
-  // - timer counts upward 
-  data.shaftSpeedCalc.Timer= timerBegin(0, TIMER_PRESCALER_FOR_1NS, true);                                            
+  // - timer counts upward
+  data.shaftSpeedCalc.Timer = timerBegin(0, TIMER_PRESCALER_FOR_1NS, true);
 
   // start the timer
   timerStart(data.shaftSpeedCalc.Timer);
 }
 //**********************************************
 // Set up the Alternator 1 speed timer and interrupt
-void tAcquireData::_setUpAlternator1SpeedInt(void)
+void AcquireData::_setUpAlternator1SpeedInt(void)
 {
   // Init the PIN for engine speed frequency
-  pinMode(ALTERNATOR1_RPM_PIN, INPUT_PULLUP);    
-  // attache the pin on falling edge to an interrupt and specify ISR 
-  attachInterrupt(digitalPinToInterrupt(ALTERNATOR1_RPM_PIN), handleAlternator1SpeedInterrupt, FALLING); 
+  pinMode(ALTERNATOR1_RPM_PIN, INPUT_PULLUP);
+  // attache the pin on falling edge to an interrupt and specify ISR
+  attachInterrupt(digitalPinToInterrupt(ALTERNATOR1_RPM_PIN), handleAlternator1SpeedInterrupt, FALLING);
 
   // set up the engine speed timer
   // - the associated timer is TMR1
   // - prescaler of 80 gives 1ns as time per tick at 80Mhz
-  // - timer counts upward 
-  data.alternator1SpeedCalc.Timer= timerBegin(1, TIMER_PRESCALER_FOR_1NS, true);                                            
+  // - timer counts upward
+  data.alternator1SpeedCalc.Timer = timerBegin(1, TIMER_PRESCALER_FOR_1NS, true);
 
   // start the timer
   timerStart(data.alternator1SpeedCalc.Timer);
@@ -293,18 +309,18 @@ void tAcquireData::_setUpAlternator1SpeedInt(void)
 
 //**********************************************
 // Set up the Alternator 2 speed timer and interrupt
-void tAcquireData::_setUpAlternator2SpeedInt(void)
+void AcquireData::_setUpAlternator2SpeedInt(void)
 {
   // Init the PIN for engine speed frequency
-  pinMode(ALTERNATOR2_RPM_PIN, INPUT_PULLUP);    
-  // attache the pin on falling edge to an interrupt and specify ISR 
-  attachInterrupt(digitalPinToInterrupt(ALTERNATOR2_RPM_PIN), handleAlternator2SpeedInterrupt, FALLING); 
+  pinMode(ALTERNATOR2_RPM_PIN, INPUT_PULLUP);
+  // attache the pin on falling edge to an interrupt and specify ISR
+  attachInterrupt(digitalPinToInterrupt(ALTERNATOR2_RPM_PIN), handleAlternator2SpeedInterrupt, FALLING);
 
   // set up the engine speed timer
   // - the associated timer is TMR2
   // - prescaler of 80 gives 1ns as time per tick at 80Mhz
-  // - timer counts upward 
-  data.alternator2SpeedCalc.Timer= timerBegin(1, TIMER_PRESCALER_FOR_1NS, true);                                            
+  // - timer counts upward
+  data.alternator2SpeedCalc.Timer = timerBegin(1, TIMER_PRESCALER_FOR_1NS, true);
 
   // start the timer
   timerStart(data.alternator2SpeedCalc.Timer);
@@ -312,14 +328,14 @@ void tAcquireData::_setUpAlternator2SpeedInt(void)
 
 //***********************************************
 // Calculate rotational speed
-double tAcquireData::_calcNumberOfRevs(tSpeedCalc *tmrValues)
+double AcquireData::_calcNumberOfRevs(tSpeedCalc *tmrValues)
 {
   double RPM = 0;
   // Lock the RAM and prevent other tasks from reading/writing
   taskENTER_CRITICAL(&tmrValues->muxTMR);
   if (tmrValues->PeriodCount != 0)
     // PeriodCount in 0.000001 of a second
-    RPM = 1000000.00 / tmrValues->PeriodCount;
+    RPM = 1000000.00 / tmrValues->PeriodCount * 60;
   // prevent div by zero if there is no signal
   if (millis() > tmrValues->TimestampLastInt + 500)
     RPM = 0; // No signals RPM=0;
@@ -332,24 +348,77 @@ double tAcquireData::_calcNumberOfRevs(tSpeedCalc *tmrValues)
 
 //****************************************
 // Measure all Speeds
-void tAcquireData::measureSpeed()
+void AcquireData::measureSpeed()
 {
   double speed;
 
   // measure Engine Speed
-  speed =  _calcNumberOfRevs(&engSpeedCalc);
+  speed = _calcNumberOfRevs(&engSpeedCalc);
   this->_StoreData(this->nMot, speed, millis());
   // measure Shaft Speed
-  speed =  _calcNumberOfRevs(&shaftSpeedCalc);
+  speed = _calcNumberOfRevs(&shaftSpeedCalc);
   this->_StoreData(this->nShaft, speed, millis());
   // measure Alternator1 Speed
-  speed =  _calcNumberOfRevs(&alternator1SpeedCalc);
+  speed = _calcNumberOfRevs(&alternator1SpeedCalc);
   this->_StoreData(this->nAlternator1, speed, millis());
   // measure Alternator2 Speed
-  speed =  _calcNumberOfRevs(&alternator2SpeedCalc);
+  speed = _calcNumberOfRevs(&alternator2SpeedCalc);
   this->_StoreData(this->nAlternator2, speed, millis());
 }
 
+//****************************************
+// Convert all measured data into N2kData formats
+void AcquireData::convertDataToN2k(tVolvoPentaData *data)
+{
+
+  data->engine_hours = 1234;
+
+  data->engine_coolant_flow = 0;
+  data->engine_coolant_temperature = 345;
+  data->engine_coolant_temperature_wall = this->tCoolWall.getValue() + 273.15;;
+  data->engine_room_temperature = this->tEngRoom.getValue() + 273.15;;
+  data->gearbox_temperature = this->tGearbox.getValue() + 273.15;
+  data->exhaust_temperature = this->tExhaust.getValue() + 273.15;
+
+  data->engine_oel_pressure = 23456;
+
+  data->engine_speed = this->nMot.getValue();
+  data->shaft_speed = this->nShaft.getValue();
+  data->alternator1_speed = this->nAlternator1.getValue();
+  data->alternator2_speed = this->nAlternator2.getValue();
+
+  data->batterie_voltage = this->uBat.getValue();
+
+  data->flg_coolant_temperature_ok = false;
+  data->flg_engine_oel_pressure_ok = false;
+
+// Simulationsdata
+#ifdef USE_SIM_DATA_N2K
+
+  data->engine_hours = 1234;
+
+  data->engine_coolant_flow = 0;
+  data->engine_coolant_temperature = 345;
+  data->engine_coolant_temperature_wall = 456;
+  data->engine_room_temperature = 333;
+  data->gearbox_temperature = 543;
+  data->exhaust_temperature = 678;
+
+  data->engine_oel_pressure = 23456;
+
+  data->engine_speed = 1234;
+  data->shaft_speed = 5676;
+  data->alternator1_speed = 2345;
+  data->alternator2_speed = 3456;
+
+  data->batterie_voltage = 12.99;
+
+  data->flg_coolant_temperature_ok = false;
+  data->flg_engine_oel_pressure_ok = false;
+
+#endif
+
+}
 
 //==============================================================================
 //==============================================================================
@@ -364,11 +433,11 @@ void IRAM_ATTR handleEngineSpeedInterrupt()
   // Lock the RAM and prevent other tasks from reading/writing
   taskENTER_CRITICAL_ISR(&data.engSpeedCalc.muxTMR);
   // value of timer at interrupt
-  uint64_t TempVal = timerRead(data.engSpeedCalc.Timer);        
+  uint64_t TempVal = timerRead(data.engSpeedCalc.Timer);
   // period count between falling edges in 0.000001 of a second
-  data.engSpeedCalc.PeriodCount = TempVal - data.engSpeedCalc.StartValue; 
+  data.engSpeedCalc.PeriodCount = TempVal - data.engSpeedCalc.StartValue;
   // puts latest reading as start for next calculation
-  data.engSpeedCalc.StartValue = TempVal; 
+  data.engSpeedCalc.StartValue = TempVal;
   data.engSpeedCalc.TimestampLastInt = millis();
   // Unlock the RAM
   taskEXIT_CRITICAL_ISR(&data.engSpeedCalc.muxTMR);
@@ -381,11 +450,11 @@ void IRAM_ATTR handleShaftSpeedInterrupt()
   // Lock the RAM and prevent other tasks from reading/writing
   taskENTER_CRITICAL_ISR(&data.shaftSpeedCalc.muxTMR);
   // value of timer at interrupt
-  uint64_t TempVal = timerRead(data.shaftSpeedCalc.Timer);        
+  uint64_t TempVal = timerRead(data.shaftSpeedCalc.Timer);
   // period count between falling edges in 0.000001 of a second
-  data.shaftSpeedCalc.PeriodCount = TempVal - data.shaftSpeedCalc.StartValue; 
+  data.shaftSpeedCalc.PeriodCount = TempVal - data.shaftSpeedCalc.StartValue;
   // puts latest reading as start for next calculation
-  data.shaftSpeedCalc.StartValue = TempVal; 
+  data.shaftSpeedCalc.StartValue = TempVal;
   data.shaftSpeedCalc.TimestampLastInt = millis();
   // Unlock the RAM
   taskEXIT_CRITICAL_ISR(&data.shaftSpeedCalc.muxTMR);
@@ -398,11 +467,11 @@ void IRAM_ATTR handleAlternator1SpeedInterrupt()
   // Lock the RAM and prevent other tasks from reading/writing
   taskENTER_CRITICAL_ISR(&data.alternator1SpeedCalc.muxTMR);
   // value of timer at interrupt
-  uint64_t TempVal = timerRead(data.alternator1SpeedCalc.Timer);        
+  uint64_t TempVal = timerRead(data.alternator1SpeedCalc.Timer);
   // period count between falling edges in 0.000001 of a second
-  data.alternator1SpeedCalc.PeriodCount = TempVal - data.alternator1SpeedCalc.StartValue; 
+  data.alternator1SpeedCalc.PeriodCount = TempVal - data.alternator1SpeedCalc.StartValue;
   // puts latest reading as start for next calculation
-  data.alternator1SpeedCalc.StartValue = TempVal; 
+  data.alternator1SpeedCalc.StartValue = TempVal;
   data.alternator1SpeedCalc.TimestampLastInt = millis();
   // Unlock the RAM
   taskEXIT_CRITICAL_ISR(&data.alternator1SpeedCalc.muxTMR);
@@ -415,14 +484,12 @@ void IRAM_ATTR handleAlternator2SpeedInterrupt()
   // Lock the RAM and prevent other tasks from reading/writing
   taskENTER_CRITICAL_ISR(&data.alternator2SpeedCalc.muxTMR);
   // value of timer at interrupt
-  uint64_t TempVal = timerRead(data.alternator2SpeedCalc.Timer);        
+  uint64_t TempVal = timerRead(data.alternator2SpeedCalc.Timer);
   // period count between falling edges in 0.000001 of a second
-  data.alternator2SpeedCalc.PeriodCount = TempVal - data.alternator2SpeedCalc.StartValue; 
+  data.alternator2SpeedCalc.PeriodCount = TempVal - data.alternator2SpeedCalc.StartValue;
   // puts latest reading as start for next calculation
-  data.alternator2SpeedCalc.StartValue = TempVal; 
+  data.alternator2SpeedCalc.StartValue = TempVal;
   data.alternator2SpeedCalc.TimestampLastInt = millis();
   // Unlock the RAM
   taskEXIT_CRITICAL_ISR(&data.alternator2SpeedCalc.muxTMR);
 }
-
-

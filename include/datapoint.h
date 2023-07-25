@@ -64,6 +64,9 @@ public:
     String getName();
     String getUnit();
 
+    double getValue(){return this->value;};
+    double getValueMean(){return this->value_mean;};
+    
     /********************************************************************* //**
      * \brief Update the value of the datapoint
      * 
@@ -84,6 +87,8 @@ public:
      * \return false
      */
     bool printDatapointFull();
+
+    bool printDatapointShort();
 
 private:
     String signalName = "na";

@@ -3,6 +3,10 @@
 		{
 			"name": "VolvoPentaConnect",
 			"path": "."
+		},
+		{
+			"name": "ActiSense_Reader",
+			"path": "../ActiSense_Reader"
 		}
 	],
 	"settings": {

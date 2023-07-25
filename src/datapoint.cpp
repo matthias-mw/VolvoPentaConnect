@@ -140,3 +140,21 @@ bool tDataPoint::printDatapointFull()
 
   return true;
 }
+
+bool tDataPoint::printDatapointShort()
+{
+
+  uint8_t k;
+  String str = "";
+
+  // Add Name
+  str = this->signalName + ": ";
+
+  // Add Value
+  str = str + String(this->value, 3U) + " " + this->signalUnit + "; ";
+
+  // print
+  Serial.print(str);
+
+  return true;
+}

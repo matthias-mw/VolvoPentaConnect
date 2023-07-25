@@ -32,14 +32,14 @@
 
 #include <lookUpTable.h>
 
-tAcquireData data;
 
-tDataPoint dp = tDataPoint(senType_ds1820, "Channel 1", "s");
-int k = 0;
-int m = 0;
-bool ledStatus = false;
-int pos = 0;
-bool flgBorder = false;
+LookUpTable1D tab(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
+
+/// class that contains al measured data
+AcquireData data;
+
+/// structure that hold all data ready for N2k sending
+tVolvoPentaData VolvoDataForN2k;
 
 void setup()
 {
@@ -88,20 +88,20 @@ void setup()
   // Start the DS18B20 sensor
   oneWireSensors.begin();
 
-  // // Setup NMEA2000 Interface
+  // Setup NMEA2000 Interface
   setupN2K();
 
   // Setup all Measurement Channels
   data.setUpMeasurementChannels();
 
-  data.listOneWireDevices();
+  //data.listOneWireDevices();
 }
 
 
 
-LookUpTable1D tab(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
 
-VolvoPentaData VolvoDataForN2k;
+
+
 
 
 void loop()
@@ -124,7 +124,7 @@ void loop()
   digitalWrite(STATUS_LED_PIN, HIGH);
 
   SendN2kEngineParm(VolvoDataForN2k);
-  // NMEA2000.ParseMessages();
+  NMEA2000.ParseMessages();
 
 
   
@@ -135,13 +135,11 @@ void loop()
   data.measureExhaustTemperature();
   data.checkContacts();
 
-  //data.showDataOnTerminal();
+  data.showDataOnTerminal();
+
+  data.convertDataToN2k(& VolvoDataForN2k);
 
 
-  Serial.println(VolvoDataForN2k.engine_room_temperature);
 
-
-  
-
-  delay(250);
+  delay(750);
 }

@@ -24,6 +24,7 @@
 #include <datapoint.h>
 #include <max6675.h>
 #include <MCP_ADC.h>
+#include "process_n2k.h"
 
 /** oneWire instance to communicate with any OneWire devices */
 extern OneWire oneWire;
@@ -31,12 +32,11 @@ extern OneWire oneWire;
 extern DallasTemperature oneWireSensors;
 
 
+// ------------------------------------------------------------------
+// variables for engine speed calculation
+// ------------------------------------------------------------------
 
-
- // ------------------------------------------------------------------
-  // variables for engine speed calculation
-  // ------------------------------------------------------------------
-/************************************************************************//**
+/***********************************************************************//**
  * \struct tSpeedCalc
  * \brief Structure that handles all values to determine the time difference
  * in between of two interrupts *
@@ -93,7 +93,7 @@ void IRAM_ATTR handleAlternator1SpeedInterrupt();
  */
 void IRAM_ATTR handleAlternator2SpeedInterrupt();
 
-class tAcquireData
+class AcquireData
 {
   /** max depth of the data history of each data point*/
   const uint8_t _MAX_DATA_POINTS_HISTORY = 8;
@@ -101,10 +101,10 @@ class tAcquireData
 public:
 
   /************************************************************************//**
-   * \brief Construct a new tAcquireDataobject
+   * \brief Construct a new AcquireDataobject
    *
    */
-  tAcquireData();
+  AcquireData();
 
 
   /************************************************************************//**
@@ -163,8 +163,6 @@ public:
    */
   void checkContacts();
 
-
-
   /************************************************************************//**
    * \brief  Setup all the measurement channels
    *
@@ -172,6 +170,16 @@ public:
    * all measurements channels.
    */
   void setUpMeasurementChannels();
+
+  /************************************************************************//**
+   * \brief  Convert all measured data into N2kData formats
+   *
+   * This method converts all data measured with several sensors into data
+   * which fits to the N2k standard and units.
+   * 
+   * \param data {type} 
+   */
+  void convertDataToN2k(tVolvoPentaData * data);
 
 
 
@@ -186,8 +194,6 @@ public:
 
   /** Structure with all timer values for the alternator 2 speed calculation*/
   tSpeedCalc alternator2SpeedCalc;
-
-  
 
 private:
 
@@ -310,6 +316,7 @@ private:
   
 
 };
+
 
 
 #endif //_acquire_data_h_

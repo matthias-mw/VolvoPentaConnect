@@ -27,6 +27,7 @@ void setupN2K()
                                 50,     // Device class=Propulsion See codes on  http://www.nmea.org/Assets/20120726%20nmea%202000%20class%20&%20function%20codes%20v%202.00.pdf
                                 2040    // Just choosen free from code list on http://www.nmea.org/Assets/20121020%20nmea%202000%20registration%20list.pdf
   );
+
   // Uncomment 2 rows below to see, what device will send to bus. Use e.g. OpenSkipper or Actisense NMEA Reader
 
   // NMEA2000.SetForwardStream(&Serial);
@@ -34,11 +35,12 @@ void setupN2K()
   // NMEA2000.SetForwardType(tNMEA2000::fwdt_Text); // Show in clear text. Leave uncommented for default Actisense format.
 
   // If you also want to see all traffic on the bus use N2km_ListenAndNode instead of N2km_NodeOnly below
-  NMEA2000.SetMode(tNMEA2000::N2km_NodeOnly, 0xFE);
+  NMEA2000.SetMode(tNMEA2000::N2km_NodeOnly, 0x22);
   // NMEA2000.SetDebugMode(tNMEA2000::dm_Actisense); // Uncomment this, so you can test code without CAN bus chips on Arduino Mega
   // NMEA2000.EnableForward(false); // Disable all msg forwarding to USB (=Serial)
   //  Here we tell library, which PGNs we transmit
   NMEA2000.ExtendTransmitMessages(TransmitMessages);
+
   NMEA2000.Open();
 }
 
@@ -60,34 +62,28 @@ void SendN2kEngineParm(VolvoPentaData data)
 
 
 
-
-
-
   if (TempUpdated + TempUpdatePeriod < millis())
   {
     TempUpdated = millis();
 
     // Send Engine room temperature
-    SetN2kTemperature(N2kMsg, 0, 0, N2kts_EngineRoomTemperature, (data.engine_room_temperature + 273.15));
+    SetN2kTemperatureExt(N2kMsg, 0, 0, N2kts_EngineRoomTemperature, (data.engine_room_temperature));
     NMEA2000.SendMsg(N2kMsg);
 
     // Send exhaust temperature
-    SetN2kTemperature(N2kMsg, 0, 0, N2kts_ExhaustGasTemperature, (data.exhaust_temperature));
+    SetN2kTemperatureExt(N2kMsg, 0, 0, N2kts_ExhaustGasTemperature, (data.exhaust_temperature));
     NMEA2000.SendMsg(N2kMsg);
-
-
-
 
     // Send engine speed
     SetN2kEngineParamRapid(N2kMsg, EngineInstance, data.engine_speed, 0, 0);
     NMEA2000.SendMsg(N2kMsg);
 
     // send engine data
-    SetN2kEngineDynamicParam(N2kMsg, EngineInstance, data.oel_pressure, EngineOilTemp, data.coolant_temperature + 273.15, data.batterie_voltage, FuelRate, data.engine_hours, N2kDoubleNA, N2kDoubleNA, N2kInt8NA, N2kInt8NA, flagCheckEngine);
+    SetN2kEngineDynamicParam(N2kMsg, EngineInstance, data.engine_oel_pressure, EngineOilTemp, data.engine_coolant_temperature, data.batterie_voltage, FuelRate, data.engine_hours, N2kDoubleNA, N2kDoubleNA, N2kInt8NA, N2kInt8NA, flagCheckEngine);
     NMEA2000.SendMsg(N2kMsg);
 
     // send gearbox data
-    SetN2kPGN127493 (N2kMsg, EngineInstance,N2kTG_Unknown, N2kDoubleNA, data.exhaust_temperature,0);
+    SetN2kPGN127493 (N2kMsg, EngineInstance,N2kTG_Unknown, N2kDoubleNA, data.gearbox_temperature,0);
     NMEA2000.SendMsg(N2kMsg);
 
     // Serial.print(millis()); Serial.println(", Temperature send ready");

@@ -26,47 +26,49 @@
 extern tNMEA2000 &NMEA2000;
 
 // List here messages your device will transmit.
-const unsigned long TransmitMessages[] PROGMEM={130310L,130311L,130312L,0};
+const unsigned long TransmitMessages[] PROGMEM={127493L,127489L,127488L,130316L,0};
 
+/************************************************************************//**
+ * \struct  VolvoPentaData
+ * \brief   Structure contains all data ready to be send to N2K bus
+ *
+ * The data in this struct has been collected and converted (units etc...)
+ * to be directly used inside the N2K functions.
+ */
+typedef struct VolvoPentaData{
 
+  /// engine coolant flow rate in l/h
+  double engine_coolant_flow = 0;
+  /// engine coolant temperature in kelvin
+  double engine_coolant_temperature = 0;
+  /// engine coolant temperature at the pipe in kelvin
+  double engine_coolant_temperature_wall = 0;
+  /// status that the coolant temperature has not exceeded limits
+  bool flg_coolant_temperature_ok = false;
+  /// engine oel pressure in Pascal
+  double engine_oel_pressure = 0;
+  /// status engine oel pressure is ok
+  bool flg_engine_oel_pressure_ok = false;
+  /// voltage of the starter batterie in volt
+  double batterie_voltage = 0;
+  /// engine room temperature in kelvin
+  double engine_room_temperature = 0;
+  /// exhaust gat temperature in kelvin
+  double exhaust_temperature = 0;
+  /// gearbox temperature in kelvin
+  double gearbox_temperature = 0;
+  /// engine speed in rev per minute
+  double engine_speed = 0;
+  /// prop shaft speed in rev per minute
+  double shaft_speed = 0;
+  /// alternator 1 speed in rev per minute
+  double alternator1_speed = 0;
+  /// alternator 2 speed in rev per minute
+  double alternator2_speed = 0;
+  /// engine hours run in seconds
+  uint16_t engine_hours = 0;
 
-struct VolvoPentaData{
-
-  double fuel_flow = 10;
-  
-  double coolant_temperature = 124;
-
-  // Kelvin
-  double coolant_temperature_wall = 124;
-
-  bool coolant_temperature_ok = true;
-
-  // kPa * 100
-  double oel_pressure = 250000;
-
-  bool oel_pressure_ok = false;
-  
-  double batterie_voltage = 11.88;
-  
-  double engine_room_temperature = 35;
-
-  double exhaust_temperature = 456;
-
-  double gearbox_temperature = 100;
-
-  double engine_speed = 1358;
-
-  double shaft_speed = 1000;
-
-  double alternator1_speed = 1234;
-
-  double alternator2_speed = 3456;
-
-  uint16_t engine_hours = 1234;
-
-
-
-};
+}tVolvoPentaData;
 
 
 
