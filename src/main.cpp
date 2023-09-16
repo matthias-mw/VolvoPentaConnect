@@ -21,9 +21,7 @@
 #include <NMEA2000_CAN.h>
 #include <N2kMessages.h>
 
-// // Handle NMEA2000 Bus
- #include <process_n2k.h>
-
+#include <process_n2k.h>
 #include <datapoint.h>
 #include <acquire_data.h>
 #include <OneWire.h>
@@ -98,12 +96,6 @@ void setup()
 }
 
 
-
-
-
-
-
-
 void loop()
 {
 
@@ -125,10 +117,7 @@ void loop()
 
   SendN2kEngineParm(VolvoDataForN2k);
   NMEA2000.ParseMessages();
-
-
   
-
   //data.measureOnewire();
   data.measureVoltage();
   data.measureSpeed();

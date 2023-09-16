@@ -14,18 +14,31 @@
 void setupN2K()
 {
 
+  //build Version Numbers
+  char hwVers [25] = HW_DESCRIPTION;
+  char swVers [25];
+  char tmp[5];
+
+  snprintf(tmp,sizeof(tmp), " v%d  ", HW_VERSION_MAJOR);
+  strncat(hwVers, tmp ,sizeof(hwVers) - strlen(hwVers) - 1);
+  strncat(hwVers, HW_VERSION_DATE ,sizeof(hwVers) - strlen(hwVers) - 1);
+  
+  snprintf(swVers,sizeof(swVers), "%d.%d.%d  ",SW_VERSION_MAJOR,SW_VERSION_MINOR,SW_VERSION_PATCH);
+  strncat(swVers, SW_VERSION_DATE ,sizeof(swVers) - strlen(swVers) - 1);
+
   // Set Product information
-  NMEA2000.SetProductInformation("12345678",             // Manufacturer's Model serial code
-                                 100,                    // Manufacturer's product code
-                                 "VolvoPenta Monitor",   // Manufacturer's Model ID
-                                 "0.0.0.1 (2022-12-04)", // Manufacturer's Software version code
-                                 "0.0.0.1 (2022-12-04)"  // Manufacturer's Model version
+  NMEA2000.SetProductInformation(N2K_MANUFACTURER_MODEL_SERIAL, // Manufacturer's Model serial code
+                                 N2K_MANUFACTURER_PRODUCT_CODE, // Manufacturer's product code
+                                 N2K_MANUFACTURER_MODEL_ID,   // Manufacturer's Model ID
+                                 swVers, // Manufacturer's Software version code
+                                 hwVers, // Manufacturer's Model version
+                                 2                       // Load Equivalency 2x50mA
   );
   // Set device information
-  NMEA2000.SetDeviceInformation(001500, // Unique number. Use e.g. Serial number.
-                                160,    // Device function=Engine Gateway. See codes on http://www.nmea.org/Assets/20120726%20nmea%202000%20class%20&%20function%20codes%20v%202.00.pdf
-                                50,     // Device class=Propulsion See codes on  http://www.nmea.org/Assets/20120726%20nmea%202000%20class%20&%20function%20codes%20v%202.00.pdf
-                                2040    // Just choosen free from code list on http://www.nmea.org/Assets/20121020%20nmea%202000%20registration%20list.pdf
+  NMEA2000.SetDeviceInformation(N2K_UNIQUE_DEVICE_ID,  // Unique number for each device. Use e.g. Serial number.
+                                160,    // Device function=Engine Gateway
+                                50,     // Device class=Propulsion 
+                                174    //  Manufacturer Code 
   );
 
   // Uncomment 2 rows below to see, what device will send to bus. Use e.g. OpenSkipper or Actisense NMEA Reader

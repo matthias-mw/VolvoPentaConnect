@@ -18,6 +18,7 @@
 
 
 #include <Arduino.h>
+#include <versionInfo.h>
 #include <hardwareDef.h>
 #include <NMEA2000.h>
 #include <N2kMessages.h>
