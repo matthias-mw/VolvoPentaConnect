@@ -30,6 +30,12 @@
 
 #include <lookUpTable.h>
 
+#define N2KUpdatePeriodFast 500
+#define N2KUpdatePeriodSlow 2000
+
+static unsigned long timeUpdatedFast = millis();
+static unsigned long timeUpdatedSlow = millis();
+static bool blink = false;
 
 LookUpTable1D tab(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
 
@@ -98,37 +104,50 @@ void setup()
 
 void loop()
 {
-
-  static double EngineRPM = 0;
-
-  // Serial.println("Test...");
-
-  // if (digitalRead(BUTTON2_PIN))
-  // {
-  //   Serial.println("Button pressed...");
-  //   digitalWrite(WARNING_OUTPUT_PIN, HIGH);
-  // }else{
-  //   digitalWrite(WARNING_OUTPUT_PIN, LOW);
-  // }
-
-  digitalWrite(STATUS_LED_PIN, LOW);
-  delay(250);
-  digitalWrite(STATUS_LED_PIN, HIGH);
-
-  SendN2kEngineParm(VolvoDataForN2k);
+  // Check N2k Messages
   NMEA2000.ParseMessages();
+
+
+  // process all fast messages
+  if ((timeUpdatedFast + N2KUpdatePeriodFast) < millis()){
+
+    // save timestamp
+    timeUpdatedFast = millis();
+
+    digitalWrite(STATUS_LED_PIN,blink);
+    blink = !blink;
+
+    // measure all signals
+    data.measureVoltage();
+    data.measureSpeed();
+    data.measureExhaustTemperature();
+    data.checkContacts();
+    // Convert measured Data into N2K format
+    data.convertDataToN2k(& VolvoDataForN2k);
+    
+    // Send all fast N2kMessages
+    SendN2kEngineParmFast(VolvoDataForN2k);
+  }
+
+  // process all fast messages
+  if ((timeUpdatedSlow + N2KUpdatePeriodSlow) < millis()){
+
+    // save timestamp
+    timeUpdatedSlow = millis();
+
+    //data.measureOnewire();
+    
+    // Convert measured Data into N2K format
+    data.convertDataToN2k(& VolvoDataForN2k);
+    
+    // Send all Slow N2kMessages
+    SendN2kEngineParmSlow(VolvoDataForN2k);
+  }
   
-  //data.measureOnewire();
-  data.measureVoltage();
-  data.measureSpeed();
-  data.measureExhaustTemperature();
-  data.checkContacts();
+  
+  
+  
+  
+  
 
-  data.showDataOnTerminal();
-
-  data.convertDataToN2k(& VolvoDataForN2k);
-
-
-
-  delay(750);
 }

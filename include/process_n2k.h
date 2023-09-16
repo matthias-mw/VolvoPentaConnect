@@ -11,11 +11,8 @@
  * - Prozessor:         ESP32-WROOM
  * - Hardware:          az-delivery-devkit-v4
 */
-
-
 #ifndef _process_n2k_
 #define _process_n2k_
-
 
 #include <Arduino.h>
 #include <versionInfo.h>
@@ -71,12 +68,33 @@ typedef struct VolvoPentaData{
 
 }tVolvoPentaData;
 
-
-
-
+/************************************************************************//**
+ * \brief Setup for the Nk2 Module
+ * 
+ * This method sets up all the necessary information for the NMEA2000 
+ * communication, such as manufacturer and device informations.
+ *
+ */
 void setupN2K();
 
+/************************************************************************//**
+ * \brief Sends out all the messages in a fast timeframe
+ * 
+ * This method sends out all N2k Messages in a fast timeframe. The period is 
+ * defined in \ref N2KUpdatePeriodFast 
+ *
+ * \param data contains all measured engine data
+ */
+void SendN2kEngineParmFast(VolvoPentaData data);
 
-void SendN2kEngineParm(VolvoPentaData data);
+/************************************************************************//**
+ * \brief Sends out all the messages in a slow timeframe
+ * 
+ * This method sends out all N2k Messages in a slow timeframe. The period is 
+ * defined in \ref N2KUpdatePeriodSlow
+ *
+ * \param data contains all measured engine data
+ */
+void SendN2kEngineParmSlow(VolvoPentaData data);
 
 #endif //_process_n2k_
