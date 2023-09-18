@@ -45,6 +45,10 @@ AcquireData data;
 /// structure that hold all data ready for N2k sending
 tVolvoPentaData VolvoDataForN2k;
 
+TaskHandle_t Task1;
+void Task1code( void * parameter);
+
+
 void setup()
 {
 
@@ -98,12 +102,27 @@ void setup()
   // Setup all Measurement Channels
   data.setUpMeasurementChannels();
 
-  //data.listOneWireDevices();
+  data.listOneWireDevices();
+
+  xTaskCreatePinnedToCore(
+      Task1code, /* Function to implement the task */
+      "Task1", /* Name of the task */
+      10000,  /* Stack size in words */
+      NULL,  /* Task input parameter */
+      0,  /* Priority of the task */
+      &Task1,  /* Task handle. */
+      0); /* Core where the task should run */
+
 }
 
 
 void loop()
 {
+  delay(100);
+  // Serial.print( millis());
+  // Serial.print(": loop() running on core ");
+  // Serial.println(xPortGetCoreID());
+
   // Check N2k Messages
   NMEA2000.ParseMessages();
 
@@ -134,8 +153,12 @@ void loop()
 
     // save timestamp
     timeUpdatedSlow = millis();
+    Serial.print( millis());
+    Serial.println(": start list");
+    data.listOneWireDevices();
+    Serial.print( millis());
+    Serial.println(": list ready");
 
-    //data.measureOnewire();
     
     // Convert measured Data into N2K format
     data.convertDataToN2k(& VolvoDataForN2k);
@@ -143,11 +166,20 @@ void loop()
     // Send all Slow N2kMessages
     SendN2kEngineParmSlow(VolvoDataForN2k);
   }
-  
-  
-  
-  
-  
-  
-
 }
+  
+void Task1code( void * parameter) {
+  while(1) {
+    Serial.print( millis());
+    Serial.print(": task1() running on core ");
+    Serial.println(xPortGetCoreID());
+    
+    data.measureOnewire();
+    Serial.print( millis());
+    Serial.println(": Task1 Measure ready");
+
+  }
+}
+  
+  
+ 
