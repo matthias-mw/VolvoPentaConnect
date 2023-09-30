@@ -22,59 +22,105 @@
 
 /************************************************************************ //**
  * \enum   tSensorTyp
- * \brief  Specifies the typ of Sensor use for data aquisition
+ * \brief  Specifies the typ of Sensor use for data acquisition
  */
 typedef enum
 {
-    /** xxxx */
+    /** Sensortyp DS18S20 - oneWire Thermocouple */
     senType_ds1820,
 
-    /** xxxx. */
+    /** Sensortyp Drehzahlmessung */
     senType_RPM,
 
-    /** xxxx. */
+    /** Sensortyp MAX6675 - SPI device for NiCr-Ni Thermocouples */
     senType_max6675,
 
-    /** xxxx. */
+    /** Sensortype MCP3204 - SPI Analog-in-Digital-Wandler 4Channel */
     senType_mcp3204,
 
-    /** xxxx. */
+    /** Sensortyp on chip AD-Wandler at the esp32. */
     senType_adc,
 
-    /** xxxx. */
+    /** Sensortyp General IO of the esp32  */
     senType_GPIO,
 
-    /** */
+    /** Sensortyp virtual - simulated or calculated signal*/
     senType_virtual,
-    /**  */
+
+    /** default no Sensortyp defined */
     senType_none
 } tSensorTyp;
 
 /************************************************************************ //**
  * \class tDataPoint
  * \brief This gives an object for a Datapoint
+ * 
+ * This object 
  */
 class tDataPoint
 {
 public:
+    /*********************************************************************//**
+     * \brief Construct a new t Data Point object
+     *
+     * \param senType   Type of Sensor used (\ref tSensorTyp)
+     * \param name      Datapoint name (eG. batteryvoltage)
+     * \param unit      Datapoint unit (eG. V)
+     *      
+     */
     tDataPoint(tSensorTyp senType, String name = "na", String unit = "-");
 
-    void setName(String name);
-    void setUnit(String unit);
+    /*********************************************************************//**
+     * \brief Get the Name of this Datapoint
+     *
+     * \return String name of datapoint
+     */
     String getName();
+
+    /*********************************************************************//**
+     * \brief Get the Unit of this Datapoint
+     *
+     * \return String unit of datapoint
+     */
     String getUnit();
 
-    double getValue(){return this->value;};
-    double getValueMean(){return this->value_mean;};
+    /**********************************************************************//**
+     * \brief Get the Value of the datapoint object
+     * 
+     * This method returns the current value of the datapoint.
+     * 
+     * The method is protected by a semaphore \ref xMutexDataLock to make 
+     * sure that reading and writing of the datapoint is consistent in
+     * multithreading operations
+     *
+     * \return double 
+     */double getValue();
+
+    /**********************************************************************//**
+     * \brief Get the Value Mean of the Datapoint object
+     * 
+     * This method returns the mean value of the datapoint.
+     * 
+     * The method is protected by a semaphore \ref xMutexDataLock to make 
+     * sure that reading and writing of the datapoint is consistent in
+     * multithreading operations
+     *
+     * \return double 
+     */
+    double getValueMean();
     
     /********************************************************************* //**
-     * \brief Update the value of the datapoint
+     * \brief Update the value of the Datapoint
      * 
      * This method updates the value and the timestamp of an datapoint and
      * calculates all other values (eg history and mean) inside the datapoint.
+     * 
+     * The method is protected by a semaphore \ref xMutexDataLock to make 
+     * sure that reading and writing of the datapoint is consistent in
+     * multithreading operations
      *
-     * \param new_value {type}
-     * \param new_timestamp {type}
+     * \param new_value         new value for updating
+     * \param new_timestamp     corresponding timestamp
      * \return true
      * \return false
      */
@@ -82,23 +128,50 @@ public:
 
     /******************************************************************** //**
      * \brief Printing all the Infos of a Datapoint
+     * 
+     * This Method prints all informations of the Datapoint to the serial
+     * stream.
      *
      * \return true
      * \return false
      */
     bool printDatapointFull();
 
+    /******************************************************************** //**
+     * \brief Printing Short Infos of a Datapoint
+     * 
+     * This Method prints a short version of the informations of the 
+     * Datapoint to the serialstream.
+     * 
+     * \return true
+     * \return false
+     */
     bool printDatapointShort();
 
 private:
+
+    /// Signal name of the datapoint
     String signalName = "na";
+    /// unit of the datapoint
     String signalUnit = "-";
+    /// Typ of sensor used for this signal
     tSensorTyp sensorTyp = senType_none;
+    /// timestamp for den data acquisition of this datapoint
     uint32_t timestamp = 0;
+    /* number of values from the signals history that is used to calculate 
+        the moving average */
     uint32_t mean_cnt = 3;
+    /// current value of the datapoint
     double value = 0;
+    /// current mean value of the datapoint
     double value_mean = 0;
+    /// history of the signals values 
     double value_history[MAX_HISTORY_BUFFER_SIZE];
+    /* semaphore handle to ensure data consistency while reading and 
+    writing in parallel tasks */
+    SemaphoreHandle_t xMutexDataLock = NULL;  // Create a mutex object
+    
 };
+
 
 #endif //_datapoint_h_

@@ -45,8 +45,10 @@ AcquireData data;
 /// structure that hold all data ready for N2k sending
 tVolvoPentaData VolvoDataForN2k;
 
-TaskHandle_t Task1;
-void Task1code( void * parameter);
+
+
+TaskHandle_t TaskMeasureOneWire;
+void taskMeasureOneWire( void * parameter);
 
 
 void setup()
@@ -104,79 +106,84 @@ void setup()
 
   data.listOneWireDevices();
 
+  
+
   xTaskCreatePinnedToCore(
-      Task1code, /* Function to implement the task */
-      "Task1", /* Name of the task */
-      10000,  /* Stack size in words */
-      NULL,  /* Task input parameter */
-      0,  /* Priority of the task */
-      &Task1,  /* Task handle. */
-      0); /* Core where the task should run */
+      taskMeasureOneWire,   /* Function to implement the task */
+      "TaskMeasureOneWire", /* Name of the task */
+      10000,                /* Stack size in words */
+      NULL,                 /* Task input parameter */
+      0,                    /* Priority of the task */
+      &TaskMeasureOneWire,  /* Task handle. */
+      0);                   /* Core where the task should run */
 
 }
 
 
 void loop()
 {
-  delay(100);
-  // Serial.print( millis());
-  // Serial.print(": loop() running on core ");
-  // Serial.println(xPortGetCoreID());
-
-  // Check N2k Messages
-  NMEA2000.ParseMessages();
-
-
-  // process all fast messages
-  if ((timeUpdatedFast + N2KUpdatePeriodFast) < millis()){
-
-    // save timestamp
-    timeUpdatedFast = millis();
-
-    digitalWrite(STATUS_LED_PIN,blink);
-    blink = !blink;
-
-    // measure all signals
+  timeUpdatedFast++;
+  if(timeUpdatedFast > 1000){
+    Serial.print(".");
+    timeUpdatedFast = 0;
+  }
     data.measureVoltage();
     data.measureSpeed();
     data.measureExhaustTemperature();
     data.checkContacts();
-    // Convert measured Data into N2K format
     data.convertDataToN2k(& VolvoDataForN2k);
-    
-    // Send all fast N2kMessages
-    SendN2kEngineParmFast(VolvoDataForN2k);
-  }
+  
+  // // Check N2k Messages
+  // NMEA2000.ParseMessages();
 
-  // process all fast messages
-  if ((timeUpdatedSlow + N2KUpdatePeriodSlow) < millis()){
 
-    // save timestamp
-    timeUpdatedSlow = millis();
-    Serial.print( millis());
-    Serial.println(": start list");
-    data.listOneWireDevices();
-    Serial.print( millis());
-    Serial.println(": list ready");
+  // // process all fast messages
+  // if ((timeUpdatedFast + N2KUpdatePeriodFast) < millis()){
 
+  //   // save timestamp
+  //   timeUpdatedFast = millis();
+
+  //   digitalWrite(STATUS_LED_PIN,blink);
+  //   blink = !blink;
+
+  //   // measure all signals
+  //   data.measureVoltage();
+  //   data.measureSpeed();
+  //   data.measureExhaustTemperature();
+  //   data.checkContacts();
+  //   // Convert measured Data into N2K format
+  //   data.convertDataToN2k(& VolvoDataForN2k);
+     
+
+  //   // Send all fast N2kMessages
+  //   SendN2kEngineParmFast(VolvoDataForN2k);
+  // }
+
+  // // process all fast messages
+  // if ((timeUpdatedSlow + N2KUpdatePeriodSlow) < millis()){
+
+  //   // save timestamp
+  //   timeUpdatedSlow = millis();
+  //   // Serial.print( millis());
+  //   // Serial.println(": start list");
+  //   // Serial.print( millis());
+  //   // Serial.println(": list ready");
     
-    // Convert measured Data into N2K format
-    data.convertDataToN2k(& VolvoDataForN2k);
+  //   // data.listOneWireDevices();
     
-    // Send all Slow N2kMessages
-    SendN2kEngineParmSlow(VolvoDataForN2k);
-  }
+  //   // Convert measured Data into N2K format
+  //   data.convertDataToN2k(& VolvoDataForN2k);
+    
+  //   // Send all Slow N2kMessages
+  //   SendN2kEngineParmSlow(VolvoDataForN2k);
+  // }
 }
   
-void Task1code( void * parameter) {
+void taskMeasureOneWire( void * parameter) {
   while(1) {
-    Serial.print( millis());
-    Serial.print(": task1() running on core ");
-    Serial.println(xPortGetCoreID());
     
     data.measureOnewire();
-    Serial.print( millis());
-    Serial.println(": Task1 Measure ready");
+
 
   }
 }

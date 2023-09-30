@@ -14,86 +14,175 @@
 
 #include <datapoint.h>
 
+// *****************************************************************************
+// Constructor
+// *****************************************************************************
 tDataPoint::tDataPoint(tSensorTyp senType, String name, String unit)
 {
   uint8_t i;
 
+  // initialize Values
   this->sensorTyp = senType;
   this->signalName = name;
   this->signalUnit = unit;
 
+  // create a mutex object to protect data for synchronized handling
+  this->xMutexDataLock = xSemaphoreCreateMutex(); 
+
+  // initialize history
   for (i = 0; i < MAX_HISTORY_BUFFER_SIZE; i++)
   {
     this->value_history[i] = 0;
   }
 }
 
-void tDataPoint::setName(String name)
-{
-  if (name != "")
-  {
-    this->signalName = name;
-  }
-  else
-  {
-    this->signalName = "na";
-  }
-}
-void tDataPoint::setUnit(String unit)
-{
-  if (unit != "")
-  {
-    this->signalUnit = unit;
-  }
-  else
-  {
-    this->signalUnit = "-";
-  }
-}
-
+// *****************************************************************************
+// Get the Name of this Datapoint
+// *****************************************************************************
 String tDataPoint::getName()
 {
   return this->signalName;
 }
 
+// *****************************************************************************
+// Get the Unit of this Datapoint
+// *****************************************************************************
 String tDataPoint::getUnit()
 {
   return this->signalUnit;
 }
 
+// *****************************************************************************
+// Update the value of the Datapoint
+// *****************************************************************************
 bool tDataPoint::updateValue(double new_value, uint32_t new_timestamp)
 {
   uint8_t k;
   double mean = 0;
   double tmp = 0;
 
-  // Move History to next point
-  for (k = (MAX_HISTORY_BUFFER_SIZE - 1); k > 0; k--)
+  // Check if the Semaphore used for Dataprotection is initialzed
+  if (this->xMutexDataLock != NULL)
   {
-    this->value_history[k] = this->value_history[k - 1];
-  }
-
-  // save the value and timestamp
-  this->value = new_value;
-  this->value_history[0] = new_value;
-  this->timestamp = new_timestamp;
-
-  // don't calculate mean for boolean values
-  if (this->sensorTyp != senType_GPIO)
-  {
-    // Calculate mean value
-    for (k = 0; k < this->mean_cnt; k++)
+    // See if we can obtain the semaphore. If the semaphore is not
+    // available wait 10ms to see if it becomes free.
+    if (xSemaphoreTake(this->xMutexDataLock, (TickType_t)1) == pdTRUE)
     {
-      mean = mean + this->value_history[k];
+      // We were able to obtain the semaphore and can now use 
+      // the protected data 
+
+      // Move History to next point
+      for (k = (MAX_HISTORY_BUFFER_SIZE - 1); k > 0; k--)
+      {
+        this->value_history[k] = this->value_history[k - 1];
+      }
+
+      // save the value and timestamp
+      this->value = new_value;
+      this->value_history[0] = new_value;
+      this->timestamp = new_timestamp;
+
+      // don't calculate mean for boolean values
+      if (this->sensorTyp != senType_GPIO)
+      {
+        // Calculate mean value
+        for (k = 0; k < this->mean_cnt; k++)
+        {
+          mean = mean + this->value_history[k];
+        }
+        this->value_mean = mean / this->mean_cnt;
+      }
+      else
+      {
+        this->value_mean = new_value;
+      }
+      // We have finished accessing the shared resource.  Release the
+      // semaphore. 
+      xSemaphoreGive(this->xMutexDataLock);
+
     }
-    this->value_mean = mean / this->mean_cnt;
-  }else{
-    this->value_mean = new_value;
+    else
+    {
+      /* We could not obtain the semaphore and can therefore not access
+      the shared resource safely. */
+      Serial.print(millis());
+      Serial.println("No Semaphore obtained. Data Resource has been blocked for to long, no update possible");
+    }
   }
 
   return true;
 }
 
+// *****************************************************************************
+// Get the Value of the datapoint object
+// *****************************************************************************
+double tDataPoint::getValue(){
+
+  double tmpValue = 0;
+
+  // Check if the Semaphore used for Data protection is initialzed
+  if (this->xMutexDataLock != NULL)
+  {
+    // See if we can obtain the semaphore. If the semaphore is not
+    // available wait 10ms to see if it becomes free.
+    if (xSemaphoreTake(this->xMutexDataLock, (TickType_t)1) == pdTRUE)
+    {
+      tmpValue = this->value;
+      
+      // We have finished accessing the shared resource.  Release the
+      // semaphore. 
+      xSemaphoreGive(this->xMutexDataLock);
+    }
+    else
+    {
+      /* We could not obtain the semaphore and can therefore not access
+      the shared resource safely. */
+      Serial.print(millis());
+      Serial.println("No Semaphore obtained. Data Resource has been blocked for to long, no Read possible");
+
+    }
+  }
+
+  return tmpValue;
+
+}
+
+// *****************************************************************************
+// Get the Value Mean of the Datapoint object
+// *****************************************************************************
+double tDataPoint::getValueMean(){
+
+  double tmpValue = 0;
+
+  // Check if the Semaphore used for Data protection is initialzed
+  if (this->xMutexDataLock != NULL)
+  {
+    // See if we can obtain the semaphore. If the semaphore is not
+    // available wait 10ms to see if it becomes free.
+    if (xSemaphoreTake(this->xMutexDataLock, (TickType_t)1) == pdTRUE)
+    {
+      tmpValue = this->value_mean;
+      
+      // We have finished accessing the shared resource.  Release the
+      // semaphore. 
+      xSemaphoreGive(this->xMutexDataLock);
+    }
+    else
+    {
+      /* We could not obtain the semaphore and can therefore not access
+      the shared resource safely. */
+      Serial.print(millis());
+      Serial.println("No Semaphore obtained. Data Resource has been blocked for to long, no ReadMean possible");
+    }
+  }
+
+  return tmpValue;
+
+}
+
+// *****************************************************************************
+// Printing all the Infos of a Datapoint
+// *****************************************************************************
 bool tDataPoint::printDatapointFull()
 {
 
@@ -141,6 +230,9 @@ bool tDataPoint::printDatapointFull()
   return true;
 }
 
+// *****************************************************************************
+// Printing Short Infos of a Datapoint
+// *****************************************************************************
 bool tDataPoint::printDatapointShort()
 {
 
