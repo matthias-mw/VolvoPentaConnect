@@ -234,10 +234,10 @@ void AcquireData::measureOnewire()
   double temp = oneWireSensors.getTempC(oWtCoolWall);
   this->_StoreData(this->tCoolWall, temp, millis());
 
-  // Measure Engine Room Sensor
-  oneWireSensors.requestTemperaturesByAddress(oWtEngRoom);
-  temp = oneWireSensors.getTempC(oWtEngRoom);
-  this->_StoreData(this->tEngRoom, temp, millis());
+  // // Measure Engine Room Sensor
+  // oneWireSensors.requestTemperaturesByAddress(oWtEngRoom);
+  // temp = oneWireSensors.getTempC(oWtEngRoom);
+  // this->_StoreData(this->tEngRoom, temp, millis());
 
   // Measure Gearbox Sensor
   oneWireSensors.requestTemperaturesByAddress(oWtGearbox);
