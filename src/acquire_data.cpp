@@ -54,9 +54,9 @@ void AcquireData::showDataOnTerminal()
   // while (i-- > 0)
   //   Serial.println();
 
-  // tCoolWall.printDatapointFull();
+  // tSeaOutletWall.printDatapointFull();
   // tGearbox.printDatapointFull();
-  // tEngRoom.printDatapointFull();
+  // tAlternator.printDatapointFull();
   // uBat.printDatapointFull();
   // nMot.printDatapointFull();
   // nShaft.printDatapointFull();
@@ -71,9 +71,9 @@ void AcquireData::showDataOnTerminal()
   // flgContact2.printDatapointFull();
   // flgContact3.printDatapointFull();
 
-  tCoolWall.printDatapointShort();
+  tSeaOutletWall.printDatapointShort();
   tGearbox.printDatapointShort();
-  tEngRoom.printDatapointShort();
+  tAlternator.printDatapointShort();
   tExhaust.printDatapointShort();
   Serial.println();
 
@@ -227,15 +227,15 @@ void AcquireData::listOneWireDevices()
 void AcquireData::measureOnewire()
 {
 
-  // Measure Wall Sensor Cooling
-  oneWireSensors.requestTemperaturesByAddress(oWtCoolWall);
-  double temp = oneWireSensors.getTempC(oWtCoolWall);
-  this->_StoreData(this->tCoolWall, temp, millis());
+  // Measure Wall Sensor Seawater outlet
+  oneWireSensors.requestTemperaturesByAddress(oWtSeaOutletWall);
+  double temp = oneWireSensors.getTempC(oWtSeaOutletWall);
+  this->_StoreData(this->tSeaOutletWall, temp, millis());
 
-  // // Measure Engine Room Sensor
-  // oneWireSensors.requestTemperaturesByAddress(oWtEngRoom);
-  // temp = oneWireSensors.getTempC(oWtEngRoom);
-  // this->_StoreData(this->tEngRoom, temp, millis());
+  // Measure Balmar Alternator Sensor
+  oneWireSensors.requestTemperaturesByAddress(oWtAlternator);
+  temp = oneWireSensors.getTempC(oWtAlternator);
+  this->_StoreData(this->tAlternator, temp, millis());
 
   // Measure Gearbox Sensor
   oneWireSensors.requestTemperaturesByAddress(oWtGearbox);
@@ -381,9 +381,9 @@ void AcquireData::convertDataToN2k(tVolvoPentaData *data)
 
       data->engine_coolant_flow = 0;
       data->engine_coolant_temperature = 345;
-      data->engine_coolant_temperature_wall = this->tCoolWall.getValue() + 273.15;
+      data->engine_coolant_temperature_wall = this->tSeaOutletWall.getValue() + 273.15;
       ;
-      data->engine_room_temperature = this->tEngRoom.getValue() + 273.15;
+      data->engine_room_temperature = this->tAlternator.getValue() + 273.15;
       ;
       data->gearbox_temperature = this->tGearbox.getValue() + 273.15;
       data->exhaust_temperature = this->tExhaust.getValue() + 273.15;

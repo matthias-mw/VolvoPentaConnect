@@ -23,6 +23,15 @@
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//      -----  DEBUG DEFINES ----
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+/// activate debug of free stacksize of the tasks
+//#define DEBUG_TASK_STACK_SIZE
+
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //      -----  generell Definitions ----
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -66,6 +75,12 @@
 // --------> OneWire <---------------------
 /// GPIO where the DS18B20 is connected to
 #define ONEWIRE_PIN 15
+/// OneWire device address of the seawater outlet temperature sensor
+#define ONEWIRE_ADR_SEAOUTLETWALL { 0x28, 0x75, 0x4C, 0x18, 0x0E, 0x00, 0x00, 0x75}
+/// OneWire device address of the alternator temperature sensor
+#define ONEWIRE_ADR_ALTERNATOR {0x28, 0x67, 0x52, 0x17, 0x0E, 0x00, 0x00, 0x04}
+/// OneWire device address of the gearbox temperature sensor
+#define ONEWIRE_ADR_GEARBOX {0x28, 0x67, 0x52, 0x17, 0x0E, 0x00, 0x00, 0x04}
 
 // --------> Analog PINs <-----------------
 /// Analog Channel for Battery Voltage

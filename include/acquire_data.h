@@ -206,17 +206,17 @@ private:
   MCP3204 mcp3204 = MCP3204(SPI_MISO_PIN, SPI_MOSI_PIN, SPI_CLK_PIN);  
 
   /// OneWire Sensor Address for cooling system
-  DeviceAddress oWtCoolWall = {0x28, 0xE8, 0xF7, 0xAA, 0x03, 0x00, 0x00, 0x37};
+  DeviceAddress oWtSeaOutletWall = ONEWIRE_ADR_SEAOUTLETWALL;
   /// OneWire Sensor Address for engine room system
-  DeviceAddress oWtEngRoom = {0x28, 0xBF, 0xCA, 0xAA, 0x03, 0x00, 0x00, 0xF4};
+  DeviceAddress oWtAlternator = ONEWIRE_ADR_ALTERNATOR;
   /// OneWire Sensor Address for gearbox system
-  DeviceAddress oWtGearbox = {0x28, 0xBF, 0xCA, 0xAA, 0x03, 0x00, 0x00, 0xF4};
+  DeviceAddress oWtGearbox = ONEWIRE_ADR_GEARBOX;
 
   /** Temperature of the cooling system measure via a ds1820 sensor mounted 
       at the wall of a cooling pipe*/
-  tDataPoint tCoolWall = tDataPoint(senType_ds1820, "tCoolWall", "GrdC");
-  /** Temperature of the engine room measured via a ds1820 sensor*/
-  tDataPoint tEngRoom = tDataPoint(senType_ds1820, "tEngRoom", "GrdC");
+  tDataPoint tSeaOutletWall = tDataPoint(senType_ds1820, "tSeaOutletWall", "GrdC");
+  /** Temperature of the balmar alternator measured via a ds1820 sensor*/
+  tDataPoint tAlternator = tDataPoint(senType_ds1820, "tAlternator", "GrdC");
   /** Temperature of the gearbox measured via a ds1820 sensor mounted 
       at the wall of the transmission */
   tDataPoint tGearbox = tDataPoint(senType_ds1820, "tGearbox", "GrdC");
