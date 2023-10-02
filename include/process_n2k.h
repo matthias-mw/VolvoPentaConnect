@@ -22,6 +22,8 @@
 
 // Publish the extern NMEA2000 Object from <NMEA2000_CAN.h>
 extern tNMEA2000 &NMEA2000;
+// Publish Mutex for protecting data integrity of \ref VolvoDataForN2k
+extern SemaphoreHandle_t xMutexVolvoN2kData;
 
 // List here messages your device will transmit.
 const unsigned long TransmitMessages[] PROGMEM={127493L,127489L,127488L,130316L,0};
@@ -85,7 +87,7 @@ void setupN2K();
  *
  * \param data contains all measured engine data
  */
-void SendN2kEngineParmFast(VolvoPentaData data);
+void SendN2kEngineParmFast(VolvoPentaData *data);
 
 /************************************************************************//**
  * \brief Sends out all the messages in a slow timeframe
@@ -95,6 +97,6 @@ void SendN2kEngineParmFast(VolvoPentaData data);
  *
  * \param data contains all measured engine data
  */
-void SendN2kEngineParmSlow(VolvoPentaData data);
+void SendN2kEngineParmSlow(VolvoPentaData *data);
 
 #endif //_process_n2k_

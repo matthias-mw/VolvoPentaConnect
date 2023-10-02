@@ -65,7 +65,7 @@
 
 // --------> OneWire <---------------------
 /// GPIO where the DS18B20 is connected to
-#define ONEWIRE_PIN 23
+#define ONEWIRE_PIN 15
 
 // --------> Analog PINs <-----------------
 /// Analog Channel for Battery Voltage
