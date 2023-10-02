@@ -44,12 +44,40 @@ AcquireData data;
 
 /// structure that hold all data ready for N2k sending
 tVolvoPentaData VolvoDataForN2k;
+/// Mutex for protecting data integrity of \ref VolvoDataForN2k
+SemaphoreHandle_t xMutexVolvoN2kData = NULL;
 
+/************************************************************************//**
+ * \brief Task Handle for task measuring fast signals
+ */
 TaskHandle_t TaskMeasureFastHandle;
+/************************************************************************//**
+ * \brief Task Handle for task measuring oneWire signals
+ */
 TaskHandle_t TaskMeasureOneWireHandle;
+
+/************************************************************************//**
+ * \brief Task for measuring oneWire signals
+ * 
+ * This tasks measures all oneWire signals, converts them to N2K format 
+ * and sends out corresponding N2K messages \ref SendN2kEngineParmSlow.
+ *
+ * \param parameter {type} 
+ */
 void taskMeasureOneWire(void *parameter);
+
+/************************************************************************//**
+ * \brief Task for measuring fast signals
+ * 
+ * This tasks measures all fast signals, converts them to N2K format 
+ * and sends out corresponding N2K messages \ref SendN2kEngineParmFast.
+ *
+ * \param parameter {type} 
+ */
 void taskMeasureFast(void *pvParameters);
 
+//***************************************************************
+// Setup Task
 void setup()
 {
 
@@ -103,13 +131,17 @@ void setup()
   // Setup all Measurement Channels
   data.setUpMeasurementChannels();
 
+  // List all connected oneWire Devices
   data.listOneWireDevices();
+
+  // Create mutex before starting tasks
+  xMutexVolvoN2kData = xSemaphoreCreateMutex();
 
   // Create TaskMeasureOnewire with priority 0 at core 0
   xTaskCreatePinnedToCore(
       taskMeasureOneWire,   /* Function to implement the task */
       "TaskMeasureOneWire", /* Name of the task */
-      1500,                /* Stack size in words */
+      1300,                /* Stack size in words */
       NULL,                 /* Task input parameter */
       0,                    /* Priority of the task */
       &TaskMeasureOneWireHandle,  /* Task handle. */
@@ -119,30 +151,25 @@ void setup()
   xTaskCreatePinnedToCore(
       taskMeasureFast, 
       "TaskMeasureFast", 
-      1500, 
+      1300, 
       NULL, 
       1, 
       &TaskMeasureFastHandle, 
       0);
-
-
 }
 
+//***************************************************************
+// Standard IdleTask
 void loop()
 {
-  timeUpdatedFast++;
-
-  // if(timeUpdatedFast > 1000){
-  //   Serial.print(".");
-  //   timeUpdatedFast = 0;
-  // }
-
-  // // Check N2k Messages
+  
+  // Check N2k Messages
   NMEA2000.ParseMessages();
-
 
 }
 
+//***************************************************************
+// Task to measure and send OneWire Data on a regular basis
 void taskMeasureOneWire(void *parameter)
 {
   UBaseType_t stackHighWaterMark;
@@ -159,14 +186,15 @@ void taskMeasureOneWire(void *parameter)
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);
     // send data
-    SendN2kEngineParmSlow(VolvoDataForN2k);
+    SendN2kEngineParmSlow(&VolvoDataForN2k);
 
     // non blocking delay for the fast measuring
     vTaskDelay(pdMS_TO_TICKS(300)); 
   }
 }
 
-// Task2 function
+//***************************************************************
+// Task to measure and send fast signals on a regular basis
 void taskMeasureFast(void *pvParameters)
 {
   UBaseType_t stackHighWaterMark;
@@ -186,7 +214,7 @@ void taskMeasureFast(void *pvParameters)
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);
     // send data to N2K
-    SendN2kEngineParmFast(VolvoDataForN2k);
+    SendN2kEngineParmFast(&VolvoDataForN2k);
     
     // non blocking delay for the fast measuring
     vTaskDelay(pdMS_TO_TICKS(249)); 

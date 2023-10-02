@@ -30,7 +30,8 @@
 extern OneWire oneWire;
 /** Object for our oneWire Dallas Temperature sensors */
 extern DallasTemperature oneWireSensors;
-
+/// Mutex for protecting data integrity of \ref VolvoDataForN2k
+extern SemaphoreHandle_t xMutexVolvoN2kData;
 
 // ------------------------------------------------------------------
 // variables for engine speed calculation

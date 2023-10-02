@@ -94,8 +94,6 @@ void AcquireData::showDataOnTerminal()
   flgContact2.printDatapointShort();
   flgContact3.printDatapointShort();
   Serial.println();
-
-
 }
 //****************************************
 // Stores the data into a Datapoint
@@ -371,53 +369,67 @@ void AcquireData::measureSpeed()
 void AcquireData::convertDataToN2k(tVolvoPentaData *data)
 {
 
-  data->engine_hours = 1234;
+  // Check if the Semaphore used for Dataprotection is initialzed
+  if (xMutexVolvoN2kData != NULL)
+  {
+    // See if we can obtain the semaphore. If the semaphore is not
+    // available wait 5ms to see if it becomes free.
+    if (xSemaphoreTake(xMutexVolvoN2kData, (TickType_t)5) == pdTRUE)
+    {
 
-  data->engine_coolant_flow = 0;
-  data->engine_coolant_temperature = 345;
-  data->engine_coolant_temperature_wall = this->tCoolWall.getValue() + 273.15;;
-  data->engine_room_temperature = this->tEngRoom.getValue() + 273.15;;
-  data->gearbox_temperature = this->tGearbox.getValue() + 273.15;
-  data->exhaust_temperature = this->tExhaust.getValue() + 273.15;
+      data->engine_hours = 1234;
 
-  data->engine_oel_pressure = 23456;
+      data->engine_coolant_flow = 0;
+      data->engine_coolant_temperature = 345;
+      data->engine_coolant_temperature_wall = this->tCoolWall.getValue() + 273.15;
+      ;
+      data->engine_room_temperature = this->tEngRoom.getValue() + 273.15;
+      ;
+      data->gearbox_temperature = this->tGearbox.getValue() + 273.15;
+      data->exhaust_temperature = this->tExhaust.getValue() + 273.15;
 
-  data->engine_speed = this->nMot.getValue();
-  data->shaft_speed = this->nShaft.getValue();
-  data->alternator1_speed = this->nAlternator1.getValue();
-  data->alternator2_speed = this->nAlternator2.getValue();
+      data->engine_oel_pressure = 23456;
 
-  data->batterie_voltage = this->uBat.getValue();
+      data->engine_speed = this->nMot.getValue();
+      data->shaft_speed = this->nShaft.getValue();
+      data->alternator1_speed = this->nAlternator1.getValue();
+      data->alternator2_speed = this->nAlternator2.getValue();
 
-  data->flg_coolant_temperature_ok = false;
-  data->flg_engine_oel_pressure_ok = false;
+      data->batterie_voltage = this->uBat.getValue();
+
+      data->flg_coolant_temperature_ok = false;
+      data->flg_engine_oel_pressure_ok = false;
+
 
 // Simulationsdata
 #ifdef USE_SIM_DATA_N2K
 
-  data->engine_hours = 1234;
+      data->engine_hours = 1234;
 
-  data->engine_coolant_flow = 0;
-  data->engine_coolant_temperature = 345;
-  data->engine_coolant_temperature_wall = 456;
-  data->engine_room_temperature = 333;
-  data->gearbox_temperature = 543;
-  data->exhaust_temperature = 678;
+      data->engine_coolant_flow = 0;
+      data->engine_coolant_temperature = 345;
+      data->engine_coolant_temperature_wall = 456;
+      data->engine_room_temperature = 333;
+      data->gearbox_temperature = 543;
+      data->exhaust_temperature = 678;
 
-  data->engine_oel_pressure = 23456;
+      data->engine_oel_pressure = 23456;
 
-  data->engine_speed = 1234;
-  data->shaft_speed = 5676;
-  data->alternator1_speed = 2345;
-  data->alternator2_speed = 3456;
+      data->engine_speed = 1234;
+      data->shaft_speed = 5676;
+      data->alternator1_speed = 2345;
+      data->alternator2_speed = 3456;
 
-  data->batterie_voltage = 12.99;
+      data->batterie_voltage = 12.99;
 
-  data->flg_coolant_temperature_ok = false;
-  data->flg_engine_oel_pressure_ok = false;
+      data->flg_coolant_temperature_ok = false;
+      data->flg_engine_oel_pressure_ok = false;
 
 #endif
-
+    // unlock the resource again
+    xSemaphoreGive(xMutexVolvoN2kData);
+    }
+  }
 }
 
 //==============================================================================
