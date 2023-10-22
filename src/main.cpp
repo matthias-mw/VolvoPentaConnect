@@ -27,6 +27,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Wire.h>
+#include "LiquidCrystal_PCF8574.h"
 
 #include <lookUpTable.h>
 
@@ -36,6 +37,12 @@
 static unsigned long timeUpdatedFast = millis();
 static unsigned long timeUpdatedSlow = millis();
 static bool blink = false;
+
+TwoWire Wire_1 = TwoWire(0x3f);
+
+LiquidCrystal_PCF8574 lcd(0x3F);  // set the LCD address to 0x27 
+char lcdDisplay[4][20];           // 4 lines of 20 character buffer
+
 
 LookUpTable1D tab(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
 
@@ -58,6 +65,8 @@ TaskHandle_t TaskMeasureFastHandle;
  */
 TaskHandle_t TaskMeasureOneWireHandle;
 
+TaskHandle_t TaskUpdateLCDHandle;
+
 /************************************************************************
  * \brief Task for measuring oneWire signals
  *
@@ -77,6 +86,9 @@ void taskMeasureOneWire(void *parameter);
  * \param parameter {type}
  */
 void taskMeasureFast(void *pvParameters);
+
+
+void taskUpdateLCD(void *pvParameters);
 
 //***************************************************************
 // Setup Task
@@ -122,7 +134,7 @@ void setup()
   pinMode(ESP32_CAN_RX_PIN, INPUT);
 
   // Start I2C
-  Wire.begin();
+  //Wire.begin();
 
   // Start the DS18B20 sensor
   oneWireSensors.begin();
@@ -136,29 +148,47 @@ void setup()
   // List all connected oneWire Devices
   data.listOneWireDevices();
 
+  // Setup LCD Display
+  Wire_1.begin(21, 22);   // custom i2c port on ESP
+  Wire_1.setClock(80000);   // set 80kHz (PCF8574 max speed 100kHz)
+  
+  lcd.begin(20,4, Wire_1);
+  lcd.setBacklight(255);    // TODO: Check Function
+
+
   // Create mutex before starting tasks
   xMutexVolvoN2kData = xSemaphoreCreateMutex();
   xMutexStdOut = xSemaphoreCreateMutex();
 
-  // Create TaskMeasureOnewire with priority 0 at core 0
+  // Create TaskMeasureOnewire with priority 1 at core 0
   xTaskCreatePinnedToCore(
       taskMeasureOneWire,        /* Function to implement the task */
       "TaskMeasureOneWire",      /* Name of the task */
-      1300,                      /* Stack size in words */
+      1700,                      /* Stack size in words */
       NULL,                      /* Task input parameter */
-      0,                         /* Priority of the task */
+      1,                         /* Priority of the task */
       &TaskMeasureOneWireHandle, /* Task handle. */
       0);                        /* Core where the task should run */
 
-  // Create TaskMeasureFast with priority 1 at core 0
+  // Create TaskMeasureFast with priority 3 at core 0
   xTaskCreatePinnedToCore(
       taskMeasureFast,
       "TaskMeasureFast",
-      1300,
+      1700,
       NULL,
-      1,
+      3,
       &TaskMeasureFastHandle,
       0);
+  
+  // Create TaskMeasureFast with priority 1 at core 0
+  xTaskCreatePinnedToCore(
+      taskUpdateLCD,        /* Function to implement the task */
+      "TaskUpdateLCD",           /* Name of the task */
+      1700,                      /* Stack size in words */
+      NULL,                      /* Task input parameter */
+      0,                         /* Priority of the task */
+      &TaskUpdateLCDHandle,      /* Task handle. */
+      0); 
 }
 
 //***************************************************************
@@ -173,11 +203,11 @@ void loop()
   {
     timeUpdatedFast = millis();
 
-    if (xSemaphoreTake(xMutexStdOut, (TickType_t)50) == pdTRUE)
-    {
-      data.showDataOnTerminal();
-      xSemaphoreGive(xMutexStdOut);
-    }
+    // if (xSemaphoreTake(xMutexStdOut, (TickType_t)50) == pdTRUE)
+    // {
+    //   data.showDataOnTerminal();
+    //   xSemaphoreGive(xMutexStdOut);
+    // }
   }
 }
 
@@ -251,4 +281,68 @@ void taskMeasureFast(void *pvParameters)
     // non blocking delay for the fast measuring
     vTaskDelay(pdMS_TO_TICKS(249));
   }
+}
+
+//***************************************************************
+// Task to Update the LCD Display
+void taskUpdateLCD(void *pvParameters)
+{
+
+  while (1)
+  {
+// just to debug the stacksize
+#ifdef DEBUG_TASK_STACK_SIZE
+    if (xSemaphoreTake(xMutexStdOut, (TickType_t)50) == pdTRUE)
+    {
+      UBaseType_t stackHighWaterMark;
+      stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+      Serial.print(millis());
+      Serial.print(" Update LCD Task is started -> free stack: ");
+      Serial.println(stackHighWaterMark);
+
+      xSemaphoreGive(xMutexStdOut);
+    }
+
+#endif // DEBUG_TASK_STACK_SIZE
+
+  char lcdbuf[21];
+  const char someLine[] = "Hallo56789ABCDEF1234";  // 20 chars
+  
+  // fill the screen buffer
+  strncpy(&lcdDisplay[0][0], someLine , 20);
+  strncpy(&lcdDisplay[1][0], someLine , 20);
+  strncpy(&lcdDisplay[2][0], someLine , 20);
+  strncpy(&lcdDisplay[3][0], someLine , 20);
+  
+  
+  // prepare screen
+  lcd.home();
+  lcd.clear();
+  lcd.setCursor(0, 0);   
+  // copy the buffer to the screen
+  // 1st line continues at 3d line
+  // 2nd line continues at 4th line
+  strncpy(lcdbuf, &lcdDisplay[0][0], 20); lcdbuf[20] = '\0'; // create a termineted text line 
+
+
+  sprintf(lcdbuf, "n1 = %04.0d U/min \0", 422);
+
+  lcd.print(lcdbuf);           // print the line to screen
+  lcd.setCursor(0, 2);   
+  lcd.print(lcdbuf);           // print the line to screen
+  lcd.setCursor(0, 1);   
+  strncpy(lcdbuf, &lcdDisplay[0][0], 20); lcdbuf[20] = '\0'; // create a termineted text line 
+  lcd.print(lcdbuf);           // print the line to screen
+
+  // strncpy(lcdbuf, &lcdDisplay[2][0], 20); lcdbuf[20] = '\0';
+  // lcd.print(lcdbuf); 
+  // strncpy(lcdbuf, &lcdDisplay[1][0], 20); lcdbuf[20] = '\0';
+  // lcd.print(lcdbuf); 
+  // strncpy(lcdbuf, &lcdDisplay[3][0], 20); lcdbuf[20] = '\0';
+  // lcd.print(lcdbuf);
+
+  // non blocking delay for the fast measuring
+  vTaskDelay(pdMS_TO_TICKS(500));
+  }
+
 }
