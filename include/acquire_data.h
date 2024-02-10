@@ -33,6 +33,10 @@ extern DallasTemperature oneWireSensors;
 /// Mutex for protecting data integrity of \ref VolvoDataForN2k
 extern SemaphoreHandle_t xMutexVolvoN2kData;
 
+/// Buffer for Crystal  LCD Display 4x20 (4 lines a 20 char)
+extern char lcdDisplay[4][20];           
+
+
 // ------------------------------------------------------------------
 // variables for engine speed calculation
 // ------------------------------------------------------------------
@@ -113,6 +117,9 @@ public:
    *
    */
   void showDataOnTerminal();
+
+
+  void updateLCDPage(uint8_t page);
   
   /************************************************************************//**
    * \brief List all OneWire devices

@@ -95,6 +95,49 @@ void AcquireData::showDataOnTerminal()
   flgContact3.printDatapointShort();
   Serial.println();
 }
+
+void AcquireData::updateLCDPage(uint8_t page)
+{
+
+  char buffer[21];
+  int length;
+
+  switch (page)
+  {
+  case 1:
+    // fill the screen buffer
+    length = sprintf(buffer, "Seawater     %3.1f C", tSeaOutletWall.getValue());
+    strncpy(&lcdDisplay[0][0], buffer, 20);
+
+    length = sprintf(buffer, "Engine       %3.1f C", tSeaOutletWall.getValue());
+    strncpy(&lcdDisplay[1][0], buffer, 20);
+
+    length = sprintf(buffer, "Alternator   %3.1f C", tAlternator.getValue());
+    strncpy(&lcdDisplay[2][0], buffer, 20);
+
+    length = sprintf(buffer, "Exhaust      %3.1f C", tExhaust.getValue());
+    strncpy(&lcdDisplay[3][0], buffer, 20);
+
+    break;
+
+  default:
+    // fill the screen buffer
+    length = sprintf(buffer, "n_Eng   %4d U/min", (uint16_t)nMot.getValue());
+    strncpy(&lcdDisplay[0][0], buffer, 20);
+
+    length = sprintf(buffer, "n_Gear  %4d U/min", (uint16_t)nShaft.getValue());
+    strncpy(&lcdDisplay[1][0], buffer, 20);
+
+    length = sprintf(buffer, "n_Alt1  %4d U/min", (uint16_t)nAlternator1.getValue());
+    strncpy(&lcdDisplay[2][0], buffer, 20);
+
+    length = sprintf(buffer, "n_Alt2  %4d U/min", (uint16_t)nAlternator2.getValue());
+    strncpy(&lcdDisplay[3][0], buffer, 20);
+
+    break;
+  }
+}
+
 //****************************************
 // Stores the data into a Datapoint
 void AcquireData::_StoreData(tDataPoint &db, double value, uint32_t timestamp)
@@ -400,7 +443,6 @@ void AcquireData::convertDataToN2k(tVolvoPentaData *data)
       data->flg_coolant_temperature_ok = false;
       data->flg_engine_oel_pressure_ok = false;
 
-
 // Simulationsdata
 #ifdef USE_SIM_DATA_N2K
 
@@ -426,8 +468,8 @@ void AcquireData::convertDataToN2k(tVolvoPentaData *data)
       data->flg_engine_oel_pressure_ok = false;
 
 #endif
-    // unlock the resource again
-    xSemaphoreGive(xMutexVolvoN2kData);
+      // unlock the resource again
+      xSemaphoreGive(xMutexVolvoN2kData);
     }
   }
 }

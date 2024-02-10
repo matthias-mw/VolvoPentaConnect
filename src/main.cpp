@@ -38,10 +38,14 @@ static unsigned long timeUpdatedFast = millis();
 static unsigned long timeUpdatedSlow = millis();
 static bool blink = false;
 
+static uint8_t lcdPage = 0;
+
 TwoWire Wire_1 = TwoWire(0x3f);
 
 LiquidCrystal_PCF8574 lcd(0x3F);  // set the LCD address to 0x27 
-char lcdDisplay[4][20];           // 4 lines of 20 character buffer
+
+/// Buffer for Crystal  LCD Display 4x20 (4 lines a 20 char)
+char lcdDisplay[4][20];           
 
 
 LookUpTable1D tab(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
@@ -184,7 +188,7 @@ void setup()
   xTaskCreatePinnedToCore(
       taskUpdateLCD,        /* Function to implement the task */
       "TaskUpdateLCD",           /* Name of the task */
-      1700,                      /* Stack size in words */
+      3000,                      /* Stack size in words */
       NULL,                      /* Task input parameter */
       0,                         /* Priority of the task */
       &TaskUpdateLCDHandle,      /* Task handle. */
@@ -203,11 +207,11 @@ void loop()
   {
     timeUpdatedFast = millis();
 
-    // if (xSemaphoreTake(xMutexStdOut, (TickType_t)50) == pdTRUE)
-    // {
-    //   data.showDataOnTerminal();
-    //   xSemaphoreGive(xMutexStdOut);
-    // }
+    if (xSemaphoreTake(xMutexStdOut, (TickType_t)50) == pdTRUE)
+    {
+      data.showDataOnTerminal();
+      xSemaphoreGive(xMutexStdOut);
+    }
   }
 }
 
@@ -306,15 +310,10 @@ void taskUpdateLCD(void *pvParameters)
 #endif // DEBUG_TASK_STACK_SIZE
 
   char lcdbuf[21];
-  const char someLine[] = "Hallo56789ABCDEF1234";  // 20 chars
+
   
-  // fill the screen buffer
-  strncpy(&lcdDisplay[0][0], someLine , 20);
-  strncpy(&lcdDisplay[1][0], someLine , 20);
-  strncpy(&lcdDisplay[2][0], someLine , 20);
-  strncpy(&lcdDisplay[3][0], someLine , 20);
-  
-  
+  data.updateLCDPage(lcdPage);
+
   // prepare screen
   lcd.home();
   lcd.clear();
@@ -322,24 +321,29 @@ void taskUpdateLCD(void *pvParameters)
   // copy the buffer to the screen
   // 1st line continues at 3d line
   // 2nd line continues at 4th line
-  strncpy(lcdbuf, &lcdDisplay[0][0], 20); lcdbuf[20] = '\0'; // create a termineted text line 
 
 
-  sprintf(lcdbuf, "n1 = %04.0d U/min \0", 422);
-
+  strncpy(lcdbuf, &lcdDisplay[0][0], 20); lcdbuf[20] = '\0'; 
   lcd.print(lcdbuf);           // print the line to screen
-  lcd.setCursor(0, 2);   
-  lcd.print(lcdbuf);           // print the line to screen
+
+
   lcd.setCursor(0, 1);   
-  strncpy(lcdbuf, &lcdDisplay[0][0], 20); lcdbuf[20] = '\0'; // create a termineted text line 
+  strncpy(lcdbuf, &lcdDisplay[1][0], 20); lcdbuf[20] = '\0'; 
   lcd.print(lcdbuf);           // print the line to screen
+  
+  lcd.setCursor(0, 2);   
+  strncpy(lcdbuf, &lcdDisplay[2][0], 20); lcdbuf[20] = '\0'; 
+  lcd.print(lcdbuf);           // print the line to screen
+  
+  lcd.setCursor(0, 3);   
+  strncpy(lcdbuf, &lcdDisplay[3][0], 20); lcdbuf[20] = '\0'; 
+  lcd.print(lcdbuf);           // print the line to screen
+  
+  lcdPage++;
 
-  // strncpy(lcdbuf, &lcdDisplay[2][0], 20); lcdbuf[20] = '\0';
-  // lcd.print(lcdbuf); 
-  // strncpy(lcdbuf, &lcdDisplay[1][0], 20); lcdbuf[20] = '\0';
-  // lcd.print(lcdbuf); 
-  // strncpy(lcdbuf, &lcdDisplay[3][0], 20); lcdbuf[20] = '\0';
-  // lcd.print(lcdbuf);
+  if (lcdPage > 1){
+    lcdPage = 0;
+  }
 
   // non blocking delay for the fast measuring
   vTaskDelay(pdMS_TO_TICKS(500));
