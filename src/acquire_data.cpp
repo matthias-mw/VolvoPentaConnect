@@ -119,9 +119,8 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     }
 
     // fill buffer with data
-    length = sprintf(buffer, " %4d %4d %4.1f %4d", (uint16_t)tEngine.getValue(), (uint16_t)tGearbox.getValue(),tSeaOutletWall.getValue(), (uint16_t) tExhaust.getValue());
+    length = sprintf(buffer, " %4d %4d %4.1f %4d", (uint16_t)tEngine.getValue(), (uint16_t)tGearbox.getValue(), tSeaOutletWall.getValue(), (uint16_t)tExhaust.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
-
 
     break;
 
@@ -140,9 +139,8 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     }
 
     // fill buffer with data
-    length = sprintf(buffer, " %4d %4d %4.1f %4d", (uint16_t)nMot.getValue(), (uint16_t)tEngine.getValue(),pOil.getValue(), (uint16_t)tExhaust.getValue());
+    length = sprintf(buffer, " %4d %4d %4.1f %4d", (uint16_t)nMot.getValue(), (uint16_t)tEngine.getValue(), pOil.getValue(), (uint16_t)tExhaust.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
-
 
     break;
 
@@ -161,9 +159,8 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     }
 
     // fill buffer with data
-    length = sprintf(buffer, " %4d %4d %4d %4.1f", (uint16_t)nAlternator1.getValue(), (uint16_t)tAlternator.getValue(),(uint16_t)nAlternator2.getValue(), uBat.getValue());
+    length = sprintf(buffer, " %4d %4d %4d %4.1f", (uint16_t)nAlternator1.getValue(), (uint16_t)tAlternator.getValue(), (uint16_t)nAlternator2.getValue(), uBat.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
-
 
     break;
 
@@ -201,10 +198,13 @@ void AcquireData::_StoreData(tDataPoint &db, double value, uint32_t timestamp)
 // Measure Exhaust Temperature
 void AcquireData::measureExhaustTemperature()
 {
-
   double tMeasure = -200;
 
   tMeasure = thermoNiCr_Ni.readCelsius();
+// Simulationsdata verwenden
+#ifdef USE_SIM_DATA
+  tMeasure = 521;
+#endif  
   this->_StoreData(this->tExhaust, tMeasure, millis());
 }
 
@@ -234,27 +234,47 @@ void AcquireData::measureVoltage()
   voltage = analogRead(UBAT_ADC_PIN);
   voltage = ADC_CH36_LUT[(int)voltage];
   voltage = voltage / 4096 * ACH_CH36_FACTOR + ACH_CH36_OFFSET;
+// Simulationsdata verwenden
+#ifdef USE_SIM_DATA
+  voltage = 12.8;
+#endif  
   this->_StoreData(this->uBat, voltage, millis());
 
   // measure MCP3204 Channel 1
   voltageMax = mcp3204.maxValue();
   voltage = (double)mcp3204.analogRead(0);
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH1_FAC;
+// Simulationsdata verwenden
+#ifdef USE_SIM_DATA
+  voltage = 1.8;
+#endif   
   this->_StoreData(this->uMcp3204Ch1, voltage, millis());
 
   // measure MCP3204 Channel 2
   voltage = (double)mcp3204.analogRead(1);
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH2_FAC;
+// Simulationsdata verwenden
+#ifdef USE_SIM_DATA
+  voltage = 2.1;
+#endif 
   this->_StoreData(this->uMcp3204Ch2, voltage, millis());
 
   // measure MCP3204 Channel 3
   voltage = (double)mcp3204.analogRead(2);
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH3_FAC;
+// Simulationsdata verwenden
+#ifdef USE_SIM_DATA
+  voltage = 8.4;
+#endif 
   this->_StoreData(this->uMcp3204Ch3, voltage, millis());
 
   // measure MCP3204 Channel 4
   voltage = (double)mcp3204.analogRead(3);
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH4_FAC;
+// Simulationsdata verwenden
+#ifdef USE_SIM_DATA
+  voltage = 4.3;
+#endif 
   this->_StoreData(this->uMcp3204Ch4, voltage, millis());
 
   // Serial.print(millis());
@@ -324,16 +344,28 @@ void AcquireData::measureOnewire()
   // Measure Wall Sensor Seawater outlet
   oneWireSensors.requestTemperaturesByAddress(oWtSeaOutletWall);
   double temp = oneWireSensors.getTempC(oWtSeaOutletWall);
+// Simulationsdata verwenden
+#ifdef USE_SIM_DATA
+  temp = 45.7;
+#endif
   this->_StoreData(this->tSeaOutletWall, temp, millis());
 
   // Measure Balmar Alternator Sensor
   oneWireSensors.requestTemperaturesByAddress(oWtAlternator);
   temp = oneWireSensors.getTempC(oWtAlternator);
+// Simulationsdata verwenden
+#ifdef USE_SIM_DATA
+  temp = 75.1;
+#endif
   this->_StoreData(this->tAlternator, temp, millis());
 
   // Measure Gearbox Sensor
   oneWireSensors.requestTemperaturesByAddress(oWtGearbox);
   temp = oneWireSensors.getTempC(oWtGearbox);
+// Simulationsdata verwenden
+#ifdef USE_SIM_DATA
+  temp = 51.3;
+#endif
   this->_StoreData(this->tGearbox, temp, millis());
 }
 
@@ -446,15 +478,46 @@ void AcquireData::measureSpeed()
 
   // measure Engine Speed
   speed = _calcNumberOfRevs(&engSpeedCalc);
+  if (speed > 9999){
+    speed = 9999;
+  }
+// Simulationsdata verwenden
+#ifdef USE_SIM_DATA
+  speed = 2112;
+#endif  
   this->_StoreData(this->nMot, speed, millis());
+
   // measure Shaft Speed
   speed = _calcNumberOfRevs(&shaftSpeedCalc);
+  if (speed > 9999){
+    speed = 9999;
+  }
+// Simulationsdata verwenden
+#ifdef USE_SIM_DATA
+  speed = 2381;
+#endif 
   this->_StoreData(this->nShaft, speed, millis());
+
   // measure Alternator1 Speed
   speed = _calcNumberOfRevs(&alternator1SpeedCalc);
+  if (speed > 9999){
+    speed = 9999;
+  }
+// Simulationsdata verwenden
+#ifdef USE_SIM_DATA
+  speed = 5647;
+#endif 
   this->_StoreData(this->nAlternator1, speed, millis());
+
   // measure Alternator2 Speed
   speed = _calcNumberOfRevs(&alternator2SpeedCalc);
+  if (speed > 9999){
+    speed = 9999;
+  }
+// Simulationsdata verwenden
+#ifdef USE_SIM_DATA
+  speed = 8675;
+#endif 
   this->_StoreData(this->nAlternator2, speed, millis());
 }
 
@@ -494,31 +557,6 @@ void AcquireData::convertDataToN2k(tVolvoPentaData *data)
       data->flg_coolant_temperature_ok = false;
       data->flg_engine_oel_pressure_ok = false;
 
-// Simulationsdata
-#ifdef USE_SIM_DATA_N2K
-
-      data->engine_hours = 1234;
-
-      data->engine_coolant_flow = 0;
-      data->engine_coolant_temperature = 345;
-      data->engine_coolant_temperature_wall = 456;
-      data->engine_room_temperature = 333;
-      data->gearbox_temperature = 543;
-      data->exhaust_temperature = 678;
-
-      data->engine_oel_pressure = 23456;
-
-      data->engine_speed = 1234;
-      data->shaft_speed = 5676;
-      data->alternator1_speed = 2345;
-      data->alternator2_speed = 3456;
-
-      data->batterie_voltage = 12.99;
-
-      data->flg_coolant_temperature_ok = false;
-      data->flg_engine_oel_pressure_ok = false;
-
-#endif
       // unlock the resource again
       xSemaphoreGive(xMutexVolvoN2kData);
     }

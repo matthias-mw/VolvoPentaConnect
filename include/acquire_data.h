@@ -163,7 +163,7 @@ public:
    * thermocouple and the MAX6675 Chip
    */
   void measureExhaustTemperature();
-
+  
   /************************************************************************//**
    * \brief  Checking the states of the contact
    *
