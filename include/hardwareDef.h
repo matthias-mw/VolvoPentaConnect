@@ -27,7 +27,7 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 /// activate debug of free stacksize of the tasks
-#define DEBUG_TASK_STACK_SIZE
+// #define DEBUG_TASK_STACK_SIZE
 
 
 

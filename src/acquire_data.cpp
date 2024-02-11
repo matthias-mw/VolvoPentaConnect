@@ -96,7 +96,7 @@ void AcquireData::showDataOnTerminal()
   Serial.println();
 }
 
-void AcquireData::updateLCDPage(uint8_t page)
+void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
 {
 
   char buffer[21];
@@ -105,33 +105,84 @@ void AcquireData::updateLCDPage(uint8_t page)
   switch (page)
   {
   case 1:
-    // fill the screen buffer
-    length = sprintf(buffer, "Seawater     %3.1f C", tSeaOutletWall.getValue());
-    strncpy(&lcdDisplay[0][0], buffer, 20);
 
-    length = sprintf(buffer, "Engine       %3.1f C", tSeaOutletWall.getValue());
-    strncpy(&lcdDisplay[1][0], buffer, 20);
+    if (!blnUpdateDataOnly)
+    { // fill the screen buffer with permanent text
+      length = sprintf(buffer, "Temperature   [GrdC]");
+      strncpy(&lcdDisplay[0][0], buffer, 20);
 
-    length = sprintf(buffer, "Alternator   %3.1f C", tAlternator.getValue());
-    strncpy(&lcdDisplay[2][0], buffer, 20);
+      length = sprintf(buffer, "--------------------");
+      strncpy(&lcdDisplay[1][0], buffer, 20);
 
-    length = sprintf(buffer, "Exhaust      %3.1f C", tExhaust.getValue());
+      length = sprintf(buffer, "  Eng Gear  Sea  Exh");
+      strncpy(&lcdDisplay[2][0], buffer, 20);
+    }
+
+    // fill buffer with data
+    length = sprintf(buffer, " %4d %4d %4.1f %4d", (uint16_t)tEngine.getValue(), (uint16_t)tGearbox.getValue(),tSeaOutletWall.getValue(), (uint16_t) tExhaust.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
+
+
+    break;
+
+  case 2:
+
+    if (!blnUpdateDataOnly)
+    { // fill the screen buffer with permanent text
+      length = sprintf(buffer, "Engine Data  %6.1fh", engHour.getValue());
+      strncpy(&lcdDisplay[0][0], buffer, 20);
+
+      length = sprintf(buffer, "--------------------");
+      strncpy(&lcdDisplay[1][0], buffer, 20);
+
+      length = sprintf(buffer, "  rpm GrdC  bar GrdC");
+      strncpy(&lcdDisplay[2][0], buffer, 20);
+    }
+
+    // fill buffer with data
+    length = sprintf(buffer, " %4d %4d %4.1f %4d", (uint16_t)nMot.getValue(), (uint16_t)tEngine.getValue(),pOil.getValue(), (uint16_t)tExhaust.getValue());
+    strncpy(&lcdDisplay[3][0], buffer, 20);
+
+
+    break;
+
+  case 3:
+
+    if (!blnUpdateDataOnly)
+    { // fill the screen buffer with permanent text
+      length = sprintf(buffer, "Alternator  Data", engHour.getValue());
+      strncpy(&lcdDisplay[0][0], buffer, 20);
+
+      length = sprintf(buffer, "--------------------");
+      strncpy(&lcdDisplay[1][0], buffer, 20);
+
+      length = sprintf(buffer, "  rpm GrdC  rpm    V");
+      strncpy(&lcdDisplay[2][0], buffer, 20);
+    }
+
+    // fill buffer with data
+    length = sprintf(buffer, " %4d %4d %4d %4.1f", (uint16_t)nAlternator1.getValue(), (uint16_t)tAlternator.getValue(),(uint16_t)nAlternator2.getValue(), uBat.getValue());
+    strncpy(&lcdDisplay[3][0], buffer, 20);
+
 
     break;
 
   default:
-    // fill the screen buffer
-    length = sprintf(buffer, "n_Eng   %4d U/min", (uint16_t)nMot.getValue());
-    strncpy(&lcdDisplay[0][0], buffer, 20);
 
-    length = sprintf(buffer, "n_Gear  %4d U/min", (uint16_t)nShaft.getValue());
-    strncpy(&lcdDisplay[1][0], buffer, 20);
+    if (!blnUpdateDataOnly)
+    { // fill the screen buffer with permanent text
+      length = sprintf(buffer, "Speed        [U/min]");
+      strncpy(&lcdDisplay[0][0], buffer, 20);
 
-    length = sprintf(buffer, "n_Alt1  %4d U/min", (uint16_t)nAlternator1.getValue());
-    strncpy(&lcdDisplay[2][0], buffer, 20);
+      length = sprintf(buffer, "--------------------");
+      strncpy(&lcdDisplay[1][0], buffer, 20);
 
-    length = sprintf(buffer, "n_Alt2  %4d U/min", (uint16_t)nAlternator2.getValue());
+      length = sprintf(buffer, "  Eng Gear Alt1 Alt2");
+      strncpy(&lcdDisplay[2][0], buffer, 20);
+    }
+
+    // fill buffer with data
+    length = sprintf(buffer, " %4d %4d %4d %4d", (uint16_t)nMot.getValue(), (uint16_t)nShaft.getValue(), (uint16_t)nAlternator1.getValue(), (uint16_t)nAlternator1.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
 
     break;

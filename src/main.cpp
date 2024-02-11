@@ -42,11 +42,10 @@ static uint8_t lcdPage = 0;
 
 TwoWire Wire_1 = TwoWire(0x3f);
 
-LiquidCrystal_PCF8574 lcd(0x3F);  // set the LCD address to 0x27 
+LiquidCrystal_PCF8574 lcd(0x3F); // set the LCD address to 0x27
 
 /// Buffer for Crystal  LCD Display 4x20 (4 lines a 20 char)
-char lcdDisplay[4][20];           
-
+char lcdDisplay[4][20];
 
 LookUpTable1D tab(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
 
@@ -90,7 +89,6 @@ void taskMeasureOneWire(void *parameter);
  * \param parameter {type}
  */
 void taskMeasureFast(void *pvParameters);
-
 
 void taskUpdateLCD(void *pvParameters);
 
@@ -138,7 +136,7 @@ void setup()
   pinMode(ESP32_CAN_RX_PIN, INPUT);
 
   // Start I2C
-  //Wire.begin();
+  // Wire.begin();
 
   // Start the DS18B20 sensor
   oneWireSensors.begin();
@@ -154,11 +152,10 @@ void setup()
 
   // Setup LCD Display
   Wire_1.begin(21, 22);   // custom i2c port on ESP
-  Wire_1.setClock(80000);   // set 80kHz (PCF8574 max speed 100kHz)
-  
-  lcd.begin(20,4, Wire_1);
-  lcd.setBacklight(255);    // TODO: Check Function
+  Wire_1.setClock(80000); // set 80kHz (PCF8574 max speed 100kHz)
 
+  lcd.begin(20, 4, Wire_1);
+  lcd.setBacklight(255); // TODO: Check Function
 
   // Create mutex before starting tasks
   xMutexVolvoN2kData = xSemaphoreCreateMutex();
@@ -183,16 +180,16 @@ void setup()
       3,
       &TaskMeasureFastHandle,
       0);
-  
+
   // Create TaskMeasureFast with priority 1 at core 0
   xTaskCreatePinnedToCore(
       taskUpdateLCD,        /* Function to implement the task */
-      "TaskUpdateLCD",           /* Name of the task */
-      3000,                      /* Stack size in words */
-      NULL,                      /* Task input parameter */
-      0,                         /* Priority of the task */
-      &TaskUpdateLCDHandle,      /* Task handle. */
-      0); 
+      "TaskUpdateLCD",      /* Name of the task */
+      3000,                 /* Stack size in words */
+      NULL,                 /* Task input parameter */
+      2,                    /* Priority of the task */
+      &TaskUpdateLCDHandle, /* Task handle. */
+      0);
 }
 
 //***************************************************************
@@ -203,6 +200,7 @@ void loop()
   // Check N2k Messages
   NMEA2000.ParseMessages();
 
+  // Datenausgabe auf den Standard Terminal via USB
   if ((timeUpdatedFast + N2KUpdatePeriodFast) < millis())
   {
     timeUpdatedFast = millis();
@@ -242,10 +240,10 @@ void taskMeasureOneWire(void *parameter)
     data.measureOnewire();
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);
-    // send data
+    // send data to NMEA2000 Bus
     SendN2kEngineParmSlow(&VolvoDataForN2k);
 
-    // non blocking delay for the fast measuring
+    // non blocking delay for the slow measuring
     vTaskDelay(pdMS_TO_TICKS(300));
   }
 }
@@ -279,7 +277,7 @@ void taskMeasureFast(void *pvParameters)
     data.checkContacts();
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);
-    // send data to N2K
+    // send data to NMEA2000 Bus
     SendN2kEngineParmFast(&VolvoDataForN2k);
 
     // non blocking delay for the fast measuring
@@ -309,44 +307,46 @@ void taskUpdateLCD(void *pvParameters)
 
 #endif // DEBUG_TASK_STACK_SIZE
 
-  char lcdbuf[21];
+    char lcdbuf[21];
 
-  
-  data.updateLCDPage(lcdPage);
+    data.updateLCDPage(lcdPage);
 
-  // prepare screen
-  lcd.home();
-  lcd.clear();
-  lcd.setCursor(0, 0);   
-  // copy the buffer to the screen
-  // 1st line continues at 3d line
-  // 2nd line continues at 4th line
+    // prepare screen
+    lcd.home();
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    // copy the buffer to the screen
+    // 1st line continues at 3d line
+    // 2nd line continues at 4th line
 
+ 
+    strncpy(lcdbuf, &lcdDisplay[0][0], 20);
+    lcdbuf[20] = '\0';
+    lcd.print(lcdbuf); // print the line to screen
+ 
+    lcd.setCursor(0, 1);
+    strncpy(lcdbuf, &lcdDisplay[1][0], 20);
+    lcdbuf[20] = '\0';
+    lcd.print(lcdbuf); // print the line to screen
+ 
+    lcd.setCursor(0, 2);
+    strncpy(lcdbuf, &lcdDisplay[2][0], 20);
+    lcdbuf[20] = '\0';
+    lcd.print(lcdbuf); // print the line to screen
 
-  strncpy(lcdbuf, &lcdDisplay[0][0], 20); lcdbuf[20] = '\0'; 
-  lcd.print(lcdbuf);           // print the line to screen
+    lcd.setCursor(0, 3);
+    strncpy(lcdbuf, &lcdDisplay[3][0], 20);
+    lcdbuf[20] = '\0';
+    lcd.print(lcdbuf); // print the line to screen
 
+    lcdPage++;
 
-  lcd.setCursor(0, 1);   
-  strncpy(lcdbuf, &lcdDisplay[1][0], 20); lcdbuf[20] = '\0'; 
-  lcd.print(lcdbuf);           // print the line to screen
-  
-  lcd.setCursor(0, 2);   
-  strncpy(lcdbuf, &lcdDisplay[2][0], 20); lcdbuf[20] = '\0'; 
-  lcd.print(lcdbuf);           // print the line to screen
-  
-  lcd.setCursor(0, 3);   
-  strncpy(lcdbuf, &lcdDisplay[3][0], 20); lcdbuf[20] = '\0'; 
-  lcd.print(lcdbuf);           // print the line to screen
-  
-  lcdPage++;
-
-  if (lcdPage > 1){
-    lcdPage = 0;
+    if (lcdPage > 3)
+    {
+      lcdPage = 0;
+    }
+ 
+    // non blocking delay for the lcd Display
+    vTaskDelay(pdMS_TO_TICKS(4000));
   }
-
-  // non blocking delay for the fast measuring
-  vTaskDelay(pdMS_TO_TICKS(500));
-  }
-
 }
