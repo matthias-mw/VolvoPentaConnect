@@ -348,7 +348,7 @@ void taskUpdateLCD(void *pvParameters)
 
     lcdPage++;
 
-    if (lcdPage > 3)
+    if (lcdPage > 4)
     {
       lcdPage = 0;
     }

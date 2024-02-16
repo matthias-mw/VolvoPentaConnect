@@ -108,7 +108,9 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
   switch (page)
   {
   case 1:
-
+    // ------------------------------
+    // Temperature Screen
+    // ------------------------------
     if (!blnUpdateDataOnly)
     { // fill the screen buffer with permanent text
       length = sprintf(buffer, "Temperature   [GrdC]");
@@ -129,6 +131,9 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
 
   case 2:
 
+    // ------------------------------
+    // Engine Screen
+    // ------------------------------
     if (!blnUpdateDataOnly)
     { // fill the screen buffer with permanent text
       length = sprintf(buffer, "Engine Data  %6.1fh", engHour.getValue());
@@ -149,9 +154,12 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
 
   case 3:
 
+    // ------------------------------
+    // Alternator Screen
+    // ------------------------------
     if (!blnUpdateDataOnly)
     { // fill the screen buffer with permanent text
-      length = sprintf(buffer, "Alternator  Data", engHour.getValue());
+      length = sprintf(buffer, "Alternator  Data");
       strncpy(&lcdDisplay[0][0], buffer, 20);
 
       length = sprintf(buffer, "--------------------");
@@ -167,8 +175,34 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
 
     break;
 
+  case 4:
+
+    // ------------------------------
+    // Voltage Screen
+    // ------------------------------
+    if (!blnUpdateDataOnly)
+    { // fill the screen buffer with permanent text
+      length = sprintf(buffer, "MCP3204       %5.2fV", uBat.getValue());
+      strncpy(&lcdDisplay[0][0], buffer, 20);
+
+      length = sprintf(buffer, "--------------------");
+      strncpy(&lcdDisplay[1][0], buffer, 20);
+
+      length = sprintf(buffer, "    V    V    V    V");
+      strncpy(&lcdDisplay[2][0], buffer, 20);
+    }
+
+    // fill buffer with data
+    length = sprintf(buffer, " %4.1f %4.1f %4.1f %4.1f", uMcp3204Ch1.getValue(), uMcp3204Ch2.getValue(),uMcp3204Ch3.getValue(),uMcp3204Ch4.getValue());
+    strncpy(&lcdDisplay[3][0], buffer, 20);
+
+    break;    
+
   default:
 
+    // ------------------------------
+    // Speed Screen
+    // ------------------------------
     if (!blnUpdateDataOnly)
     { // fill the screen buffer with permanent text
       length = sprintf(buffer, "Speed        [U/min]");
