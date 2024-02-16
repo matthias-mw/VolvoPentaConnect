@@ -38,7 +38,7 @@ static unsigned long timeUpdatedFast = millis();
 static unsigned long timeUpdatedSlow = millis();
 static bool blink = false;
 
-static uint8_t lcdPage = 0;
+static uint8_t lcdPage = 4;
 
 TwoWire Wire_1 = TwoWire(0x3f);
 
@@ -46,6 +46,12 @@ LiquidCrystal_PCF8574 lcd(0x3F); // set the LCD address to 0x27
 
 /// Buffer for Crystal  LCD Display 4x20 (4 lines a 20 char)
 char lcdDisplay[4][20];
+
+/// LCD Panel switched to a complete new screen
+bool lcdScreenRenew = true;
+
+/// LCD Panel Updatecouter is incremented every cycle of \ref taskUpdateLCD
+uint16_t lcdUpdateCounter = 0;
 
 /// Class that contains a map to convert the measured voltage into tEngine
 LookUpTable1D mapTCO(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
@@ -281,7 +287,7 @@ void taskMeasureFast(void *pvParameters)
     data.checkContacts();
     // calculate values
     data.calculateVolvoPentaSensors();
-    
+
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);
     // send data to NMEA2000 Bus
@@ -318,42 +324,45 @@ void taskUpdateLCD(void *pvParameters)
 
     data.updateLCDPage(lcdPage);
 
-    // prepare screen
-    lcd.home();
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    // copy the buffer to the screen
-    // 1st line continues at 3d line
-    // 2nd line continues at 4th line
 
- 
-    strncpy(lcdbuf, &lcdDisplay[0][0], 20);
-    lcdbuf[20] = '\0';
-    lcd.print(lcdbuf); // print the line to screen
- 
-    lcd.setCursor(0, 1);
-    strncpy(lcdbuf, &lcdDisplay[1][0], 20);
-    lcdbuf[20] = '\0';
-    lcd.print(lcdbuf); // print the line to screen
- 
-    lcd.setCursor(0, 2);
-    strncpy(lcdbuf, &lcdDisplay[2][0], 20);
-    lcdbuf[20] = '\0';
-    lcd.print(lcdbuf); // print the line to screen
+    // Update first 3 Rows with static text
+    // less often to save processor time
+    if (lcdScreenRenew || (lcdUpdateCounter > 30))
+    {
 
+      // reset count
+      lcdUpdateCounter = 0;
+      lcdScreenRenew = false;
+
+      // prepare screen
+      //lcd.home();
+      //lcd.clear();
+
+      lcd.setCursor(0, 0);
+      strncpy(lcdbuf, &lcdDisplay[0][0], 20);
+      lcdbuf[20] = '\0';
+      lcd.print(lcdbuf); // print the line to screen
+
+      lcd.setCursor(0, 1);
+      strncpy(lcdbuf, &lcdDisplay[1][0], 20);
+      lcdbuf[20] = '\0';
+      lcd.print(lcdbuf); // print the line to screen
+
+      lcd.setCursor(0, 2);
+      strncpy(lcdbuf, &lcdDisplay[2][0], 20);
+      lcdbuf[20] = '\0';
+      lcd.print(lcdbuf); // print the line to screen
+    }
+
+    // Update measured values more often for good response
     lcd.setCursor(0, 3);
     strncpy(lcdbuf, &lcdDisplay[3][0], 20);
     lcdbuf[20] = '\0';
     lcd.print(lcdbuf); // print the line to screen
 
-    lcdPage++;
 
-    if (lcdPage > 4)
-    {
-      lcdPage = 0;
-    }
- 
     // non blocking delay for the lcd Display
-    vTaskDelay(pdMS_TO_TICKS(4000));
+    lcdUpdateCounter++;
+    vTaskDelay(pdMS_TO_TICKS(50));
   }
 }

@@ -29,7 +29,7 @@
 /// activate debug of free stacksize of the tasks
 // #define DEBUG_TASK_STACK_SIZE
 
-#define USE_SIM_DATA
+//#define USE_SIM_DATA
 
 
 
