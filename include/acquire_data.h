@@ -20,6 +20,8 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
+#include <lookUpTable.h>
+
 #include <adc_calib.h>
 #include <datapoint.h>
 #include <max6675.h>
@@ -163,6 +165,16 @@ public:
    * thermocouple and the MAX6675 Chip
    */
   void measureExhaustTemperature();
+  
+  /************************************************************************//**
+   * \brief  Calculate VolvoPenta Original Sensoren
+   *
+   * This method calulates all values for VolvoPenta sensoren based
+   * on measures voltages and interpolation curves.
+   * 
+   * \sa adc_calib.h
+   */
+  void calculateVolvoPentaSensors();
   
   /************************************************************************//**
    * \brief  Checking the states of the contact

@@ -21,6 +21,9 @@ DallasTemperature oneWireSensors(&oneWire);
 
 extern AcquireData data;
 
+extern LookUpTable1D mapTCO;
+extern LookUpTable1D mapPOIL;
+
 //****************************************
 // Construct a new AcquireDataobject
 AcquireData::AcquireData()
@@ -204,7 +207,7 @@ void AcquireData::measureExhaustTemperature()
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
   tMeasure = 521;
-#endif  
+#endif
   this->_StoreData(this->tExhaust, tMeasure, millis());
 }
 
@@ -237,7 +240,7 @@ void AcquireData::measureVoltage()
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
   voltage = 12.8;
-#endif  
+#endif
   this->_StoreData(this->uBat, voltage, millis());
 
   // measure MCP3204 Channel 1
@@ -246,8 +249,8 @@ void AcquireData::measureVoltage()
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH1_FAC;
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  voltage = 1.8;
-#endif   
+  voltage = 4.56;
+#endif
   this->_StoreData(this->uMcp3204Ch1, voltage, millis());
 
   // measure MCP3204 Channel 2
@@ -255,8 +258,8 @@ void AcquireData::measureVoltage()
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH2_FAC;
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  voltage = 2.1;
-#endif 
+  voltage = 1.7;
+#endif
   this->_StoreData(this->uMcp3204Ch2, voltage, millis());
 
   // measure MCP3204 Channel 3
@@ -265,7 +268,7 @@ void AcquireData::measureVoltage()
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
   voltage = 8.4;
-#endif 
+#endif
   this->_StoreData(this->uMcp3204Ch3, voltage, millis());
 
   // measure MCP3204 Channel 4
@@ -274,19 +277,33 @@ void AcquireData::measureVoltage()
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
   voltage = 4.3;
-#endif 
+#endif
   this->_StoreData(this->uMcp3204Ch4, voltage, millis());
 
-  // Serial.print(millis());
-  // Serial.print("\t mcp3204:\t");
-  // for (int channel = 0 ; channel < mcp3204.channels(); channel++)
-  // {
-  //   uint16_t val = mcp3204.analogRead(channel);
-  //   Serial.print(val);
-  //   Serial.print("\t");
-  //   delay(1);       // added so single reads are better visible on a scope
-  // }
-  // Serial.println();
+}
+
+//==============================================================================
+//==============================================================================
+// method's calculated VolvoPenta Sensors
+//==============================================================================
+//==============================================================================
+
+//****************************************
+// Calculate VolvoPenta Original Sensoren
+void AcquireData::calculateVolvoPentaSensors()
+{
+  double result = 0;
+
+  // Channel 1 -> Coolant Temperatur
+  double voltage = uMcp3204Ch1.getValue();
+  mapTCO.LookUpValue(voltage, &result);
+  this->_StoreData(this->tEngine, result, millis());
+
+  // Channel 2 -> Oil pressure
+  voltage = uMcp3204Ch2.getValue();
+  mapPOIL.LookUpValue(voltage, &result);
+  this->_StoreData(this->pOil, result, millis());
+
 }
 
 //==============================================================================
@@ -478,46 +495,50 @@ void AcquireData::measureSpeed()
 
   // measure Engine Speed
   speed = _calcNumberOfRevs(&engSpeedCalc);
-  if (speed > 9999){
+  if (speed > 9999)
+  {
     speed = 9999;
   }
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
   speed = 2112;
-#endif  
+#endif
   this->_StoreData(this->nMot, speed, millis());
 
   // measure Shaft Speed
   speed = _calcNumberOfRevs(&shaftSpeedCalc);
-  if (speed > 9999){
+  if (speed > 9999)
+  {
     speed = 9999;
   }
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
   speed = 2381;
-#endif 
+#endif
   this->_StoreData(this->nShaft, speed, millis());
 
   // measure Alternator1 Speed
   speed = _calcNumberOfRevs(&alternator1SpeedCalc);
-  if (speed > 9999){
+  if (speed > 9999)
+  {
     speed = 9999;
   }
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
   speed = 5647;
-#endif 
+#endif
   this->_StoreData(this->nAlternator1, speed, millis());
 
   // measure Alternator2 Speed
   speed = _calcNumberOfRevs(&alternator2SpeedCalc);
-  if (speed > 9999){
+  if (speed > 9999)
+  {
     speed = 9999;
   }
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
   speed = 8675;
-#endif 
+#endif
   this->_StoreData(this->nAlternator2, speed, millis());
 }
 

@@ -47,7 +47,11 @@ LiquidCrystal_PCF8574 lcd(0x3F); // set the LCD address to 0x27
 /// Buffer for Crystal  LCD Display 4x20 (4 lines a 20 char)
 char lcdDisplay[4][20];
 
-LookUpTable1D tab(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
+/// Class that contains a map to convert the measured voltage into tEngine
+LookUpTable1D mapTCO(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
+
+/// Class that contains a map to convert the measured voltage into pOil
+LookUpTable1D mapPOIL(AXIS_POIL_MES, MAP_POIL_MES, POIL_AXIS_LEN, POIL_MAP_PREC);
 
 /// class that contains all measured data
 AcquireData data;
@@ -275,6 +279,9 @@ void taskMeasureFast(void *pvParameters)
     data.measureSpeed();
     data.measureExhaustTemperature();
     data.checkContacts();
+    // calculate values
+    data.calculateVolvoPentaSensors();
+    
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);
     // send data to NMEA2000 Bus
