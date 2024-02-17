@@ -27,7 +27,8 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 /// activate debug of free stacksize of the tasks
-// #define DEBUG_TASK_STACK_SIZE
+
+#define DEBUG_TASK_STACK_SIZE
 
 //#define USE_SIM_DATA
 
@@ -40,11 +41,21 @@
 
 /// GPIO where the LED is connected (Active High)
 #define STATUS_LED_PIN  0
+/// Turns on the Status LED Light
+#define LED_PIN_ON 1
+/// Turns off the Status LED Light
+#define LED_PIN_OFF 0
+
 
 /// GPIO where Button 1 is connected (Low Active)
 #define BUTTON1_PIN  2
 /// GPIO where Button 2 is connected (Low Active)
 #define BUTTON2_PIN  12
+
+/// Debounce value for the button inside of the interpretation task
+#define BUTTON_DEBOUNCE 2
+/// long press value for the button inside of the interpretation task
+#define BUTTON_LONG_PRESS 15
 
 /// GPIO where the WARNING is connected (Active High)
 #define WARNING_OUTPUT_PIN  14

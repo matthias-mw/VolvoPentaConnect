@@ -159,7 +159,7 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     // ------------------------------
     if (!blnUpdateDataOnly)
     { // fill the screen buffer with permanent text
-      length = sprintf(buffer, "Alternator  Data");
+      length = sprintf(buffer, "Alternator  Data    ");
       strncpy(&lcdDisplay[0][0], buffer, 20);
 
       length = sprintf(buffer, "--------------------");
