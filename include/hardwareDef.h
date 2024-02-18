@@ -28,7 +28,7 @@
 
 /// activate debug of free stacksize of the tasks
 
-#define DEBUG_TASK_STACK_SIZE
+//#define DEBUG_TASK_STACK_SIZE
 
 //#define USE_SIM_DATA
 
@@ -46,6 +46,12 @@
 /// Turns off the Status LED Light
 #define LED_PIN_OFF 0
 
+/// LCD Panel value for full brightness
+#define LCD_BACKLIGHT_FULL    255
+/// LCD Panel value for backlight switched off
+#define LCD_BACKLIGHT_OFF     0
+/// LCD Panel counter for backlight switched off
+#define LCD_BACKLIGHT_OFF_COUNT  200    //ToDo Real Value
 
 /// GPIO where Button 1 is connected (Low Active)
 #define BUTTON1_PIN  2

@@ -57,6 +57,8 @@ uint16_t btn2DebounceCnt = 0;
 
 /// LCD Panel Updatecouter is incremented every cycle of \ref taskUpdateLCD
 uint16_t lcdUpdateCounter = 0;
+/// LCD Panel dimmer counter is used to decrease backlight during no activity
+uint32_t lcdBacklightDimCounter = 0;
 
 /// Class that contains a map to convert the measured voltage into tEngine
 LookUpTable1D mapTCO(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
@@ -195,7 +197,7 @@ void setup()
   Wire_1.setClock(80000); // set 80kHz (PCF8574 max speed 100kHz)
 
   lcd.begin(20, 4, Wire_1);
-  lcd.setBacklight(255); // TODO: Check Function
+  lcd.setBacklight(255);
 
   // Create mutex before starting tasks
   xMutexVolvoN2kData = xSemaphoreCreateMutex();
@@ -424,16 +426,39 @@ void taskInterpretButton(void *pvParameters)
     }
 
 #endif // DEBUG_TASK_STACK_SIZE
+
     // ============================================
     // Check Button 1
     // ============================================
     if (digitalRead(BUTTON1_PIN))
     {
       digitalWrite(STATUS_LED_PIN, LED_PIN_ON);
+
+      // ++++++++++ Do on Button Release ++++++++++
+      // increase debounce counter
+      btn1DebounceCnt++;
+      // enable lcd backlight
+      lcdBacklightDimCounter = 0;
+      // detect long press event
+      if (btn1DebounceCnt >= BUTTON_LONG_PRESS)
+      {
+        // long press action
+        lcd.setBacklight(0);
+      }
     }
     else
     {
       digitalWrite(STATUS_LED_PIN, LED_PIN_OFF);
+
+      // ++++++++++ Do on Button Release ++++++++++
+      // detect short press event
+      if ((btn1DebounceCnt >= BUTTON_DEBOUNCE) && (btn1DebounceCnt < BUTTON_LONG_PRESS))
+      {
+        // short press action
+        lcd.setBacklight(5);
+      }
+      // reset debounce counter
+      btn1DebounceCnt = 0;
     }
 
     // ============================================
@@ -444,6 +469,8 @@ void taskInterpretButton(void *pvParameters)
       // ++++++++++ Do on Button Release ++++++++++
       // increase debounce counter
       btn2DebounceCnt++;
+      // enable lcd backlight
+      lcdBacklightDimCounter = 0;
       // detect long press event
       if (btn2DebounceCnt >= BUTTON_LONG_PRESS)
       {
@@ -467,6 +494,21 @@ void taskInterpretButton(void *pvParameters)
       // reset debounce counter
       btn2DebounceCnt = 0;
     }
+
+    // Set LED Backlight Brightness
+    if (lcdBacklightDimCounter < LCD_BACKLIGHT_OFF_COUNT)
+    {
+      // dimmed brightness to the LCD Panel
+      lcd.setBacklight(LCD_BACKLIGHT_FULL);
+    }
+    else
+    {
+      // LCD Panel backlight is off
+      lcd.setBacklight(LCD_BACKLIGHT_OFF);
+    }
+    // increase counter
+    lcdBacklightDimCounter++;
+
     // non blocking delay for the button
     vTaskDelay(pdMS_TO_TICKS(150));
   }
