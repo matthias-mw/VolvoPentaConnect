@@ -124,8 +124,10 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     }
 
     // fill buffer with data
-    length = sprintf(buffer, " %4d %4d %4.1f %4d", (uint16_t)tEngine.getValue(), (uint16_t)tGearbox.getValue(), tSeaOutletWall.getValue(), (uint16_t)tExhaust.getValue());
+    length = sprintf(buffer, "%5d%5d%5.1f%5d", (int16_t)tEngine.getValue(), (int16_t)tGearbox.getValue(), tSeaOutletWall.getValue(), (int16_t)tExhaust.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
+
+    Serial.println(lcdDisplay[3]);
 
     break;
 
@@ -147,7 +149,7 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     }
 
     // fill buffer with data
-    length = sprintf(buffer, " %4d %4d %4.1f %4d", (uint16_t)nMot.getValue(), (uint16_t)tEngine.getValue(), pOil.getValue(), (uint16_t)tExhaust.getValue());
+    length = sprintf(buffer, "%5d%5d%5.1f%5d", (uint16_t)nMot.getValue(), (uint16_t)tEngine.getValue(), pOil.getValue(), (uint16_t)tExhaust.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
 
     break;
@@ -170,7 +172,7 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     }
 
     // fill buffer with data
-    length = sprintf(buffer, " %4d %4d %4d %4.1f", (uint16_t)nAlternator1.getValue(), (uint16_t)tAlternator.getValue(), (uint16_t)nAlternator2.getValue(), uBat.getValue());
+    length = sprintf(buffer, "%5d%5d%5d%5.1f", (uint16_t)nAlternator1.getValue(), (uint16_t)tAlternator.getValue(), (uint16_t)nAlternator2.getValue(), uBat.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
 
     break;
@@ -193,7 +195,7 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     }
 
     // fill buffer with data
-    length = sprintf(buffer, " %4.1f %4.1f %4.1f %4.1f", uMcp3204Ch1.getValue(), uMcp3204Ch2.getValue(),uMcp3204Ch3.getValue(),uMcp3204Ch4.getValue());
+    length = sprintf(buffer, "%5.1f%5.1f%5.1f%5.1f", uMcp3204Ch1.getValue(), uMcp3204Ch2.getValue(),uMcp3204Ch3.getValue(),uMcp3204Ch4.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
 
     break;    
@@ -216,7 +218,7 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     }
 
     // fill buffer with data
-    length = sprintf(buffer, " %4d %4d %4d %4d", (uint16_t)nMot.getValue(), (uint16_t)nShaft.getValue(), (uint16_t)nAlternator1.getValue(), (uint16_t)nAlternator1.getValue());
+    length = sprintf(buffer, "%5d%5d%5d%5d", (uint16_t)nMot.getValue(), (uint16_t)nShaft.getValue(), (uint16_t)nAlternator1.getValue(), (uint16_t)nAlternator2.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
 
     break;
@@ -238,9 +240,14 @@ void AcquireData::measureExhaustTemperature()
   double tMeasure = -200;
 
   tMeasure = thermoNiCr_Ni.readCelsius();
+  //Abfangen eines defekten Thermoelements
+  //readCelsius liefert NAN bei defekt zurück
+  if ((int)tMeasure == 0x7FFFFFFF){
+    tMeasure=-9;
+  }
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  tMeasure = 521;
+  tMeasure = SIM_DATA_EXHAUST;
 #endif
   this->_StoreData(this->tExhaust, tMeasure, millis());
 }
@@ -273,7 +280,7 @@ void AcquireData::measureVoltage()
   voltage = voltage / 4096 * ACH_CH36_FACTOR + ACH_CH36_OFFSET;
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  voltage = 12.8;
+  voltage = SIM_DATA_UBAT_ADC_PIN;
 #endif
   this->_StoreData(this->uBat, voltage, millis());
 
@@ -283,7 +290,7 @@ void AcquireData::measureVoltage()
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH1_FAC;
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  voltage = 4.56;
+  voltage = SIM_DATA_MCP3201_CHN1;
 #endif
   this->_StoreData(this->uMcp3204Ch1, voltage, millis());
 
@@ -292,7 +299,7 @@ void AcquireData::measureVoltage()
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH2_FAC;
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  voltage = 1.7;
+  voltage = SIM_DATA_MCP3201_CHN2;
 #endif
   this->_StoreData(this->uMcp3204Ch2, voltage, millis());
 
@@ -301,7 +308,7 @@ void AcquireData::measureVoltage()
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH3_FAC;
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  voltage = 8.4;
+  voltage = SIM_DATA_MCP3201_CHN3;
 #endif
   this->_StoreData(this->uMcp3204Ch3, voltage, millis());
 
@@ -310,7 +317,7 @@ void AcquireData::measureVoltage()
   voltage = voltage / voltageMax * MCP3204_VREF * MCP3204_CH4_FAC;
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  voltage = 4.3;
+  voltage = SIM_DATA_MCP3201_CHN4;
 #endif
   this->_StoreData(this->uMcp3204Ch4, voltage, millis());
 
@@ -397,7 +404,7 @@ void AcquireData::measureOnewire()
   double temp = oneWireSensors.getTempC(oWtSeaOutletWall);
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  temp = 45.7;
+  temp = SIM_DATA_1WIRE_CH1;
 #endif
   this->_StoreData(this->tSeaOutletWall, temp, millis());
 
@@ -406,7 +413,7 @@ void AcquireData::measureOnewire()
   temp = oneWireSensors.getTempC(oWtAlternator);
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  temp = 75.1;
+  temp = SIM_DATA_1WIRE_CH2;
 #endif
   this->_StoreData(this->tAlternator, temp, millis());
 
@@ -415,7 +422,7 @@ void AcquireData::measureOnewire()
   temp = oneWireSensors.getTempC(oWtGearbox);
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  temp = 51.3;
+  temp = SIM_DATA_1WIRE_CH3;
 #endif
   this->_StoreData(this->tGearbox, temp, millis());
 }
@@ -535,7 +542,7 @@ void AcquireData::measureSpeed()
   }
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  speed = 2112;
+  speed = SIM_DATA_ENG_SPEED;
 #endif
   this->_StoreData(this->nMot, speed, millis());
 
@@ -547,7 +554,7 @@ void AcquireData::measureSpeed()
   }
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  speed = 2381;
+  speed = SIM_DATA_SHAFT_SPEED;
 #endif
   this->_StoreData(this->nShaft, speed, millis());
 
@@ -559,7 +566,7 @@ void AcquireData::measureSpeed()
   }
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  speed = 5647;
+  speed = SIM_DATA_ALT1_SPEED;
 #endif
   this->_StoreData(this->nAlternator1, speed, millis());
 
@@ -571,7 +578,7 @@ void AcquireData::measureSpeed()
   }
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
-  speed = 8675;
+  speed = SIM_DATA_ALT2_SPEED;
 #endif
   this->_StoreData(this->nAlternator2, speed, millis());
 }

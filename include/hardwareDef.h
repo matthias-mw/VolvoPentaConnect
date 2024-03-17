@@ -30,14 +30,26 @@
 
 //#define DEBUG_TASK_STACK_SIZE
 
-//#define USE_SIM_DATA
+// Definition of Simulated Test Data for TEsting without sensors
+#define USE_SIM_DATA
 
-
+#define SIM_DATA_UBAT_ADC_PIN   11.7
+#define SIM_DATA_MCP3201_CHN1   4.56
+#define SIM_DATA_MCP3201_CHN2   1.7
+#define SIM_DATA_MCP3201_CHN3   8.4
+#define SIM_DATA_MCP3201_CHN4   3.9
+#define SIM_DATA_EXHAUST        -789456
+#define SIM_DATA_1WIRE_CH1      -45.7
+#define SIM_DATA_1WIRE_CH2      -23.6
+#define SIM_DATA_1WIRE_CH3      -51.3
+#define SIM_DATA_ENG_SPEED      2112
+#define SIM_DATA_SHAFT_SPEED    358
+#define SIM_DATA_ALT1_SPEED     1890
+#define SIM_DATA_ALT2_SPEED     15000
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //      -----  generell Definitions ----
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 
 /// GPIO where the LED is connected (Active High)
 #define STATUS_LED_PIN  0
@@ -51,7 +63,7 @@
 /// LCD Panel value for backlight switched off
 #define LCD_BACKLIGHT_OFF     0
 /// LCD Panel counter for backlight switched off
-#define LCD_BACKLIGHT_OFF_COUNT  200    //ToDo Real Value
+#define LCD_BACKLIGHT_OFF_COUNT  200UL    //ToDo Real Value
 
 /// GPIO where Button 1 is connected (Low Active)
 #define BUTTON1_PIN  2
