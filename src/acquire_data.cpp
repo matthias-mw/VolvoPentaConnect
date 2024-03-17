@@ -149,7 +149,7 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     }
 
     // fill buffer with data
-    length = sprintf(buffer, "%5d%5d%5.1f%5d", (uint16_t)nMot.getValue(), (uint16_t)tEngine.getValue(), pOil.getValue(), (uint16_t)tExhaust.getValue());
+    length = sprintf(buffer, "%5d%5d%5.1f%5d", (uint16_t)nMot.getValue(), (uint16_t)tEngine.getValue(), pOil.getValue(), (int16_t)tExhaust.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
 
     break;
@@ -172,7 +172,7 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     }
 
     // fill buffer with data
-    length = sprintf(buffer, "%5d%5d%5d%5.1f", (uint16_t)nAlternator1.getValue(), (uint16_t)tAlternator.getValue(), (uint16_t)nAlternator2.getValue(), uBat.getValue());
+    length = sprintf(buffer, "%5d%5d%5d%5.1f", (uint16_t)nAlternator1.getValue(), (int16_t)tAlternator.getValue(), (uint16_t)nAlternator2.getValue(), uBat.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
 
     break;

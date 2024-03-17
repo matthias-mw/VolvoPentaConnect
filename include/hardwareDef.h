@@ -38,10 +38,10 @@
 #define SIM_DATA_MCP3201_CHN2   1.7
 #define SIM_DATA_MCP3201_CHN3   8.4
 #define SIM_DATA_MCP3201_CHN4   3.9
-#define SIM_DATA_EXHAUST        -789456
-#define SIM_DATA_1WIRE_CH1      -45.7
-#define SIM_DATA_1WIRE_CH2      -23.6
-#define SIM_DATA_1WIRE_CH3      -51.3
+#define SIM_DATA_EXHAUST        456
+#define SIM_DATA_1WIRE_CH1      45.7
+#define SIM_DATA_1WIRE_CH2      23.6
+#define SIM_DATA_1WIRE_CH3      51.3
 #define SIM_DATA_ENG_SPEED      2112
 #define SIM_DATA_SHAFT_SPEED    358
 #define SIM_DATA_ALT1_SPEED     1890

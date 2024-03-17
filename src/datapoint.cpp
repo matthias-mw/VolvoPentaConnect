@@ -17,7 +17,7 @@
 // *****************************************************************************
 // Constructor
 // *****************************************************************************
-tDataPoint::tDataPoint(tSensorTyp senType, String name, String unit)
+tDataPoint::tDataPoint(tSensorTyp senType, String name, String unit, double min_value, double max_value)
 {
   uint8_t i;
 
@@ -25,6 +25,8 @@ tDataPoint::tDataPoint(tSensorTyp senType, String name, String unit)
   this->sensorTyp = senType;
   this->signalName = name;
   this->signalUnit = unit;
+  this->value_limit_min = min_value;
+  this->value_limit_max = max_value;
 
   // create a mutex object to protect data for synchronized handling
   this->xMutexDataLock = xSemaphoreCreateMutex(); 
@@ -77,6 +79,14 @@ bool tDataPoint::updateValue(double new_value, uint32_t new_timestamp)
         this->value_history[k] = this->value_history[k - 1];
       }
 
+      // check limits of the new value
+      if (new_value < this->value_limit_min) {
+        new_value = this->value_limit_min;
+      }
+      if (new_value > this->value_limit_max) {
+        new_value = this->value_limit_max;
+      }
+      
       // save the value and timestamp
       this->value = new_value;
       this->value_history[0] = new_value;
