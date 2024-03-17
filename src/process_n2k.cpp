@@ -61,15 +61,15 @@ void setupN2K()
 
 //*************************************************************
 // Sends out all the messages in a fast timeframe
-void SendN2kEngineParmFast(VolvoPentaData *data)
+void SendN2kEngineParmFast(VolvoPentaData *n2kVolvoData)
 {
   tN2kMsg N2kMsg;
 
-  unsigned char EngineInstance = 0;
-
+  static unsigned char EngineInstance = 0;
+  static unsigned char EngineInstanceAlt1 = 1;
+  
   // Data not measured now
   double EngineOilTemp = N2kDoubleNA;
-  double FuelRate = N2kDoubleNA;
   bool flagCheckEngine = false;
   bool flagLowFuelPress = false;
 
@@ -81,19 +81,26 @@ void SendN2kEngineParmFast(VolvoPentaData *data)
     if (xSemaphoreTake(xMutexVolvoN2kData, (TickType_t)5) == pdTRUE)
     {
       // Send exhaust temperature
-      SetN2kTemperatureExt(N2kMsg, 0, 0, N2kts_ExhaustGasTemperature, (data->exhaust_temperature));
+      SetN2kTemperatureExt(N2kMsg, 0, 0, N2kts_ExhaustGasTemperature, (n2kVolvoData->exhaust_temperature));
       NMEA2000.SendMsg(N2kMsg);
 
       // Send engine speed
-      SetN2kEngineParamRapid(N2kMsg, EngineInstance, data->engine_speed, 0, 0);
+      SetN2kEngineParamRapid(N2kMsg, EngineInstance, n2kVolvoData->engine_speed, 0, 0);
       NMEA2000.SendMsg(N2kMsg);
 
-      // send engine data
-      SetN2kEngineDynamicParam(N2kMsg, EngineInstance, data->engine_oel_pressure, EngineOilTemp, data->engine_coolant_temperature, data->batterie_voltage, FuelRate, data->engine_hours, N2kDoubleNA, N2kDoubleNA, N2kInt8NA, N2kInt8NA, flagCheckEngine);
+      // send engine dynamic data
+      SetN2kEngineDynamicParam(N2kMsg, EngineInstance, n2kVolvoData->engine_oel_pressure, EngineOilTemp, n2kVolvoData->engine_coolant_temperature, n2kVolvoData->batterie_voltage, N2kDoubleNA, n2kVolvoData->engine_hours, N2kDoubleNA, N2kDoubleNA, N2kInt8NA, N2kInt8NA, flagCheckEngine);
+      NMEA2000.SendMsg(N2kMsg);
+
+      // send Balmar Alternator Data as "Instance 1"
+      SetN2kEngineDynamicParam(N2kMsg, EngineInstanceAlt1, N2kDoubleNA, N2kDoubleNA, n2kVolvoData->alternator1_temperature, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kInt8NA, N2kInt8NA, flagCheckEngine);
+      NMEA2000.SendMsg(N2kMsg);
+      // send Balmar Alternator Data as "Instance 1"
+      SetN2kEngineParamRapid(N2kMsg, EngineInstanceAlt1, n2kVolvoData->alternator1_speed, 0, 0);
       NMEA2000.SendMsg(N2kMsg);
 
       // send gearbox data
-      SetN2kPGN127493(N2kMsg, EngineInstance, N2kTG_Unknown, N2kDoubleNA, data->gearbox_temperature, 0);
+      SetN2kPGN127493(N2kMsg, EngineInstance, N2kTG_Unknown, N2kDoubleNA, n2kVolvoData->gearbox_temperature, 0);
       NMEA2000.SendMsg(N2kMsg);
     }
     // unlock the resource again
@@ -103,7 +110,7 @@ void SendN2kEngineParmFast(VolvoPentaData *data)
 
 //*************************************************************
 // Sends out all the messages in a fast timeframe
-void SendN2kEngineParmSlow(VolvoPentaData *data)
+void SendN2kEngineParmSlow(VolvoPentaData *n2kVolvoData)
 {
   tN2kMsg N2kMsg;
 
@@ -114,8 +121,8 @@ void SendN2kEngineParmSlow(VolvoPentaData *data)
     // available wait 5ms to see if it becomes free.
     if (xSemaphoreTake(xMutexVolvoN2kData, (TickType_t)5) == pdTRUE)
     {
-      // Send Engine room temperature
-      SetN2kTemperatureExt(N2kMsg, 0, 0, N2kts_EngineRoomTemperature, (data->engine_room_temperature));
+      // Send Temperature of Seewater Cool Pipe
+      SetN2kTemperatureExt(N2kMsg, 0, 0, N2kts_HeatIndexTemperature, (n2kVolvoData->engine_coolant_temperature_wall));
       NMEA2000.SendMsg(N2kMsg);
 
       // unlock the resource again

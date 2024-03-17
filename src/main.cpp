@@ -475,7 +475,7 @@ void taskInterpretButton(void *pvParameters)
       if (btn2DebounceCnt >= BUTTON_LONG_PRESS)
       {
         // long press action
-        lcdPage = 1;
+        lcdPage = 10;
         lcdScreenRenew = true;
       }
     }

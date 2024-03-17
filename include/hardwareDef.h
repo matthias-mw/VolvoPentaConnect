@@ -63,7 +63,7 @@
 /// LCD Panel value for backlight switched off
 #define LCD_BACKLIGHT_OFF     0
 /// LCD Panel counter for backlight switched off
-#define LCD_BACKLIGHT_OFF_COUNT  200UL    //ToDo Real Value
+#define LCD_BACKLIGHT_OFF_COUNT  2000UL    //ToDo Real Value
 
 /// GPIO where Button 1 is connected (Low Active)
 #define BUTTON1_PIN  2

@@ -195,10 +195,44 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     }
 
     // fill buffer with data
-    length = sprintf(buffer, "%5.1f%5.1f%5.1f%5.1f", uMcp3204Ch1.getValue(), uMcp3204Ch2.getValue(),uMcp3204Ch3.getValue(),uMcp3204Ch4.getValue());
+    length = sprintf(buffer, "%5.1f%5.1f%5.1f%5.1f", uMcp3204Ch1.getValue(), uMcp3204Ch2.getValue(), uMcp3204Ch3.getValue(), uMcp3204Ch4.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
 
-    break;    
+    break;
+
+  case 10:
+
+    uint8_t i;
+    uint8_t deviceCount;
+    DeviceAddress address;
+    char buffer[20];
+
+    // locate devices on the bus
+    deviceCount = oneWireSensors.getDeviceCount();
+    length = sprintf(buffer, "Found %1d DS18S20.    ", deviceCount);
+    strncpy(&lcdDisplay[0][0], buffer, 20);
+
+    // print addresses to terminal
+    Serial.println("Printing addresses...");
+    for (int i = 0; i < 3; i++)
+    {
+      if (i >= deviceCount)
+      {
+        // clear line
+        length = sprintf(buffer, "                    ");
+        strncpy(&lcdDisplay[i + 1][0], buffer, 20);
+      }
+      else
+      {
+        //show the address
+        oneWireSensors.getAddress(address, i);
+        length = sprintf(buffer, "> 0x%02x%02x%02x%02x%02x%02x%02x%02x",
+                         address[0], address[1], address[2], address[3], address[4],
+                         address[5], address[6], address[7]);
+        strncpy(&lcdDisplay[i + 1][0], buffer, 20);
+      }
+    }
+    break;
 
   default:
 
@@ -240,10 +274,11 @@ void AcquireData::measureExhaustTemperature()
   double tMeasure = -200;
 
   tMeasure = thermoNiCr_Ni.readCelsius();
-  //Abfangen eines defekten Thermoelements
-  //readCelsius liefert NAN bei defekt zurück
-  if ((int)tMeasure == 0x7FFFFFFF){
-    tMeasure=-9;
+  // Abfangen eines defekten Thermoelements
+  // readCelsius liefert NAN bei defekt zurück
+  if ((int)tMeasure == 0x7FFFFFFF)
+  {
+    tMeasure = -9;
   }
 // Simulationsdata verwenden
 #ifdef USE_SIM_DATA
@@ -320,7 +355,6 @@ void AcquireData::measureVoltage()
   voltage = SIM_DATA_MCP3201_CHN4;
 #endif
   this->_StoreData(this->uMcp3204Ch4, voltage, millis());
-
 }
 
 //==============================================================================
@@ -344,7 +378,6 @@ void AcquireData::calculateVolvoPentaSensors()
   voltage = uMcp3204Ch2.getValue();
   mapPOIL.LookUpValue(voltage, &result);
   this->_StoreData(this->pOil, result, millis());
-
 }
 
 //==============================================================================
@@ -361,6 +394,7 @@ void AcquireData::listOneWireDevices()
   uint8_t i;
   uint8_t deviceCount;
   DeviceAddress address;
+  char buffer[20];
 
   // locate devices on the bus
   Serial.println("Locating devices...");
@@ -377,10 +411,12 @@ void AcquireData::listOneWireDevices()
   Serial.println("Printing addresses...");
   for (int i = 0; i < deviceCount; i++)
   {
+
     Serial.print("Sensor ");
     Serial.print(i + 1);
     Serial.print(" : ");
     oneWireSensors.getAddress(address, i);
+
     for (uint8_t i = 0; i < 8; i++)
     {
       Serial.print("0x");
@@ -585,7 +621,7 @@ void AcquireData::measureSpeed()
 
 //****************************************
 // Convert all measured data into N2kData formats
-void AcquireData::convertDataToN2k(tVolvoPentaData *data)
+void AcquireData::convertDataToN2k(tVolvoPentaData *n2kVolvoData)
 {
 
   // Check if the Semaphore used for Dataprotection is initialzed
@@ -596,28 +632,25 @@ void AcquireData::convertDataToN2k(tVolvoPentaData *data)
     if (xSemaphoreTake(xMutexVolvoN2kData, (TickType_t)5) == pdTRUE)
     {
 
-      data->engine_hours = 1234;
+      n2kVolvoData->engine_hours = this->engHour.getValue();
 
-      data->engine_coolant_flow = 0;
-      data->engine_coolant_temperature = 345;
-      data->engine_coolant_temperature_wall = this->tSeaOutletWall.getValue() + 273.15;
-      ;
-      data->engine_room_temperature = this->tAlternator.getValue() + 273.15;
-      ;
-      data->gearbox_temperature = this->tGearbox.getValue() + 273.15;
-      data->exhaust_temperature = this->tExhaust.getValue() + 273.15;
+      n2kVolvoData->engine_coolant_temperature = this->tEngine.getValue() + 273.15;
+      n2kVolvoData->engine_coolant_temperature_wall = this->tSeaOutletWall.getValue() + 273.15;
+      n2kVolvoData->alternator1_temperature = this->tAlternator.getValue() + 273.15;
+      n2kVolvoData->gearbox_temperature = this->tGearbox.getValue() + 273.15;
+      n2kVolvoData->exhaust_temperature = this->tExhaust.getValue() + 273.15;
 
-      data->engine_oel_pressure = 23456;
+      n2kVolvoData->engine_oel_pressure = this->pOil.getValue() * 100000; // bar to PA
 
-      data->engine_speed = this->nMot.getValue();
-      data->shaft_speed = this->nShaft.getValue();
-      data->alternator1_speed = this->nAlternator1.getValue();
-      data->alternator2_speed = this->nAlternator2.getValue();
+      n2kVolvoData->engine_speed = this->nMot.getValue();
+      n2kVolvoData->shaft_speed = this->nShaft.getValue();
+      n2kVolvoData->alternator1_speed = this->nAlternator1.getValue();
+      n2kVolvoData->alternator2_speed = this->nAlternator2.getValue();
 
-      data->batterie_voltage = this->uBat.getValue();
+      n2kVolvoData->batterie_voltage = this->uBat.getValue();
 
-      data->flg_coolant_temperature_ok = false;
-      data->flg_engine_oel_pressure_ok = false;
+      n2kVolvoData->flg_coolant_temperature_ok = false;
+      n2kVolvoData->flg_engine_oel_pressure_ok = false;
 
       // unlock the resource again
       xSemaphoreGive(xMutexVolvoN2kData);
