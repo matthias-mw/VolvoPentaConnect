@@ -37,8 +37,6 @@ const unsigned long TransmitMessages[] PROGMEM={127493L,127489L,127488L,130316L,
  */
 typedef struct VolvoPentaData{
 
-  /// engine coolant flow rate in l/h
-  double engine_coolant_flow = 0;
   /// engine coolant temperature in kelvin
   double engine_coolant_temperature = 0;
   /// engine coolant temperature at the pipe in kelvin
@@ -51,8 +49,8 @@ typedef struct VolvoPentaData{
   bool flg_engine_oel_pressure_ok = false;
   /// voltage of the starter batterie in volt
   double batterie_voltage = 0;
-  /// engine room temperature in kelvin
-  double engine_room_temperature = 0;
+  /// Alternator 1 temperature in kelvin
+  double alternator1_temperature = 0;
   /// exhaust gat temperature in kelvin
   double exhaust_temperature = 0;
   /// gearbox temperature in kelvin

@@ -68,7 +68,7 @@ public:
      * \param unit      Datapoint unit (eG. V)
      *      
      */
-    tDataPoint(tSensorTyp senType, String name = "na", String unit = "-");
+    tDataPoint(tSensorTyp senType, String name = "na", String unit = "-", double min_value = -9999, double max_value = 9999);
 
     /*********************************************************************//**
      * \brief Get the Name of this Datapoint
@@ -167,6 +167,11 @@ private:
     double value_mean = 0;
     /// history of the signals values 
     double value_history[MAX_HISTORY_BUFFER_SIZE];
+    /// lower limit of the value
+    double value_limit_min = -9999;
+    /// upper limit of the value
+    double value_limit_max = 9999;
+
     /* semaphore handle to ensure data consistency while reading and 
     writing in parallel tasks */
     SemaphoreHandle_t xMutexDataLock = NULL;  // Create a mutex object

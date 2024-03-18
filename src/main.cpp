@@ -27,6 +27,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Wire.h>
+#include "LiquidCrystal_PCF8574.h"
 
 #include <lookUpTable.h>
 
@@ -37,7 +38,33 @@ static unsigned long timeUpdatedFast = millis();
 static unsigned long timeUpdatedSlow = millis();
 static bool blink = false;
 
-LookUpTable1D tab(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
+static uint8_t lcdPage = 4;
+
+TwoWire Wire_1 = TwoWire(0x3f);
+
+LiquidCrystal_PCF8574 lcd(0x3F); // set the LCD address to 0x27
+
+/// Buffer for Crystal  LCD Display 4x20 (4 lines a 20 char)
+char lcdDisplay[4][20];
+
+/// LCD Panel switched to a complete new screen
+bool lcdScreenRenew = true;
+
+/// Button 1 debounce counter
+uint16_t btn1DebounceCnt = 0;
+/// Button 1 debounce counter
+uint16_t btn2DebounceCnt = 0;
+
+/// LCD Panel Updatecouter is incremented every cycle of \ref taskUpdateLCD
+uint16_t lcdUpdateCounter = 0;
+/// LCD Panel dimmer counter is used to decrease backlight during no activity
+uint32_t lcdBacklightDimCounter = 0;
+
+/// Class that contains a map to convert the measured voltage into tEngine
+LookUpTable1D mapTCO(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
+
+/// Class that contains a map to convert the measured voltage into pOil
+LookUpTable1D mapPOIL(AXIS_POIL_MES, MAP_POIL_MES, POIL_AXIS_LEN, POIL_MAP_PREC);
 
 /// class that contains all measured data
 AcquireData data;
@@ -59,6 +86,16 @@ TaskHandle_t TaskMeasureFastHandle;
 TaskHandle_t TaskMeasureOneWireHandle;
 
 /************************************************************************
+ * \brief Task Handle for task LCD Panel Update
+ */
+TaskHandle_t TaskUpdateLCDHandle;
+
+/************************************************************************
+ * \brief Task Handle for task Button Interpretation
+ */
+TaskHandle_t TaskInterpretButtonHandle;
+
+/************************************************************************
  * \brief Task for measuring oneWire signals
  *
  * This tasks measures all oneWire signals, converts them to N2K format
@@ -78,6 +115,25 @@ void taskMeasureOneWire(void *parameter);
  */
 void taskMeasureFast(void *pvParameters);
 
+/************************************************************************
+ * \brief Task for LCD Panel update
+ *
+ * This tasks will update the LCD Panel.
+ *
+ * \param parameter {type}
+ */
+void taskUpdateLCD(void *pvParameters);
+
+/************************************************************************
+ * \brief Task for Button Interpretation
+ *
+ * This tasks will check the buttons continuously and issues certain
+ * commands from the user interaction.
+ *
+ * \param parameter {type}
+ */
+void taskInterpretButton(void *pvParameters);
+
 //***************************************************************
 // Setup Task
 void setup()
@@ -91,7 +147,7 @@ void setup()
 
   // Init all the PINs
   pinMode(STATUS_LED_PIN, OUTPUT);
-  digitalWrite(STATUS_LED_PIN, LOW);
+  digitalWrite(STATUS_LED_PIN, LED_PIN_OFF);
   pinMode(BUTTON1_PIN, INPUT);
   pinMode(BUTTON2_PIN, INPUT);
 
@@ -122,7 +178,7 @@ void setup()
   pinMode(ESP32_CAN_RX_PIN, INPUT);
 
   // Start I2C
-  Wire.begin();
+  // Wire.begin();
 
   // Start the DS18B20 sensor
   oneWireSensors.begin();
@@ -136,29 +192,56 @@ void setup()
   // List all connected oneWire Devices
   data.listOneWireDevices();
 
+  // Setup LCD Display
+  Wire_1.begin(21, 22);   // custom i2c port on ESP
+  Wire_1.setClock(80000); // set 80kHz (PCF8574 max speed 100kHz)
+
+  lcd.begin(20, 4, Wire_1);
+  lcd.setBacklight(255);
+
   // Create mutex before starting tasks
   xMutexVolvoN2kData = xSemaphoreCreateMutex();
   xMutexStdOut = xSemaphoreCreateMutex();
 
-  // Create TaskMeasureOnewire with priority 0 at core 0
+  // Create TaskMeasureOnewire with priority 1 at core 0
   xTaskCreatePinnedToCore(
       taskMeasureOneWire,        /* Function to implement the task */
       "TaskMeasureOneWire",      /* Name of the task */
-      1300,                      /* Stack size in words */
+      1600,                      /* Stack size in words */
       NULL,                      /* Task input parameter */
-      0,                         /* Priority of the task */
+      1,                         /* Priority of the task */
       &TaskMeasureOneWireHandle, /* Task handle. */
       0);                        /* Core where the task should run */
 
-  // Create TaskMeasureFast with priority 1 at core 0
+  // Create TaskMeasureFast with priority 3 at core 0
   xTaskCreatePinnedToCore(
-      taskMeasureFast,
-      "TaskMeasureFast",
-      1300,
-      NULL,
-      1,
-      &TaskMeasureFastHandle,
-      0);
+      taskMeasureFast,        /* Function to implement the task */
+      "TaskMeasureFast",      /* Name of the task */
+      1600,                   /* Stack size in words */
+      NULL,                   /* Task input parameter */
+      3,                      /* Priority of the task */
+      &TaskMeasureFastHandle, /* Task handle. */
+      0);                     /* Core where the task should run */
+
+  // Create TaskUpdateLCD with priority 2 at core 0
+  xTaskCreatePinnedToCore(
+      taskUpdateLCD,        /* Function to implement the task */
+      "TaskUpdateLCD",      /* Name of the task */
+      3000,                 /* Stack size in words */
+      NULL,                 /* Task input parameter */
+      2,                    /* Priority of the task */
+      &TaskUpdateLCDHandle, /* Task handle. */
+      0);                   /* Core where the task should run */
+
+  // Create TaskInterpretButton with priority 2 at core 0
+  xTaskCreatePinnedToCore(
+      taskInterpretButton,        /* Function to implement the task */
+      "TaskInterpretButton",      /* Name of the task */
+      1300,                       /* Stack size in words */
+      NULL,                       /* Task input parameter */
+      2,                          /* Priority of the task */
+      &TaskInterpretButtonHandle, /* Task handle. */
+      0);                         /* Core where the task should run */
 }
 
 //***************************************************************
@@ -169,6 +252,7 @@ void loop()
   // Check N2k Messages
   NMEA2000.ParseMessages();
 
+  // Datenausgabe auf den Standard Terminal via USB
   if ((timeUpdatedFast + N2KUpdatePeriodFast) < millis())
   {
     timeUpdatedFast = millis();
@@ -208,10 +292,10 @@ void taskMeasureOneWire(void *parameter)
     data.measureOnewire();
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);
-    // send data
+    // send data to NMEA2000 Bus
     SendN2kEngineParmSlow(&VolvoDataForN2k);
 
-    // non blocking delay for the fast measuring
+    // non blocking delay for the slow measuring
     vTaskDelay(pdMS_TO_TICKS(300));
   }
 }
@@ -230,7 +314,7 @@ void taskMeasureFast(void *pvParameters)
       UBaseType_t stackHighWaterMark;
       stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
       Serial.print(millis());
-      Serial.print(" Measure Task is started -> free stack: ");
+      Serial.print(" Measure Fast Task is started -> free stack: ");
       Serial.println(stackHighWaterMark);
 
       xSemaphoreGive(xMutexStdOut);
@@ -243,12 +327,189 @@ void taskMeasureFast(void *pvParameters)
     data.measureSpeed();
     data.measureExhaustTemperature();
     data.checkContacts();
+    // calculate values
+    data.calculateVolvoPentaSensors();
+
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);
-    // send data to N2K
+    // send data to NMEA2000 Bus
     SendN2kEngineParmFast(&VolvoDataForN2k);
 
     // non blocking delay for the fast measuring
     vTaskDelay(pdMS_TO_TICKS(249));
+  }
+}
+
+//***************************************************************
+// Task to Update the LCD Display
+void taskUpdateLCD(void *pvParameters)
+{
+
+  while (1)
+  {
+// just to debug the stacksize
+#ifdef DEBUG_TASK_STACK_SIZE
+    if (xSemaphoreTake(xMutexStdOut, (TickType_t)50) == pdTRUE)
+    {
+      UBaseType_t stackHighWaterMark;
+      stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+      Serial.print(millis());
+      Serial.print(" Update LCD Task is started -> free stack: ");
+      Serial.println(stackHighWaterMark);
+
+      xSemaphoreGive(xMutexStdOut);
+    }
+
+#endif // DEBUG_TASK_STACK_SIZE
+
+    char lcdbuf[21];
+
+    data.updateLCDPage(lcdPage);
+
+    // Update first 3 Rows with static text
+    // less often to save processor time
+    if (lcdScreenRenew || (lcdUpdateCounter > 30))
+    {
+
+      // reset count
+      lcdUpdateCounter = 0;
+      lcdScreenRenew = false;
+
+      // Update row 1
+      lcd.setCursor(0, 0);
+      strncpy(lcdbuf, &lcdDisplay[0][0], 20);
+      lcdbuf[20] = '\0';
+      lcd.print(lcdbuf); // print the line to screen
+
+      // Update row 2
+      lcd.setCursor(0, 1);
+      strncpy(lcdbuf, &lcdDisplay[1][0], 20);
+      lcdbuf[20] = '\0';
+      lcd.print(lcdbuf); // print the line to screen
+
+      // Update row 3
+      lcd.setCursor(0, 2);
+      strncpy(lcdbuf, &lcdDisplay[2][0], 20);
+      lcdbuf[20] = '\0';
+      lcd.print(lcdbuf); // print the line to screen
+    }
+
+    // Update measured values more often for good response
+    // Update row 4
+    lcd.setCursor(0, 3);
+    strncpy(lcdbuf, &lcdDisplay[3][0], 20);
+    lcdbuf[20] = '\0';
+    lcd.print(lcdbuf); // print the line to screen
+
+    // non blocking delay for the lcd Display
+    lcdUpdateCounter++;
+    vTaskDelay(pdMS_TO_TICKS(50));
+  }
+}
+//***************************************************************
+// Task to Interpret the buttons
+void taskInterpretButton(void *pvParameters)
+{
+  while (1)
+  {
+// just to debug the stacksize
+#ifdef DEBUG_TASK_STACK_SIZE
+    if (xSemaphoreTake(xMutexStdOut, (TickType_t)50) == pdTRUE)
+    {
+      UBaseType_t stackHighWaterMark;
+      stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+      Serial.print(millis());
+      Serial.print(" Button Task is started -> free stack: ");
+      Serial.println(stackHighWaterMark);
+
+      xSemaphoreGive(xMutexStdOut);
+    }
+
+#endif // DEBUG_TASK_STACK_SIZE
+
+    // ============================================
+    // Check Button 1
+    // ============================================
+    if (digitalRead(BUTTON1_PIN))
+    {
+      digitalWrite(STATUS_LED_PIN, LED_PIN_ON);
+
+      // ++++++++++ Do on Button Release ++++++++++
+      // increase debounce counter
+      btn1DebounceCnt++;
+      // enable lcd backlight
+      lcdBacklightDimCounter = 0;
+      // detect long press event
+      if (btn1DebounceCnt >= BUTTON_LONG_PRESS)
+      {
+        // long press action
+        lcd.setBacklight(0);
+      }
+    }
+    else
+    {
+      digitalWrite(STATUS_LED_PIN, LED_PIN_OFF);
+
+      // ++++++++++ Do on Button Release ++++++++++
+      // detect short press event
+      if ((btn1DebounceCnt >= BUTTON_DEBOUNCE) && (btn1DebounceCnt < BUTTON_LONG_PRESS))
+      {
+        // short press action
+        lcd.setBacklight(5);
+      }
+      // reset debounce counter
+      btn1DebounceCnt = 0;
+    }
+
+    // ============================================
+    // Check Button 2
+    // ============================================
+    if (digitalRead(BUTTON2_PIN))
+    {
+      // ++++++++++ Do on Button Release ++++++++++
+      // increase debounce counter
+      btn2DebounceCnt++;
+      // enable lcd backlight
+      lcdBacklightDimCounter = 0;
+      // detect long press event
+      if (btn2DebounceCnt >= BUTTON_LONG_PRESS)
+      {
+        // long press action
+        lcdPage = 10;
+        lcdScreenRenew = true;
+      }
+    }
+    else
+    {
+      // ++++++++++ Do on Button Release ++++++++++
+      // detect short press event
+      if ((btn2DebounceCnt >= BUTTON_DEBOUNCE) && (btn2DebounceCnt < BUTTON_LONG_PRESS))
+      {
+        // short press action
+        lcdPage++;
+        lcdScreenRenew = true;
+        if (lcdPage > 4)
+          lcdPage = 0;
+      }
+      // reset debounce counter
+      btn2DebounceCnt = 0;
+    }
+
+    // Set LED Backlight Brightness
+    if (lcdBacklightDimCounter < LCD_BACKLIGHT_OFF_COUNT)
+    {
+      // dimmed brightness to the LCD Panel
+      lcd.setBacklight(LCD_BACKLIGHT_FULL);
+    }
+    else
+    {
+      // LCD Panel backlight is off
+      lcd.setBacklight(LCD_BACKLIGHT_OFF);
+    }
+    // increase counter
+    lcdBacklightDimCounter++;
+
+    // non blocking delay for the button
+    vTaskDelay(pdMS_TO_TICKS(150));
   }
 }

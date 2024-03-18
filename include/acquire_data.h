@@ -20,6 +20,8 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
+#include <lookUpTable.h>
+
 #include <adc_calib.h>
 #include <datapoint.h>
 #include <max6675.h>
@@ -32,6 +34,10 @@ extern OneWire oneWire;
 extern DallasTemperature oneWireSensors;
 /// Mutex for protecting data integrity of \ref VolvoDataForN2k
 extern SemaphoreHandle_t xMutexVolvoN2kData;
+
+/// Buffer for Crystal  LCD Display 4x20 (4 lines a 20 char)
+extern char lcdDisplay[4][20];           
+
 
 // ------------------------------------------------------------------
 // variables for engine speed calculation
@@ -113,6 +119,9 @@ public:
    *
    */
   void showDataOnTerminal();
+
+
+  void updateLCDPage(uint8_t page, boolean blnUpdateDataOnly = false);
   
   /************************************************************************//**
    * \brief List all OneWire devices
@@ -156,7 +165,17 @@ public:
    * thermocouple and the MAX6675 Chip
    */
   void measureExhaustTemperature();
-
+  
+  /************************************************************************//**
+   * \brief  Calculate VolvoPenta Original Sensoren
+   *
+   * This method calulates all values for VolvoPenta sensoren based
+   * on measures voltages and interpolation curves.
+   * 
+   * \sa adc_calib.h
+   */
+  void calculateVolvoPentaSensors();
+  
   /************************************************************************//**
    * \brief  Checking the states of the contact
    *
@@ -212,40 +231,56 @@ private:
   /// OneWire Sensor Address for gearbox system
   DeviceAddress oWtGearbox = ONEWIRE_ADR_GEARBOX;
 
+  // =========================================
+  // Erfasste oder berechnete Messwerte
+  // =========================================
+  /** Temperature of the gearbox measured via a uMcp3204Ch1 sensor connect
+      to the original VolvoPenta sensor */
+  tDataPoint tEngine = tDataPoint(senType_adc, "tEngine", "GrdC",-99,199);
   /** Temperature of the cooling system measure via a ds1820 sensor mounted 
       at the wall of a cooling pipe*/
-  tDataPoint tSeaOutletWall = tDataPoint(senType_ds1820, "tSeaOutletWall", "GrdC");
+  tDataPoint tSeaOutletWall = tDataPoint(senType_ds1820, "tSeaOutletWall", "GrdC",-99,199);
   /** Temperature of the balmar alternator measured via a ds1820 sensor*/
-  tDataPoint tAlternator = tDataPoint(senType_ds1820, "tAlternator", "GrdC");
+  tDataPoint tAlternator = tDataPoint(senType_ds1820, "tAlternator", "GrdC",-99,199);
   /** Temperature of the gearbox measured via a ds1820 sensor mounted 
       at the wall of the transmission */
-  tDataPoint tGearbox = tDataPoint(senType_ds1820, "tGearbox", "GrdC");
-  /** Batterie voltage measured at the main power source*/
-  tDataPoint uBat = tDataPoint(senType_adc, "uBat", "V");
-  /** Engine speed measured via an hall sensor at the crankshaft*/
-  tDataPoint nMot = tDataPoint(senType_RPM, "nMot", "rpm");
-  /** Shaft speed measured via an hall sensor at the pro shaft */
-  tDataPoint nShaft = tDataPoint(senType_RPM, "nShaft", "rpm");
-  /** Alternator 1 speed measured via the W signal of the alternator*/
-  tDataPoint nAlternator1 = tDataPoint(senType_RPM, "nAlternator1", "rpm");
-  /** Alternator 2 speed measured via the W signal of the alternator*/
-  tDataPoint nAlternator2 = tDataPoint(senType_RPM, "nAlternator2", "rpm");
+  tDataPoint tGearbox = tDataPoint(senType_ds1820, "tGearbox", "GrdC",-99,199);
   /** Exhaust gas temperature measured via a NiCr-Ni thermocouple */
-  tDataPoint tExhaust = tDataPoint(senType_max6675, "tExhaust", "GrdC");
+  tDataPoint tExhaust = tDataPoint(senType_max6675, "tExhaust", "GrdC",-99,999);
+ 
+  /** Engine speed measured via an hall sensor at the crankshaft*/
+  tDataPoint nMot = tDataPoint(senType_RPM, "nMot", "rpm",0,9999);
+  /** Shaft speed measured via an hall sensor at the pro shaft */
+  tDataPoint nShaft = tDataPoint(senType_RPM, "nShaft", "rpm",0,9999);
+  /** Alternator 1 speed measured via the W signal of the alternator*/
+  tDataPoint nAlternator1 = tDataPoint(senType_RPM, "nAlternator1", "rpm",0,19999);
+  /** Alternator 2 speed measured via the W signal of the alternator*/
+  tDataPoint nAlternator2 = tDataPoint(senType_RPM, "nAlternator2", "rpm",0,19999);
+
+  /** Batterie voltage measured at the main power source*/
+  tDataPoint uBat = tDataPoint(senType_adc, "uBat", "V",0,99);
+
+  /** Batterie voltage measured at the main power source*/
+  tDataPoint pOil = tDataPoint(senType_adc, "pOil", "bar",0,99);
+
   /** Voltage measure via an mcp3204 an AD Channel 1*/
-  tDataPoint uMcp3204Ch1 = tDataPoint(senType_adc, "uMcp3204Ch1", "V");
+  tDataPoint uMcp3204Ch1 = tDataPoint(senType_adc, "uMcp3204Ch1", "V",0,99);
   /** Voltage measure via an mcp3204 an AD Channel 2*/
-  tDataPoint uMcp3204Ch2 = tDataPoint(senType_adc, "uMcp3204Ch2", "V");
+  tDataPoint uMcp3204Ch2 = tDataPoint(senType_adc, "uMcp3204Ch2", "V",0,99);
   /** Voltage measure via an mcp3204 an AD Channel 3*/
-  tDataPoint uMcp3204Ch3 = tDataPoint(senType_adc, "uMcp3204Ch3", "V");
+  tDataPoint uMcp3204Ch3 = tDataPoint(senType_adc, "uMcp3204Ch3", "V",0,99);
   /** Voltage measure via an mcp3204 an AD Channel 4*/
-  tDataPoint uMcp3204Ch4 = tDataPoint(senType_adc, "uMcp3204Ch4", "V");
+  tDataPoint uMcp3204Ch4 = tDataPoint(senType_adc, "uMcp3204Ch4", "V",0,99);
+
   /** State of Contact 1 */
-  tDataPoint flgContact1 = tDataPoint(senType_GPIO, "flgContact1", "-");
+  tDataPoint flgContact1 = tDataPoint(senType_GPIO, "flgContact1", "-",0,1);
   /** State of Contact 2 */
-  tDataPoint flgContact2 = tDataPoint(senType_GPIO, "flgContact2", "-");
+  tDataPoint flgContact2 = tDataPoint(senType_GPIO, "flgContact2", "-",0,1);
   /** State of Contact 3 */
-  tDataPoint flgContact3 = tDataPoint(senType_GPIO, "flgContact3", "-");
+  tDataPoint flgContact3 = tDataPoint(senType_GPIO, "flgContact3", "-",0,1);
+
+  /** Total run time of the diesel engine*/
+  tDataPoint engHour = tDataPoint(senType_virtual, "engHour", "h",0,19999);
 
   /************************************************************************//**
    * \brief Stores the data into a Datapoint
