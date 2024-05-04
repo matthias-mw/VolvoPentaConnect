@@ -31,17 +31,19 @@
 
 #include <lookUpTable.h>
 
-#define N2KUpdatePeriodFast 1000
-#define N2KUpdatePeriodSlow 2000
+/// Milliseconds for updating the terminal output
+#define UPDATE_TERMINAL_PERIOD 1000
 
-static unsigned long timeUpdatedFast = millis();
-static unsigned long timeUpdatedSlow = millis();
-static bool blink = false;
+/// Millisecond counter for Updating the Terminal Output
+static unsigned long timeUpdatedCnt = millis();
 
+/// ID for the active page on the LCD-Panel
 static uint8_t lcdPage = 4;
 
-TwoWire Wire_1 = TwoWire(0x3f);
+/// Object for I2C Bus
+TwoWire WireI2C = TwoWire(0x3f);
 
+/// LCD 4x20 object on I2C Bus
 LiquidCrystal_PCF8574 lcd(0x3F); // set the LCD address to 0x27
 
 /// Buffer for Crystal  LCD Display 4x20 (4 lines a 20 char)
@@ -177,9 +179,6 @@ void setup()
   pinMode(ESP32_CAN_TX_PIN, OUTPUT);
   pinMode(ESP32_CAN_RX_PIN, INPUT);
 
-  // Start I2C
-  // Wire.begin();
-
   // Start the DS18B20 sensor
   oneWireSensors.begin();
 
@@ -193,10 +192,10 @@ void setup()
   data.listOneWireDevices();
 
   // Setup LCD Display
-  Wire_1.begin(21, 22);   // custom i2c port on ESP
-  Wire_1.setClock(80000); // set 80kHz (PCF8574 max speed 100kHz)
+  WireI2C.begin(21, 22);   // custom i2c port on ESP
+  WireI2C.setClock(80000); // set 80kHz (PCF8574 max speed 100kHz)
 
-  lcd.begin(20, 4, Wire_1);
+  lcd.begin(20, 4, WireI2C);
   lcd.setBacklight(255);
 
   // Create mutex before starting tasks
@@ -253,9 +252,9 @@ void loop()
   NMEA2000.ParseMessages();
 
   // Datenausgabe auf den Standard Terminal via USB
-  if ((timeUpdatedFast + N2KUpdatePeriodFast) < millis())
+  if ((timeUpdatedCnt + UPDATE_TERMINAL_PERIOD) < millis())
   {
-    timeUpdatedFast = millis();
+    timeUpdatedCnt = millis();
 
     if (xSemaphoreTake(xMutexStdOut, (TickType_t)50) == pdTRUE)
     {
