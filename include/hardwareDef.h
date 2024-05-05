@@ -153,12 +153,12 @@
 #define MCP3204_VREF (double)4.7
 
 /// Voltage scaler for MCHP 3204 Channel 1
-#define MCP3204_CH1_FAC (double)2.488
+#define MCP3204_CH1_FAC (double)6.47706422018
 /// Voltage scaler for MCHP 3204 Channel 2
-#define MCP3204_CH2_FAC (double)2.488
+#define MCP3204_CH2_FAC (double)5.51117318436
 /// Voltage scaler for MCHP 3204 Channel 3
-#define MCP3204_CH3_FAC (double)16.024
+#define MCP3204_CH3_FAC (double)6.47706422018
 /// Voltage scaler for MCHP 3204 Channel 4
-#define MCP3204_CH4_FAC (double)16.024
+#define MCP3204_CH4_FAC (double)5.51117318436
 
 #endif // _hardwareDef_H_
