@@ -16,6 +16,10 @@
 #include <hardwareDef.h>
 
 #include <stdint.h>
+
+#include "nvs_flash.h"
+#include "nvs.h"
+
 // This will automatically choose right CAN library and create suitable
 // NMEA2000 object
 #include <NMEA2000_CAN.h>
@@ -56,6 +60,10 @@ bool lcdScreenRenew = true;
 uint16_t btn1DebounceCnt = 0;
 /// Button 1 debounce counter
 uint16_t btn2DebounceCnt = 0;
+/// LongPressButton1 is served
+bool lngPressButton1Served = false;
+/// LongPressButton2 is served
+bool lngPressButton2Served = false;
 
 /// LCD Panel Updatecouter is incremented every cycle of \ref taskUpdateLCD
 uint16_t lcdUpdateCounter = 0;
@@ -98,6 +106,11 @@ TaskHandle_t TaskUpdateLCDHandle;
 TaskHandle_t TaskInterpretButtonHandle;
 
 /************************************************************************
+ * \brief Task Handle for Data storage permanent
+ */
+TaskHandle_t TaskInterpretStorePermanentData;
+
+/************************************************************************
  * \brief Task for measuring oneWire signals
  *
  * This tasks measures all oneWire signals, converts them to N2K format
@@ -136,10 +149,27 @@ void taskUpdateLCD(void *pvParameters);
  */
 void taskInterpretButton(void *pvParameters);
 
+/************************************************************************
+ * \brief Task for permanent Data storage
+ *
+ * This tasks will store all the data which is need permanent
+ *
+ * \param parameter {type}
+ */
+void taskStorePermanentData(void *pvParameters);
+
 //***************************************************************
 // Setup Task
 void setup()
 {
+  // Initialize NVS
+  esp_err_t ret = nvs_flash_init();
+  if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
+  {
+    ESP_ERROR_CHECK(nvs_flash_erase());
+    ret = nvs_flash_init();
+  }
+  ESP_ERROR_CHECK(ret);
 
   // Wait that all Sensors can settle
   delay(1000);
@@ -198,6 +228,9 @@ void setup()
   lcd.begin(20, 4, WireI2C);
   lcd.setBacklight(255);
 
+  // restore NVM Data
+  data.restoreNVMdata();
+
   // Create mutex before starting tasks
   xMutexVolvoN2kData = xSemaphoreCreateMutex();
   xMutexStdOut = xSemaphoreCreateMutex();
@@ -236,11 +269,21 @@ void setup()
   xTaskCreatePinnedToCore(
       taskInterpretButton,        /* Function to implement the task */
       "TaskInterpretButton",      /* Name of the task */
-      1300,                       /* Stack size in words */
+      5300,                       /* Stack size in words */
       NULL,                       /* Task input parameter */
       2,                          /* Priority of the task */
       &TaskInterpretButtonHandle, /* Task handle. */
       0);                         /* Core where the task should run */
+
+  // Create TaskInterpretButton with priority 1 at core 0
+  xTaskCreatePinnedToCore(
+      taskStorePermanentData,           /* Function to implement the task */
+      "TaskStorePermanentData",         /* Name of the task */
+      2100,                             /* Stack size in words */
+      NULL,                             /* Task input parameter */
+      1,                                /* Priority of the task */
+      &TaskInterpretStorePermanentData, /* Task handle. */
+      0);
 }
 
 //***************************************************************
@@ -256,11 +299,18 @@ void loop()
   {
     timeUpdatedCnt = millis();
 
-    if (xSemaphoreTake(xMutexStdOut, (TickType_t)50) == pdTRUE)
+// Debugging
+#ifdef DEBUG_LEVEL
+    if (DEBUG_LEVEL == 1)
     {
-      data.showDataOnTerminal();
-      xSemaphoreGive(xMutexStdOut);
+      if (xSemaphoreTake(xMutexStdOut, (TickType_t)50) == pdTRUE)
+      {
+        data.showDataOnTerminal();
+        xSemaphoreGive(xMutexStdOut);
+      }
     }
+#endif // DEBUG_LEVEL
+
   }
 }
 
@@ -328,6 +378,7 @@ void taskMeasureFast(void *pvParameters)
     data.checkContacts();
     // calculate values
     data.calculateVolvoPentaSensors();
+    data.calcEngineMinutes();
 
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);
@@ -441,8 +492,26 @@ void taskInterpretButton(void *pvParameters)
       // detect long press event
       if (btn1DebounceCnt >= BUTTON_LONG_PRESS)
       {
+        // =========================
         // long press action
-        lcd.setBacklight(0);
+        // =========================
+        if (lngPressButton1Served == false)
+        {
+          // Set Engine Runtime
+          data.initEngineHours(145);
+
+          // mark long press event as served
+          lngPressButton1Served = true;
+
+// Debugging
+#ifdef DEBUG_LEVEL
+          if (DEBUG_LEVEL > 2)
+          {
+            Serial.println("Button 1 -> Long press action...");
+          }
+
+#endif // DEBUG_LEVEL
+        }
       }
     }
     else
@@ -453,11 +522,24 @@ void taskInterpretButton(void *pvParameters)
       // detect short press event
       if ((btn1DebounceCnt >= BUTTON_DEBOUNCE) && (btn1DebounceCnt < BUTTON_LONG_PRESS))
       {
+        // =========================
         // short press action
+        // =========================
         lcd.setBacklight(5);
+
+// Debugging
+#ifdef DEBUG_LEVEL
+        if (DEBUG_LEVEL > 2)
+        {
+          Serial.println("Button 1 -> Short press action...");
+        }
+
+#endif // DEBUG_LEVEL
       }
       // reset debounce counter
       btn1DebounceCnt = 0;
+      // reset long press event
+      lngPressButton1Served = false;
     }
 
     // ============================================
@@ -473,9 +555,25 @@ void taskInterpretButton(void *pvParameters)
       // detect long press event
       if (btn2DebounceCnt >= BUTTON_LONG_PRESS)
       {
+        // =========================
         // long press action
-        lcdPage = 10;
-        lcdScreenRenew = true;
+        // =========================
+        if (lngPressButton2Served == false)
+        {
+          lcdPage = 10;
+          lcdScreenRenew = true;
+
+          lngPressButton2Served = true;
+
+// Debugging
+#ifdef DEBUG_LEVEL
+          if (DEBUG_LEVEL > 2)
+          {
+            Serial.println("Button 2 -> Long press action...");
+          }
+
+#endif // DEBUG_LEVEL
+        }
       }
     }
     else
@@ -484,14 +582,28 @@ void taskInterpretButton(void *pvParameters)
       // detect short press event
       if ((btn2DebounceCnt >= BUTTON_DEBOUNCE) && (btn2DebounceCnt < BUTTON_LONG_PRESS))
       {
+        // =========================
         // short press action
+        // =========================
         lcdPage++;
         lcdScreenRenew = true;
         if (lcdPage > 4)
           lcdPage = 0;
+
+// Debugging
+#ifdef DEBUG_LEVEL
+        if (DEBUG_LEVEL > 2)
+        {
+          Serial.println("Button 2 -> Short press action...");
+        }
+
+#endif // DEBUG_LEVEL
       }
+
       // reset debounce counter
       btn2DebounceCnt = 0;
+      // reset long press event
+      lngPressButton2Served = false;
     }
 
     // Set LED Backlight Brightness
@@ -510,5 +622,34 @@ void taskInterpretButton(void *pvParameters)
 
     // non blocking delay for the button
     vTaskDelay(pdMS_TO_TICKS(150));
+  }
+}
+
+//***************************************************************
+// Task for permanent Data storage
+void taskStorePermanentData(void *pvParameters)
+{
+  while (1)
+  {
+// just to debug the stacksize
+#ifdef DEBUG_TASK_STACK_SIZE
+    if (xSemaphoreTake(xMutexStdOut, (TickType_t)50) == pdTRUE)
+    {
+      UBaseType_t stackHighWaterMark;
+      stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+      Serial.print(millis());
+      Serial.print(" Store Data Task is started -> free stack: ");
+      Serial.println(stackHighWaterMark);
+
+      xSemaphoreGive(xMutexStdOut);
+    }
+
+#endif // DEBUG_TASK_STACK_SIZE
+
+    // store NVM data
+    data.storeNVMdata();
+
+    // non blocking delay for the button (every 5min)
+    vTaskDelay(pdMS_TO_TICKS(1000 * 60 * 1));
   }
 }

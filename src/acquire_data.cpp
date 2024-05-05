@@ -48,7 +48,7 @@ void AcquireData::setUpMeasurementChannels()
 }
 
 //****************************************
-//
+// Displays all data to the terminal
 void AcquireData::showDataOnTerminal()
 {
   uint8_t i = 1;
@@ -73,6 +73,9 @@ void AcquireData::showDataOnTerminal()
   // flgContact1.printDatapointFull();
   // flgContact2.printDatapointFull();
   // flgContact3.printDatapointFull();
+
+  engMinutes.printDatapointShort();
+  Serial.println();
 
   tSeaOutletWall.printDatapointShort();
   tGearbox.printDatapointShort();
@@ -99,6 +102,8 @@ void AcquireData::showDataOnTerminal()
   Serial.println();
 }
 
+//************************************************************************
+// Update the Content of all LCD Pages
 void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
 {
 
@@ -138,7 +143,7 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     // ------------------------------
     if (!blnUpdateDataOnly)
     { // fill the screen buffer with permanent text
-      length = sprintf(buffer, "Engine Data  %6.1fh", engHour.getValue());
+      length = sprintf(buffer, "Engine Data  %6.1fh", engMinutes.getValue()/60);
       strncpy(&lcdDisplay[0][0], buffer, 20);
 
       length = sprintf(buffer, "--------------------");
@@ -212,8 +217,7 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     length = sprintf(buffer, "Found %1d DS18S20.    ", deviceCount);
     strncpy(&lcdDisplay[0][0], buffer, 20);
 
-    // print addresses to terminal
-    Serial.println("Printing addresses...");
+    // Print Adresses to LCD Display
     for (int i = 0; i < 3; i++)
     {
       if (i >= deviceCount)
@@ -224,7 +228,7 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
       }
       else
       {
-        //show the address
+        // show the address
         oneWireSensors.getAddress(address, i);
         length = sprintf(buffer, "> 0x%02x%02x%02x%02x%02x%02x%02x%02x",
                          address[0], address[1], address[2], address[3], address[4],
@@ -357,6 +361,122 @@ void AcquireData::measureVoltage()
   this->_StoreData(this->uMcp3204Ch4, voltage, millis());
 }
 
+//******************************************************
+// Calculating the Engine hours
+void AcquireData::calcEngineMinutes()
+{
+  // ToDO Update Calculation combined with rpm
+
+  double curRunTimeSec = millis();
+  double overallTineTimeMin = 0;
+
+  // check if millis() has rolled over ...
+  if (this->curRunTimeMilliLastRead > curRunTimeSec)
+  {
+    // millis() has rolled over
+    this->curRunTimeMilliLastRead = this->curRunTimeMilliLastRead + 0xFFFFFFFF;
+    curRunTimeSec = (curRunTimeSec + this->curRunTimeMilliLastRead) / 1000;
+  }
+  else
+  {
+    curRunTimeSec = (curRunTimeSec - this->curRunTimeMilliLastRead) / 1000;
+  }
+
+  // calc overall runtime
+  overallTineTimeMin = eepromStoredEngHours + curRunTimeSec / 60;
+
+// Debugging
+#ifdef DEBUG_LEVEL
+  if (DEBUG_LEVEL > 2)
+  {
+    // Debug Time Calculation
+    Serial.print(millis());
+    Serial.print(" -->  ");
+    Serial.print(curRunTimeSec);
+    Serial.print(" -->  ");
+    Serial.println(overallTineTimeMin);
+  }
+#endif // DEBUG_LEVEL
+
+  // save the overall runtime to the actual value
+  this->_StoreData(this->engMinutes, overallTineTimeMin, millis());
+}
+
+//******************************************************
+// Initial setting of the start value of the engine run time counter
+void AcquireData::initEngineHours(uint32_t runtime)
+{
+
+  // open preference namespace
+  this->eepromDataStorage.begin("engineData", false);
+
+  // store theEngine run time to NVM
+  this->eepromDataStorage.putDouble("engMinutes", runtime);
+  this->engMinutes.updateValue(runtime, millis());
+  this->eepromStoredEngHours = runtime;
+  this->curRunTimeMilliLastRead = millis();
+
+// Debugging
+#ifdef DEBUG_LEVEL
+  // Debug Initialize engine runtime
+  Serial.print("Initialize Engine runtime with: ");
+  Serial.print(runtime);
+  Serial.println("[min]");
+
+#endif // DEBUG_LEVEL
+
+  // close preference namespace
+  this->eepromDataStorage.end();
+}
+
+//******************************************************
+// Store the Engine hours to EEPROM
+void AcquireData::storeNVMdata()
+{
+  // open preference namespace
+  this->eepromDataStorage.begin("engineData", false);
+
+  // store theEngine run time to NVM
+  this->eepromDataStorage.putDouble("engMinutes", this->engMinutes.getValue());
+
+// Debugging
+#ifdef DEBUG_LEVEL
+  Serial.print("Store to NVM: ");
+  Serial.print(this->engMinutes.getValue());
+  Serial.println("[min] Engine Runtime");
+#endif // DEBUG_LEVEL
+
+  // close preference namespace
+  this->eepromDataStorage.end();
+}
+
+//****************************************
+// Restore data from NVM
+void AcquireData::restoreNVMdata(void)
+{
+
+  // Open Preferences with engineData namespace.
+  // Each application module, library,
+  // etc has to use a namespace name to prevent key name collisions. We will
+  // open storage in RW-mode (second parameter has to be false).
+  // Note: Namespace name is limited to 15 chars.
+  this->eepromDataStorage.begin("engineData", false);
+
+  // Get the value, if the key does not exist, return a default
+  // value of 0
+  this->eepromStoredEngHours = this->eepromDataStorage.getDouble("engMinutes", 10);
+  this->curRunTimeMilliLastRead = millis();
+
+// Debugging
+#ifdef DEBUG_LEVEL
+  Serial.print("Start Read from NVM ");
+  Serial.print(this->eepromStoredEngHours);
+  Serial.println("[min] Engine Runtime");
+#endif // DEBUG_LEVEL
+
+  // Close the Preferences
+  this->eepromDataStorage.end();
+}
 //==============================================================================
 //==============================================================================
 // method's calculated VolvoPenta Sensors
@@ -632,7 +752,7 @@ void AcquireData::convertDataToN2k(tVolvoPentaData *n2kVolvoData)
     if (xSemaphoreTake(xMutexVolvoN2kData, (TickType_t)5) == pdTRUE)
     {
 
-      n2kVolvoData->engine_hours = this->engHour.getValue();
+      n2kVolvoData->engine_hours = this->engMinutes.getValue()/60;
 
       n2kVolvoData->engine_coolant_temperature = this->tEngine.getValue() + 273.15;
       n2kVolvoData->engine_coolant_temperature_wall = this->tSeaOutletWall.getValue() + 273.15;
