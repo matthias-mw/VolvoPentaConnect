@@ -33,7 +33,7 @@
 #define DEBUG_LEVEL 1
 
 // Definition of Simulated Test Data for TEsting without sensors
-#define USE_SIM_DATA
+// #define USE_SIM_DATA
 
 #define SIM_DATA_UBAT_ADC_PIN 11.7
 #define SIM_DATA_MCP3201_CHN1 4.56
@@ -160,5 +160,7 @@
 #define MCP3204_CH3_FAC (double)6.47706422018
 /// Voltage scaler for MCHP 3204 Channel 4
 #define MCP3204_CH4_FAC (double)5.51117318436
+
+/// Messwert
 
 #endif // _hardwareDef_H_
