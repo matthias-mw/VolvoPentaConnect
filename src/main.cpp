@@ -42,7 +42,7 @@
 static unsigned long timeUpdatedCnt = millis();
 
 /// ID for the active page on the LCD-Panel
-static uint8_t lcdPage = 4;
+static uint8_t lcdPage = 2;
 
 /// Object for I2C Bus
 TwoWire WireI2C = TwoWire(0x3f);
@@ -497,8 +497,10 @@ void taskInterpretButton(void *pvParameters)
         // =========================
         if (lngPressButton1Served == false)
         {
+          
+          // ++++++++++ Only TO Set EngineHour Start +++++++
           // Set Engine Runtime
-          data.initEngineHours(145);
+          // data.initEngineHours(120*60);
 
           // mark long press event as served
           lngPressButton1Served = true;

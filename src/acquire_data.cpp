@@ -494,8 +494,8 @@ void AcquireData::calculateVolvoPentaSensors()
   mapTCO.LookUpValue(voltage, &result);
   this->_StoreData(this->tEngine, result, millis());
 
-  // Channel 2 -> Oil pressure
-  voltage = uMcp3204Ch2.getValue();
+  // Channel 3 -> Oil pressure
+  voltage = uMcp3204Ch3.getValue();
   mapPOIL.LookUpValue(voltage, &result);
   this->_StoreData(this->pOil, result, millis());
 }
@@ -714,8 +714,8 @@ void AcquireData::measureSpeed()
 #endif
   this->_StoreData(this->nShaft, speed, millis());
 
-  // measure Alternator1 Speed
-  speed = _calcNumberOfRevs(&alternator1SpeedCalc);
+  // measure Alternator1 Speed (16 Pol Alternator)
+  speed = _calcNumberOfRevs(&alternator1SpeedCalc) / 16;
   if (speed > 9999)
   {
     speed = 9999;
@@ -726,8 +726,8 @@ void AcquireData::measureSpeed()
 #endif
   this->_StoreData(this->nAlternator1, speed, millis());
 
-  // measure Alternator2 Speed
-  speed = _calcNumberOfRevs(&alternator2SpeedCalc);
+  // measure Alternator2 Speed (1 Pol Alternator - ToBe Checked)
+  speed = _calcNumberOfRevs(&alternator2SpeedCalc) / 1;
   if (speed > 9999)
   {
     speed = 9999;

@@ -27,16 +27,16 @@
 /// Major version number of the software project
 #define SW_VERSION_MAJOR 0
 /// Minor version number of the software project
-#define SW_VERSION_MINOR 1
+#define SW_VERSION_MINOR 2
 /// Patch version number of the software project
 #define SW_VERSION_PATCH 0
 /// Date for current version of the software project
-#define SW_VERSION_DATE  "09-2023"
+#define SW_VERSION_DATE  "05-2024"
 
 
 /// Major version number of the hardware project
 #define HW_VERSION_MAJOR 1
-/// Minor version number of the hardware project
+/// Description of the hardware project
 #define HW_DESCRIPTION "VPM" 
 /// Date for current version of the hardware project
 #define HW_VERSION_DATE  "05-2023"
