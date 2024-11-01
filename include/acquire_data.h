@@ -19,6 +19,7 @@
 #include <hardwareDef.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <Preferences.h>
 
 #include <lookUpTable.h>
 
@@ -37,7 +38,6 @@ extern SemaphoreHandle_t xMutexVolvoN2kData;
 
 /// Buffer for Crystal  LCD Display 4x20 (4 lines a 20 char)
 extern char lcdDisplay[4][20];           
-
 
 // ------------------------------------------------------------------
 // variables for engine speed calculation
@@ -120,7 +120,17 @@ public:
    */
   void showDataOnTerminal();
 
-
+  /************************************************************************//**
+   * \brief Update the Content of all LCD Pages
+   * 
+   * This method updates all LCD pages with actual data. For saving time
+   * and reducing glitches at the display, it has an option to update the 
+   * "changing" data characters and not the "static" text.
+   * 
+   * @param page                number of lcd page to be updated
+   * @param blnUpdateDataOnly   update data fields only (default = false)
+   * 
+   */
   void updateLCDPage(uint8_t page, boolean blnUpdateDataOnly = false);
   
   /************************************************************************//**
@@ -201,7 +211,43 @@ public:
    */
   void convertDataToN2k(tVolvoPentaData * data);
 
+  /************************************************************************//**
+   * \brief Calculating the Engine hours 
+   *
+   *  This method calculates the engine hours, by ....
+   */
+  void calcEngineMinutes(void);
 
+  /************************************************************************//**
+   * \brief Initial setting of the start value of the engine run time counter
+   *
+   * This method sets the engine runtime counter to a certain value. This is
+   * useful once after a system flash/change or similar.
+   * 
+   * \param runtime   Initial Value for Engine runtime [min]
+   */
+  void initEngineHours(uint32_t runtime = 0);
+
+
+  /************************************************************************//**
+   * \brief Storing data into the NVM flash 
+   * 
+   * This method stores dedicated values into the NVM to keep values over 
+   * a power cycle. The values can bee restored by the corresponding
+   * method \sa restoreNVMdata()
+   *
+   */
+  void storeNVMdata(void);
+
+  /************************************************************************//**
+   * \brief Retrieving data from NVM and restore values 
+   * 
+   * This method is reading dedicated values from the NVM and initialize 
+   * them after power up. The values have to be stored to NVM via 
+   * \sa storeNVMdata().
+   *
+   */
+  void restoreNVMdata(void);
 
   /** Structure with all timer values for the engine speed calculation*/
   tSpeedCalc engSpeedCalc;
@@ -215,7 +261,12 @@ public:
   /** Structure with all timer values for the alternator 2 speed calculation*/
   tSpeedCalc alternator2SpeedCalc;
 
+
+
+
 private:
+
+  Preferences eepromDataStorage;
 
   /** Object of the NiCr-Ni Thermocouple that handles all functions */
   MAX6675 thermoNiCr_Ni = MAX6675(SPI_CLK_PIN, NOT_CS_THERMO_PIN, SPI_MISO_PIN);
@@ -280,7 +331,12 @@ private:
   tDataPoint flgContact3 = tDataPoint(senType_GPIO, "flgContact3", "-",0,1);
 
   /** Total run time of the diesel engine*/
-  tDataPoint engHour = tDataPoint(senType_virtual, "engHour", "h",0,19999);
+  tDataPoint engMinutes = tDataPoint(senType_virtual, "engMinutes", "min",0,600000);
+
+  /** Overall run time [min] of the engine retrievd from NVM*/
+  double eepromStoredEngHours = 0;
+  /** timestamp for the last time runtime was read from NVM */
+  uint32_t curRunTimeMilliLastRead = 0;
 
   /************************************************************************//**
    * \brief Stores the data into a Datapoint
