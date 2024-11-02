@@ -212,17 +212,19 @@ public:
   void convertDataToN2k(tVolvoPentaData * data);
 
   /************************************************************************//**
-   * \brief Calculating the Engine hours 
+   * \brief Calculating the Engine hours in seconds
    *
-   *  This method calculates the engine hours, by ....
+   *  This method calculates the engine hours, by measuring the actual
+   *  runtime and adding the stored runtime from last engine run.
    */
-  void calcEngineMinutes(void);
+  void calcEngineSeconds(void);
 
   /************************************************************************//**
    * \brief Initial setting of the start value of the engine run time counter
    *
    * This method sets the engine runtime counter to a certain value. This is
-   * useful once after a system flash/change or similar.
+   * useful once after a system flash/change or similar, when the stored 
+   * value got lost.
    * 
    * \param runtime   Initial Value for Engine runtime [min]
    */
@@ -266,6 +268,7 @@ public:
 
 private:
 
+  /** Object of the NVMe storage class of the ESP32 */
   Preferences eepromDataStorage;
 
   /** Object of the NiCr-Ni Thermocouple that handles all functions */
@@ -330,11 +333,11 @@ private:
   /** State of Contact 3 */
   tDataPoint flgContact3 = tDataPoint(senType_GPIO, "flgContact3", "-",0,1);
 
-  /** Total run time of the diesel engine*/
-  tDataPoint engMinutes = tDataPoint(senType_virtual, "engMinutes", "min",0,600000);
+  /** Total run time of the diesel engine in seconds*/
+  tDataPoint engSecond = tDataPoint(senType_virtual, "engSecond", "sec",0,360000000);
 
-  /** Overall run time [min] of the engine retrievd from NVM*/
-  double eepromStoredEngHours = 0;
+  /** Overall run time [sec] of the engine retrievd from NVM*/
+  double eepromStoredEngSeconds = 0;
   /** timestamp for the last time runtime was read from NVM */
   uint32_t curRunTimeMilliLastRead = 0;
 

@@ -64,7 +64,7 @@ typedef struct VolvoPentaData{
   /// alternator 2 speed in rev per minute
   double alternator2_speed = 0;
   /// engine hours run in seconds
-  uint16_t engine_hours = 0;
+  double engine_seconds = 0;
 
 }tVolvoPentaData;
 

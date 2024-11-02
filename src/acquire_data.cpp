@@ -74,7 +74,7 @@ void AcquireData::showDataOnTerminal()
   // flgContact2.printDatapointFull();
   // flgContact3.printDatapointFull();
 
-  engMinutes.printDatapointShort();
+  engSecond.printDatapointShort();
   Serial.println();
 
   tSeaOutletWall.printDatapointShort();
@@ -143,7 +143,7 @@ void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     // ------------------------------
     if (!blnUpdateDataOnly)
     { // fill the screen buffer with permanent text
-      length = sprintf(buffer, "Engine Data  %6.1fh", engMinutes.getValue()/60);
+      length = sprintf(buffer, "Engine Data  %6.1fh", engSecond.getValue() / 3600);
       strncpy(&lcdDisplay[0][0], buffer, 20);
 
       length = sprintf(buffer, "--------------------");
@@ -362,28 +362,38 @@ void AcquireData::measureVoltage()
 }
 
 //******************************************************
-// Calculating the Engine hours
-void AcquireData::calcEngineMinutes()
+// Calculating the Engine hours in seconds
+void AcquireData::calcEngineSeconds()
 {
-  // ToDO Update Calculation combined with rpm
+  double curRunTimeSec = 0;
+  double overallTimeInSec = 0;
 
-  double curRunTimeSec = millis();
-  double overallTineTimeMin = 0;
+  // doublecheck if the engine is running
+  // either the rpm or charging voltage
+  if (this->nMot.getValue() > 10||
+      this->uBat.getValue() > 13.8)
+  {
+    // save current value in milliseconds
+    curRunTimeSec = millis();
 
-  // check if millis() has rolled over ...
-  if (this->curRunTimeMilliLastRead > curRunTimeSec)
-  {
-    // millis() has rolled over
-    this->curRunTimeMilliLastRead = this->curRunTimeMilliLastRead + 0xFFFFFFFF;
-    curRunTimeSec = (curRunTimeSec + this->curRunTimeMilliLastRead) / 1000;
-  }
-  else
-  {
-    curRunTimeSec = (curRunTimeSec - this->curRunTimeMilliLastRead) / 1000;
-  }
+    // check if millis() has rolled over ...
+    if (this->curRunTimeMilliLastRead > curRunTimeSec)
+    {
+      // millis() has rolled over
+      this->curRunTimeMilliLastRead = this->curRunTimeMilliLastRead + 0xFFFFFFFF;
+      curRunTimeSec = (curRunTimeSec + this->curRunTimeMilliLastRead) / 1000;
+    }
+    else
+    {
+      curRunTimeSec = (curRunTimeSec - this->curRunTimeMilliLastRead) / 1000;
+    }
+  };
 
   // calc overall runtime
-  overallTineTimeMin = eepromStoredEngHours + curRunTimeSec / 60;
+  overallTimeInSec = eepromStoredEngSeconds + curRunTimeSec;
+
+  // save the overall runtime to the actual value
+  this->_StoreData(this->engSecond, overallTimeInSec, millis());
 
 // Debugging
 #ifdef DEBUG_LEVEL
@@ -391,19 +401,20 @@ void AcquireData::calcEngineMinutes()
   {
     // Debug Time Calculation
     Serial.print(millis());
-    Serial.print(" -->  ");
+    Serial.print(" --> [sec]  ");
     Serial.print(curRunTimeSec);
+    Serial.print(" --> Stored [sec]  ");
+    Serial.print(eepromStoredEngSeconds);
     Serial.print(" -->  ");
-    Serial.println(overallTineTimeMin);
+    Serial.println(overallTimeInSec);
+    Serial.print(" -->  ");
+    Serial.println(this->engSecond.getValue());
   }
 #endif // DEBUG_LEVEL
-
-  // save the overall runtime to the actual value
-  this->_StoreData(this->engMinutes, overallTineTimeMin, millis());
 }
 
 //******************************************************
-// Initial setting of the start value of the engine run time counter
+// Initial setting of the value engine hour to the flash
 void AcquireData::initEngineHours(uint32_t runtime)
 {
 
@@ -411,9 +422,9 @@ void AcquireData::initEngineHours(uint32_t runtime)
   this->eepromDataStorage.begin("engineData", false);
 
   // store theEngine run time to NVM
-  this->eepromDataStorage.putDouble("engMinutes", runtime);
-  this->engMinutes.updateValue(runtime, millis());
-  this->eepromStoredEngHours = runtime;
+  this->eepromDataStorage.putDouble("engSecond", runtime);
+  this->engSecond.updateValue(runtime, millis());
+  this->eepromStoredEngSeconds = runtime;
   this->curRunTimeMilliLastRead = millis();
 
 // Debugging
@@ -421,7 +432,7 @@ void AcquireData::initEngineHours(uint32_t runtime)
   // Debug Initialize engine runtime
   Serial.print("Initialize Engine runtime with: ");
   Serial.print(runtime);
-  Serial.println("[min]");
+  Serial.println("[sec]");
 
 #endif // DEBUG_LEVEL
 
@@ -437,13 +448,13 @@ void AcquireData::storeNVMdata()
   this->eepromDataStorage.begin("engineData", false);
 
   // store theEngine run time to NVM
-  this->eepromDataStorage.putDouble("engMinutes", this->engMinutes.getValue());
+  this->eepromDataStorage.putDouble("engSecond", this->engSecond.getValue());
 
 // Debugging
 #ifdef DEBUG_LEVEL
   Serial.print("Store to NVM: ");
-  Serial.print(this->engMinutes.getValue());
-  Serial.println("[min] Engine Runtime");
+  Serial.print(this->engSecond.getValue());
+  Serial.println("[sec] Engine Runtime");
 #endif // DEBUG_LEVEL
 
   // close preference namespace
@@ -464,14 +475,14 @@ void AcquireData::restoreNVMdata(void)
 
   // Get the value, if the key does not exist, return a default
   // value of 0
-  this->eepromStoredEngHours = this->eepromDataStorage.getDouble("engMinutes", 10);
+  this->eepromStoredEngSeconds = this->eepromDataStorage.getDouble("engSecond", 10);
   this->curRunTimeMilliLastRead = millis();
 
 // Debugging
 #ifdef DEBUG_LEVEL
   Serial.print("Start Read from NVM ");
-  Serial.print(this->eepromStoredEngHours);
-  Serial.println("[min] Engine Runtime");
+  Serial.print(this->eepromStoredEngSeconds);
+  Serial.println("[sec] Engine Runtime");
 #endif // DEBUG_LEVEL
 
   // Close the Preferences
@@ -752,7 +763,7 @@ void AcquireData::convertDataToN2k(tVolvoPentaData *n2kVolvoData)
     if (xSemaphoreTake(xMutexVolvoN2kData, (TickType_t)5) == pdTRUE)
     {
 
-      n2kVolvoData->engine_hours = this->engMinutes.getValue()/60;
+      n2kVolvoData->engine_seconds = this->engSecond.getValue();
 
       n2kVolvoData->engine_coolant_temperature = this->tEngine.getValue() + 273.15;
       n2kVolvoData->engine_coolant_temperature_wall = this->tSeaOutletWall.getValue() + 273.15;

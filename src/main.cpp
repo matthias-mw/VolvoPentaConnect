@@ -378,7 +378,7 @@ void taskMeasureFast(void *pvParameters)
     data.checkContacts();
     // calculate values
     data.calculateVolvoPentaSensors();
-    data.calcEngineMinutes();
+    data.calcEngineSeconds();
 
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);
@@ -499,8 +499,8 @@ void taskInterpretButton(void *pvParameters)
         {
           
           // ++++++++++ Only TO Set EngineHour Start +++++++
-          // Set Engine Runtime
-          // data.initEngineHours(120*60);
+          // Set Engine Runtime in Seconds
+          data.initEngineHours(214*60*60);
 
           // mark long press event as served
           lngPressButton1Served = true;

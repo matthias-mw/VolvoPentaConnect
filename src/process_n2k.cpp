@@ -89,7 +89,7 @@ void SendN2kEngineParmFast(VolvoPentaData *n2kVolvoData)
       NMEA2000.SendMsg(N2kMsg);
 
       // send engine dynamic data
-      SetN2kEngineDynamicParam(N2kMsg, EngineInstance, n2kVolvoData->engine_oel_pressure, EngineOilTemp, n2kVolvoData->engine_coolant_temperature, n2kVolvoData->batterie_voltage, N2kDoubleNA, n2kVolvoData->engine_hours, N2kDoubleNA, N2kDoubleNA, N2kInt8NA, N2kInt8NA, flagCheckEngine);
+      SetN2kEngineDynamicParam(N2kMsg, EngineInstance, n2kVolvoData->engine_oel_pressure, EngineOilTemp, n2kVolvoData->engine_coolant_temperature, n2kVolvoData->batterie_voltage, N2kDoubleNA, n2kVolvoData->engine_seconds, N2kDoubleNA, N2kDoubleNA, N2kInt8NA, N2kInt8NA, flagCheckEngine);
       NMEA2000.SendMsg(N2kMsg);
 
       // send Balmar Alternator Data as "Instance 1"
