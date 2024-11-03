@@ -14,9 +14,7 @@
  **************************************************************/
 
 #include <hardwareDef.h>
-
 #include <stdint.h>
-
 #include "nvs_flash.h"
 #include "nvs.h"
 
@@ -31,8 +29,6 @@
 #include <display_data.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <Wire.h>
-#include "LiquidCrystal_PCF8574.h"
 
 #include <lookUpTable.h>
 
@@ -42,21 +38,6 @@
 /// Millisecond counter for Updating the Terminal Output
 static unsigned long timeUpdatedCnt = millis();
 
-/// ID for the active page on the LCD-Panel
-static uint8_t lcdPage = 2;
-
-/// Object for I2C Bus
-TwoWire WireI2C = TwoWire(0x3f);
-
-/// LCD 4x20 object on I2C Bus
-LiquidCrystal_PCF8574 lcd(0x3F); // set the LCD address to 0x27
-
-/// Buffer for Crystal  LCD Display 4x20 (4 lines a 20 char)
-char lcdDisplay[4][20];
-
-/// LCD Panel switched to a complete new screen
-bool lcdScreenRenew = true;
-
 /// Button 1 debounce counter
 uint16_t btn1DebounceCnt = 0;
 /// Button 1 debounce counter
@@ -65,11 +46,6 @@ uint16_t btn2DebounceCnt = 0;
 bool lngPressButton1Served = false;
 /// LongPressButton2 is served
 bool lngPressButton2Served = false;
-
-/// LCD Panel Updatecouter is incremented every cycle of \ref taskUpdateLCD
-uint16_t lcdUpdateCounter = 0;
-/// LCD Panel dimmer counter is used to decrease backlight during no activity
-uint32_t lcdBacklightDimCounter = 0;
 
 /// Class that contains a map to convert the measured voltage into tEngine
 LookUpTable1D mapTCO(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
@@ -81,7 +57,7 @@ LookUpTable1D mapPOIL(AXIS_POIL_MES, MAP_POIL_MES, POIL_AXIS_LEN, POIL_MAP_PREC)
 AcquireData data;
 
 /// class that contains all data for the LCD Panel
-DisplayData lcdData(data);
+DisplayData lcdDisplayData(data);
 
 /// structure that hold all data ready for N2k sending
 tVolvoPentaData VolvoDataForN2k;
@@ -175,6 +151,10 @@ void setup()
   }
   ESP_ERROR_CHECK(ret);
 
+  // Setup LCD Display
+  lcdDisplayData.setupLCDPanel();
+  lcdDisplayData.setLcdCurrentPage(WELCOME_PAGE);
+
   // Wait that all Sensors can settle
   delay(1000);
 
@@ -225,15 +205,11 @@ void setup()
   // List all connected oneWire Devices
   data.listOneWireDevices();
 
-  // Setup LCD Display
-  WireI2C.begin(21, 22);   // custom i2c port on ESP
-  WireI2C.setClock(80000); // set 80kHz (PCF8574 max speed 100kHz)
-
-  lcd.begin(20, 4, WireI2C);
-  lcd.setBacklight(255);
-
   // restore NVM Data
   data.restoreNVMdata();
+
+  // Setup LCD Display
+  lcdDisplayData.setLcdCurrentPage(PAGE_ENGINE);
 
   // Create mutex before starting tasks
   xMutexVolvoN2kData = xSemaphoreCreateMutex();
@@ -273,7 +249,7 @@ void setup()
   xTaskCreatePinnedToCore(
       taskInterpretButton,        /* Function to implement the task */
       "TaskInterpretButton",      /* Name of the task */
-      5300,                       /* Stack size in words */
+      3000,                       /* Stack size in words */
       NULL,                       /* Task input parameter */
       2,                          /* Priority of the task */
       &TaskInterpretButtonHandle, /* Task handle. */
@@ -416,51 +392,19 @@ void taskUpdateLCD(void *pvParameters)
 
 #endif // DEBUG_TASK_STACK_SIZE
 
-    char lcdbuf[21];
+    // Update the Content of the LCD Panel for an specific page
+    // on standard just update the 4th line
+    // with the actual measured values
+    lcdDisplayData.updateLcdContent(true);
 
-    // Update the LCD Panel for an specific page
-    lcdData.updateLCDPage(lcdPage, false);
-
-    // Update first 3 Rows with static text
-    // less often to save processor time
-    if (lcdScreenRenew || (lcdUpdateCounter > 30))
-    {
-
-      // reset count
-      lcdUpdateCounter = 0;
-      lcdScreenRenew = false;
-
-      // Update row 1
-      lcd.setCursor(0, 0);
-      strncpy(lcdbuf, &lcdDisplay[0][0], 20);
-      lcdbuf[20] = '\0';
-      lcd.print(lcdbuf); // print the line to screen
-
-      // Update row 2
-      lcd.setCursor(0, 1);
-      strncpy(lcdbuf, &lcdDisplay[1][0], 20);
-      lcdbuf[20] = '\0';
-      lcd.print(lcdbuf); // print the line to screen
-
-      // Update row 3
-      lcd.setCursor(0, 2);
-      strncpy(lcdbuf, &lcdDisplay[2][0], 20);
-      lcdbuf[20] = '\0';
-      lcd.print(lcdbuf); // print the line to screen
-    }
-
-    // Update measured values more often for good response
-    // Update row 4
-    lcd.setCursor(0, 3);
-    strncpy(lcdbuf, &lcdDisplay[3][0], 20);
-    lcdbuf[20] = '\0';
-    lcd.print(lcdbuf); // print the line to screen
+    // Update LED Backlight Brightness
+    lcdDisplayData.updateLcdBacklight();
 
     // non blocking delay for the lcd Display
-    lcdUpdateCounter++;
-    vTaskDelay(pdMS_TO_TICKS(50));
+    vTaskDelay(pdMS_TO_TICKS(100));
   }
 }
+
 //***************************************************************
 // Task to Interpret the buttons
 void taskInterpretButton(void *pvParameters)
@@ -493,7 +437,7 @@ void taskInterpretButton(void *pvParameters)
       // increase debounce counter
       btn1DebounceCnt++;
       // enable lcd backlight
-      lcdBacklightDimCounter = 0;
+      lcdDisplayData.resetLcdBacklightCounter();
       // detect long press event
       if (btn1DebounceCnt >= BUTTON_LONG_PRESS)
       {
@@ -505,7 +449,9 @@ void taskInterpretButton(void *pvParameters)
           
           // ++++++++++ Only TO Set EngineHour Start +++++++
           // Set Engine Runtime in Seconds
-          data.initEngineHours(214*60*60);
+          //data.initEngineHours(214*60*60);
+
+          lcdDisplayData.setLcdCurrentPage(WELCOME_PAGE);
 
           // mark long press event as served
           lngPressButton1Served = true;
@@ -532,7 +478,9 @@ void taskInterpretButton(void *pvParameters)
         // =========================
         // short press action
         // =========================
-        lcd.setBacklight(5);
+        // LCD Backlight to full
+        lcdDisplayData.setLcdCurrentPage(PAGE_TEMPERATURE);
+        lcdDisplayData.resetLcdBacklightCounter();
 
 // Debugging
 #ifdef DEBUG_LEVEL
@@ -550,7 +498,7 @@ void taskInterpretButton(void *pvParameters)
     }
 
     // ============================================
-    // Check Button 2
+    // Check Button 2 -> DownSwitch
     // ============================================
     if (digitalRead(BUTTON2_PIN))
     {
@@ -558,7 +506,7 @@ void taskInterpretButton(void *pvParameters)
       // increase debounce counter
       btn2DebounceCnt++;
       // enable lcd backlight
-      lcdBacklightDimCounter = 0;
+      lcdDisplayData.resetLcdBacklightCounter();
       // detect long press event
       if (btn2DebounceCnt >= BUTTON_LONG_PRESS)
       {
@@ -567,9 +515,10 @@ void taskInterpretButton(void *pvParameters)
         // =========================
         if (lngPressButton2Served == false)
         {
-          lcdPage = 10;
-          lcdScreenRenew = true;
-
+          // go to LCD Page PAGE_1WIRE_LIST
+          lcdDisplayData.setLcdCurrentPage(PAGE_1WIRE_LIST);
+          
+          // mark long press event as served
           lngPressButton2Served = true;
 
 // Debugging
@@ -592,10 +541,7 @@ void taskInterpretButton(void *pvParameters)
         // =========================
         // short press action
         // =========================
-        lcdPage++;
-        lcdScreenRenew = true;
-        if (lcdPage > 4)
-          lcdPage = 0;
+        lcdDisplayData.increaseLcdCurrentPage();
 
 // Debugging
 #ifdef DEBUG_LEVEL
@@ -612,21 +558,6 @@ void taskInterpretButton(void *pvParameters)
       // reset long press event
       lngPressButton2Served = false;
     }
-
-    // Set LED Backlight Brightness
-    if (lcdBacklightDimCounter < LCD_BACKLIGHT_OFF_COUNT)
-    {
-      // dimmed brightness to the LCD Panel
-      lcd.setBacklight(LCD_BACKLIGHT_FULL);
-    }
-    else
-    {
-      // LCD Panel backlight is off
-      lcd.setBacklight(LCD_BACKLIGHT_OFF);
-    }
-    // increase counter
-    lcdBacklightDimCounter++;
-
     // non blocking delay for the button
     vTaskDelay(pdMS_TO_TICKS(150));
   }

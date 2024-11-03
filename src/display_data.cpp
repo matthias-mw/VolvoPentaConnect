@@ -13,24 +13,102 @@
  * - Hardware:          az-delivery-devkit-v4
  */
 
-#include "display_data.h"
+#include <display_data.h>
+
+
+/// Object for I2C Bus
+TwoWire WireI2C(0x3f);
+
+/// Define the semaphore handle for the LCD Display Update
+SemaphoreHandle_t xMutexLCDUpdate = NULL;
 
 //****************************************
 // Construct a new DisplayData object
-DisplayData::DisplayData(AcquireData &data) : data(data)
+DisplayData::DisplayData(AcquireData &data) : data(data), lcd(0x3F)
 {
-} // DisplayData
+}
+
+// Setup the LCD Panel
+void DisplayData::setupLCDPanel()
+{
+  // Create the mutex before using it
+  xMutexLCDUpdate = xSemaphoreCreateMutex();
+  
+  WireI2C.begin(21, 22);   // custom i2c port on ESP
+  WireI2C.setClock(80000); // set 80kHz (PCF8574 max speed 100kHz)
+
+  this->lcd.begin(20, 4, WireI2C);
+  this->lcd.setBacklight(255);
+} // setupLCDPanel
+
+//****************************************
+// Increase the current page of the LCD Panel by One
+void DisplayData::increaseLcdCurrentPage()
+{
+  lcdCurrentPage++;
+  // limit the page number
+  if (lcdCurrentPage > MAX_MAIN_PAGES)
+  {
+    lcdCurrentPage = WELCOME_PAGE + 1;
+  }
+  lcdScreenRenew = true;   // reload the screen
+  updateLcdContent(false); // update the content completely
+
+} // increaseLcdCurrentPage
+
+//****************************************
+// Set the current page for the LCD Panel
+void DisplayData::setLcdCurrentPage(uint8_t page)
+{
+  lcdCurrentPage = page;
+  lcdScreenRenew = true;   // reload the screen
+  updateLcdContent(false); // update the content completely
+
+} // setLcdCurrentPage
+
+//****************************************
+// Update the backlight of the LCD Panel
+void DisplayData::updateLcdBacklight()
+{
+  // Set the backlight of the LCD Panel
+  if (lcdBacklightDimCounter < LCD_BACKLIGHT_OFF_COUNT)
+  {
+    // dimmed brightness to the LCD Panel
+    setBacklightFull();
+  }
+  else
+  {
+    // LCD Panel backlight is off
+    setBacklightOff();
+  }
+  // increase counter
+  lcdBacklightDimCounter++;
+} // updateLcdBacklight
+
+//****************************************
+// Set the backlight of the LCD Panel to full brightness
+void DisplayData::setBacklightFull()
+{
+  this->lcd.setBacklight(LCD_BACKLIGHT_FULL);
+} // setBacklightFull
+
+//****************************************
+// Set the backlight of the LCD Panel to off
+void DisplayData::setBacklightOff()
+{
+  this->lcd.setBacklight(LCD_BACKLIGHT_OFF);
+} // setBacklightOff
 
 //****************************************
 // Update the content of all LCD pages
-void DisplayData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
+void DisplayData::updateLcdContent(boolean blnUpdateDataOnly)
 {
   char buffer[21];
   int length;
 
-  switch (page)
+  switch (lcdCurrentPage)
   {
-  case 0:
+  case WELCOME_PAGE:
     // ------------------------------
     // Welcome Screen
     // ------------------------------
@@ -38,22 +116,22 @@ void DisplayData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     length = sprintf(buffer, "VolvoPenta Connect");
     strncpy(&lcdDisplay[0][0], buffer, 20);
 
-    length = sprintf(buffer, "--------------------");
+    length = sprintf(buffer, "---  Tatooine  ---");
     strncpy(&lcdDisplay[1][0], buffer, 20);
 
-    length = sprintf(buffer, "  by Matthias Werner");
+    length = sprintf(buffer, "by Matthias Werner  ");
     strncpy(&lcdDisplay[2][0], buffer, 20);
 
-    length = sprintf(buffer, "  Version %s", PROJECT_VERSION);
+    length = sprintf(buffer, "      Version %6s", PROJECT_VERSION);
     strncpy(&lcdDisplay[3][0], buffer, 20);
 
     break;
 
-  case 1:
+  case PAGE_ENGINE:
     // ------------------------------
     // Engine Screen
     // ------------------------------
-    if (!blnUpdateDataOnly)
+    if (!blnUpdateDataOnly || (lcdUpdateCounter > LCD_MAX_CYCLE_COUNT_TILL_FULL_UPDATE))
     { // fill the screen buffer with permanent text
       length = sprintf(buffer, "Engine Data  %6.1fh", this->data.engSecond.getValue() / 3600);
       strncpy(&lcdDisplay[0][0], buffer, 20);
@@ -70,7 +148,7 @@ void DisplayData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     strncpy(&lcdDisplay[3][0], buffer, 20);
 
     break;
-  case 2:
+  case PAGE_TEMPERATURE:
     // ------------------------------
     // Temperature Screen
     // ------------------------------
@@ -87,14 +165,12 @@ void DisplayData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     }
 
     // fill buffer with data
-    length = sprintf(buffer, "%5d%5d%5.1f%5d", (int16_t)this->data.tEngine.getValue(), (int16_t)this->data.tGearbox.getValue(), this->data.tSeaOutletWall.getValue(), (int16_t)this->data.tExhaust.getValue());
+    length = sprintf(buffer, "%5d%5d%4.1f%5d", (int16_t)this->data.tEngine.getValue(), (int16_t)this->data.tGearbox.getValue(), this->data.tSeaOutletWall.getValue(), (int16_t)this->data.tExhaust.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
-
-    Serial.println(lcdDisplay[3]);
 
     break;
 
-  case 3:
+  case PAGE_SPEED:
     // ------------------------------
     // Speed Screen
     // ------------------------------
@@ -116,7 +192,7 @@ void DisplayData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
 
     break;
 
-  case 4:
+  case PAGE_ALTERNATOR:
     // ------------------------------
     // Alternator Screen
     // ------------------------------
@@ -138,11 +214,11 @@ void DisplayData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
 
     break;
 
-  case 5:
+  case PAGE_VOLTAGE:
     // ------------------------------
     // Voltage Screen
     // ------------------------------
-    if (!blnUpdateDataOnly)
+    if (!blnUpdateDataOnly || (lcdUpdateCounter > LCD_MAX_CYCLE_COUNT_TILL_FULL_UPDATE))
     { // fill the screen buffer with permanent text
       length = sprintf(buffer, "MCP3204       %5.2fV", this->data.uBat.getValue());
       strncpy(&lcdDisplay[0][0], buffer, 20);
@@ -160,7 +236,7 @@ void DisplayData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
 
     break;
 
-  case 10:
+  case PAGE_1WIRE_LIST:
     // ------------------------------
     // List DS18S20 Sensors Screen
     // ------------------------------
@@ -214,4 +290,65 @@ void DisplayData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
     strncpy(&lcdDisplay[3][0], buffer, 20);
 
   }; // switch
+
+  // update the LCD Panel
+  updateLCDPanel();
 }
+
+//****************************************
+// Update the LCD Panel
+void DisplayData::updateLCDPanel()
+{
+
+  // Use the xMutexLCDUpdate to protect the LCD Panel update
+  if (xSemaphoreTake(xMutexLCDUpdate, (TickType_t)pdMS_TO_TICKS(100)) == pdTRUE)
+  { // Mutex is taken
+
+    char lcdbuf[21];
+    memset(lcdbuf, ' ', 20);
+    lcdbuf[20] = '\0';
+    // check if a full update is required
+    bool fullUpdateRequired = (lcdUpdateCounter > LCD_MAX_CYCLE_COUNT_TILL_FULL_UPDATE);
+
+    if (lcdScreenRenew || fullUpdateRequired)
+    {
+    
+      // Update row 1
+      this->lcd.setCursor(0, 0);
+      strncpy(lcdbuf, &lcdDisplay[0][0], 20);
+      lcdbuf[20] = '\0';
+      this->lcd.print(lcdbuf); // print the line to screen
+
+      // Update row 2
+      this->lcd.setCursor(0, 1);
+      strncpy(lcdbuf, &lcdDisplay[1][0], 20);
+      lcdbuf[20] = '\0';
+      this->lcd.print(lcdbuf); // print the line to screen
+
+      // Update row 3
+      this->lcd.setCursor(0, 2);
+      strncpy(lcdbuf, &lcdDisplay[2][0], 20);
+      lcdbuf[20] = '\0';
+      this->lcd.print(lcdbuf); // print the line to screen
+
+      // reset count
+      lcdUpdateCounter = 0;
+      lcdScreenRenew = false;
+
+    }
+    // Update measured values more often for good response
+    // Update row 4
+    this->lcd.setCursor(0, 3);
+    strncpy(lcdbuf, &lcdDisplay[3][0], 20);
+    lcdbuf[20] = '\0';
+    this->lcd.print(lcdbuf); // print the line to screen
+    
+    // increase LCD Update counter
+    lcdUpdateCounter++;
+
+    // Give back the Mutex
+    xSemaphoreGive(xMutexLCDUpdate);
+
+  } // if
+
+} // updateLCDPanel
