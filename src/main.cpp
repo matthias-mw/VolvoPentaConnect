@@ -27,6 +27,7 @@
 #include <datapoint.h>
 #include <acquire_data.h>
 #include <display_data.h>
+#include <button_interpreter.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
@@ -46,6 +47,9 @@ uint16_t btn2DebounceCnt = 0;
 bool lngPressButton1Served = false;
 /// LongPressButton2 is served
 bool lngPressButton2Served = false;
+
+/// Button Interpreter class
+ButtonInterpreter buttonInterpreter;
 
 /// Class that contains a map to convert the measured voltage into tEngine
 LookUpTable1D mapTCO(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
@@ -193,6 +197,9 @@ void setup()
   pinMode(ESP32_CAN_TX_PIN, OUTPUT);
   pinMode(ESP32_CAN_RX_PIN, INPUT);
 
+  // Initialize the Buttons
+  buttonInterpreter.initializeButtons();
+
   // Start the DS18B20 sensor
   oneWireSensors.begin();
 
@@ -248,7 +255,7 @@ void setup()
   // Create TaskInterpretButton with priority 2 at core 0
   xTaskCreatePinnedToCore(
       taskInterpretButton,        /* Function to implement the task */
-      "TaskInterpretButton",      /* Name of the task */
+      "taskInterpretButton",      /* Name of the task */
       3000,                       /* Stack size in words */
       NULL,                       /* Task input parameter */
       2,                          /* Priority of the task */
@@ -411,155 +418,43 @@ void taskInterpretButton(void *pvParameters)
 {
   while (1)
   {
-// just to debug the stacksize
-#ifdef DEBUG_TASK_STACK_SIZE
-    if (xSemaphoreTake(xMutexStdOut, (TickType_t)50) == pdTRUE)
+    // Update the Button State
+    for (int i = 0; i < NUM_BUTTONS; ++i)
     {
-      UBaseType_t stackHighWaterMark;
-      stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-      Serial.print(millis());
-      Serial.print(" Button Task is started -> free stack: ");
-      Serial.println(stackHighWaterMark);
-
-      xSemaphoreGive(xMutexStdOut);
+      buttonInterpreter.updateButtonState(buttonPins[i]);
     }
 
-#endif // DEBUG_TASK_STACK_SIZE
-
-    // ============================================
-    // Check Button 1
-    // ============================================
-    if (digitalRead(BUTTON1_PIN))
+    // when Button1 is short pressed  
+    if (buttonInterpreter.getButtonShortPress(0))
     {
+      // Do something
       digitalWrite(STATUS_LED_PIN, LED_PIN_ON);
 
-      // ++++++++++ Do on Button Release ++++++++++
-      // increase debounce counter
-      btn1DebounceCnt++;
-      // enable lcd backlight
-      lcdDisplayData.resetLcdBacklightCounter();
-      // detect long press event
-      if (btn1DebounceCnt >= BUTTON_LONG_PRESS)
-      {
-        // =========================
-        // long press action
-        // =========================
-        if (lngPressButton1Served == false)
-        {
-          
-          // ++++++++++ Only TO Set EngineHour Start +++++++
-          // Set Engine Runtime in Seconds
-          //data.initEngineHours(214*60*60);
-
-          lcdDisplayData.setLcdCurrentPage(WELCOME_PAGE);
-
-          // mark long press event as served
-          lngPressButton1Served = true;
-
-// Debugging
-#ifdef DEBUG_LEVEL
-          if (DEBUG_LEVEL > 2)
-          {
-            Serial.println("Button 1 -> Long press action...");
-          }
-
-#endif // DEBUG_LEVEL
-        }
-      }
+      lcdDisplayData.setLcdCurrentPage(PAGE_TEMPERATURE);
     }
-    else
+    // when Button2 is short pressed
+    if (buttonInterpreter.getButtonShortPress(1))
     {
+      // Do something
+      lcdDisplayData.increaseLcdCurrentPage();
+    }
+
+    // when Button1 is long pressed
+    if (buttonInterpreter.getButtonLongPress(0))
+    {
+      // Do something
+      lcdDisplayData.setLcdCurrentPage(WELCOME_PAGE);
+    }
+    // when Button2 is long pressed
+    if (buttonInterpreter.getButtonLongPress(1))
+    {
+      // Do something
       digitalWrite(STATUS_LED_PIN, LED_PIN_OFF);
 
-      // ++++++++++ Do on Button Release ++++++++++
-      // detect short press event
-      if ((btn1DebounceCnt >= BUTTON_DEBOUNCE) && (btn1DebounceCnt < BUTTON_LONG_PRESS))
-      {
-        // =========================
-        // short press action
-        // =========================
-        // LCD Backlight to full
-        lcdDisplayData.setLcdCurrentPage(PAGE_TEMPERATURE);
-        lcdDisplayData.resetLcdBacklightCounter();
-
-// Debugging
-#ifdef DEBUG_LEVEL
-        if (DEBUG_LEVEL > 2)
-        {
-          Serial.println("Button 1 -> Short press action...");
-        }
-
-#endif // DEBUG_LEVEL
-      }
-      // reset debounce counter
-      btn1DebounceCnt = 0;
-      // reset long press event
-      lngPressButton1Served = false;
+      lcdDisplayData.setLcdCurrentPage(PAGE_1WIRE_LIST);
     }
-
-    // ============================================
-    // Check Button 2 -> DownSwitch
-    // ============================================
-    if (digitalRead(BUTTON2_PIN))
-    {
-      // ++++++++++ Do on Button Release ++++++++++
-      // increase debounce counter
-      btn2DebounceCnt++;
-      // enable lcd backlight
-      lcdDisplayData.resetLcdBacklightCounter();
-      // detect long press event
-      if (btn2DebounceCnt >= BUTTON_LONG_PRESS)
-      {
-        // =========================
-        // long press action
-        // =========================
-        if (lngPressButton2Served == false)
-        {
-          // go to LCD Page PAGE_1WIRE_LIST
-          lcdDisplayData.setLcdCurrentPage(PAGE_1WIRE_LIST);
-          
-          // mark long press event as served
-          lngPressButton2Served = true;
-
-// Debugging
-#ifdef DEBUG_LEVEL
-          if (DEBUG_LEVEL > 2)
-          {
-            Serial.println("Button 2 -> Long press action...");
-          }
-
-#endif // DEBUG_LEVEL
-        }
-      }
-    }
-    else
-    {
-      // ++++++++++ Do on Button Release ++++++++++
-      // detect short press event
-      if ((btn2DebounceCnt >= BUTTON_DEBOUNCE) && (btn2DebounceCnt < BUTTON_LONG_PRESS))
-      {
-        // =========================
-        // short press action
-        // =========================
-        lcdDisplayData.increaseLcdCurrentPage();
-
-// Debugging
-#ifdef DEBUG_LEVEL
-        if (DEBUG_LEVEL > 2)
-        {
-          Serial.println("Button 2 -> Short press action...");
-        }
-
-#endif // DEBUG_LEVEL
-      }
-
-      // reset debounce counter
-      btn2DebounceCnt = 0;
-      // reset long press event
-      lngPressButton2Served = false;
-    }
-    // non blocking delay for the button
-    vTaskDelay(pdMS_TO_TICKS(150));
+    // Delay for the Button Task
+    vTaskDelay(pdMS_TO_TICKS(50));
   }
 }
 

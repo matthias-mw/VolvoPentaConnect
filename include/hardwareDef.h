@@ -66,6 +66,12 @@
 /// LCD Panel counter for backlight switched off
 #define LCD_BACKLIGHT_OFF_COUNT 2000UL // ToDo Real Value
 
+/// Number of Buttons
+#define NUM_BUTTONS 2
+/// Button 1 Index
+#define BUTTON1_INDEX 0
+/// Button 2 Index
+#define BUTTON2_INDEX 1
 /// GPIO where Button 1 is connected (Low Active)
 #define BUTTON1_PIN 2
 /// GPIO where Button 2 is connected (Low Active)
