@@ -119,20 +119,7 @@ public:
    *
    */
   void showDataOnTerminal();
-
-  /************************************************************************//**
-   * \brief Update the Content of all LCD Pages
-   * 
-   * This method updates all LCD pages with actual data. For saving time
-   * and reducing glitches at the display, it has an option to update the 
-   * "changing" data characters and not the "static" text.
-   * 
-   * @param page                number of lcd page to be updated
-   * @param blnUpdateDataOnly   update data fields only (default = false)
-   * 
-   */
-  void updateLCDPage(uint8_t page, boolean blnUpdateDataOnly = false);
-  
+ 
   /************************************************************************//**
    * \brief List all OneWire devices
    *
@@ -264,29 +251,8 @@ public:
   tSpeedCalc alternator2SpeedCalc;
 
 
-
-
-private:
-
-  /** Object of the NVMe storage class of the ESP32 */
-  Preferences eepromDataStorage;
-
-  /** Object of the NiCr-Ni Thermocouple that handles all functions */
-  MAX6675 thermoNiCr_Ni = MAX6675(SPI_CLK_PIN, NOT_CS_THERMO_PIN, SPI_MISO_PIN);
-
-  /** Object of the Microchip 3204 10bit AD-Converter that handles all 
-   * functions */
-  MCP3204 mcp3204 = MCP3204(SPI_MISO_PIN, SPI_MOSI_PIN, SPI_CLK_PIN);  
-
-  /// OneWire Sensor Address for cooling system
-  DeviceAddress oWtSeaOutletWall = ONEWIRE_ADR_SEAOUTLETWALL;
-  /// OneWire Sensor Address for engine room system
-  DeviceAddress oWtAlternator = ONEWIRE_ADR_ALTERNATOR;
-  /// OneWire Sensor Address for gearbox system
-  DeviceAddress oWtGearbox = ONEWIRE_ADR_GEARBOX;
-
   // =========================================
-  // Erfasste oder berechnete Messwerte
+  // Erfasste oder berechnete Messwerte (public)
   // =========================================
   /** Temperature of the gearbox measured via a uMcp3204Ch1 sensor connect
       to the original VolvoPenta sensor */
@@ -335,6 +301,25 @@ private:
 
   /** Total run time of the diesel engine in seconds*/
   tDataPoint engSecond = tDataPoint(senType_virtual, "engSecond", "sec",0,360000000);
+
+private:
+
+  /** Object of the NVMe storage class of the ESP32 */
+  Preferences eepromDataStorage;
+
+  /** Object of the NiCr-Ni Thermocouple that handles all functions */
+  MAX6675 thermoNiCr_Ni = MAX6675(SPI_CLK_PIN, NOT_CS_THERMO_PIN, SPI_MISO_PIN);
+
+  /** Object of the Microchip 3204 10bit AD-Converter that handles all 
+   * functions */
+  MCP3204 mcp3204 = MCP3204(SPI_MISO_PIN, SPI_MOSI_PIN, SPI_CLK_PIN);  
+
+  /// OneWire Sensor Address for cooling system
+  DeviceAddress oWtSeaOutletWall = ONEWIRE_ADR_SEAOUTLETWALL;
+  /// OneWire Sensor Address for engine room system
+  DeviceAddress oWtAlternator = ONEWIRE_ADR_ALTERNATOR;
+  /// OneWire Sensor Address for gearbox system
+  DeviceAddress oWtGearbox = ONEWIRE_ADR_GEARBOX;
 
   /** Overall run time [sec] of the engine retrievd from NVM*/
   double eepromStoredEngSeconds = 0;

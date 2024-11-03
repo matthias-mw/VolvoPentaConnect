@@ -8,7 +8,7 @@
  *
  * \author 		Matthias Werner
  * \date		10 Sep 2022
- *
+ * \version PROJECT_VERSION
  * - Prozessor:         ESP32-WROOM
  * - Hardware:          az-delivery-devkit-v4
  **************************************************************/
@@ -28,6 +28,7 @@
 #include <process_n2k.h>
 #include <datapoint.h>
 #include <acquire_data.h>
+#include <display_data.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Wire.h>
@@ -78,6 +79,9 @@ LookUpTable1D mapPOIL(AXIS_POIL_MES, MAP_POIL_MES, POIL_AXIS_LEN, POIL_MAP_PREC)
 
 /// class that contains all measured data
 AcquireData data;
+
+/// class that contains all data for the LCD Panel
+DisplayData lcdData(data);
 
 /// structure that hold all data ready for N2k sending
 tVolvoPentaData VolvoDataForN2k;
@@ -414,7 +418,8 @@ void taskUpdateLCD(void *pvParameters)
 
     char lcdbuf[21];
 
-    data.updateLCDPage(lcdPage);
+    // Update the LCD Panel for an specific page
+    lcdData.updateLCDPage(lcdPage, false);
 
     // Update first 3 Rows with static text
     // less often to save processor time
