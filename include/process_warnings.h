@@ -18,6 +18,9 @@
 #include <hardwareDef.h>
 #include <acquire_data.h>
 
+// Forward declaration
+class AcquireData;
+
 /// Delay counter for flashing LED
 #define WARNING_LED_DELAY 500
 
@@ -47,6 +50,13 @@ public:
      */
     void checkWarnings();
 
+    /*!
+     * \brief acknowledge all warnings
+     * This method acknowledges all warnings and resets the
+     * warning flags. 
+     * 
+     */
+    void acknowledgeAllWarnings();
 
 private:
     

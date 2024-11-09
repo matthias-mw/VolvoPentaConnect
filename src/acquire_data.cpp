@@ -363,12 +363,12 @@ void AcquireData::calcEngineStatus()
   if (this->nMot.getValue() > ENGINE_RUN_RPM_THRESHOLD && this->pOil.getValue() < OIL_PRESSURE_LOW_THRESHOLD)
   {
     // oil pressure is to low
-    this->currentEngineDiscreteStatus.flgLowOilPressure = true;
+    this->currentEngineDiscreteStatus.flgLowOilPressure.setFlag();
   }
   else
   {
     // oil pressure is ok
-    this->currentEngineDiscreteStatus.flgLowOilPressure = false;
+    this->currentEngineDiscreteStatus.flgLowOilPressure.resetFlag();
   }
 
   // =========================================
@@ -378,12 +378,12 @@ void AcquireData::calcEngineStatus()
   if (this->tEngine.getValue() > COOLANT_TEMPERATURE_HIGH_THRESHOLD)
   {
     // coolant temperature is to high
-    this->currentEngineDiscreteStatus.flgHighCoolantTemp = true;
+    this->currentEngineDiscreteStatus.flgHighCoolantTemp.setFlag();
   }
   else
   {
     // coolant temperature is ok
-    this->currentEngineDiscreteStatus.flgHighCoolantTemp = false;
+    this->currentEngineDiscreteStatus.flgHighCoolantTemp.resetFlag();
   }
 
   // =========================================
@@ -393,12 +393,12 @@ void AcquireData::calcEngineStatus()
   if (this->tExhaust.getValue() > EXHAUST_TEMPERATURE_HIGH_THRESHOLD)
   {
     // exhaust temperature is to high
-    this->currentEngineDiscreteStatus.flgHighExhaustTemp = true;
+    this->currentEngineDiscreteStatus.flgHighExhaustTemp.setFlag();
   }
   else
   {
     // exhaust temperature is ok
-    this->currentEngineDiscreteStatus.flgHighExhaustTemp = false;
+    this->currentEngineDiscreteStatus.flgHighExhaustTemp.resetFlag();
   }
 
   // =========================================
@@ -408,12 +408,12 @@ void AcquireData::calcEngineStatus()
   if (this->tGearbox.getValue() > GEARBOX_TEMPERATURE_HIGH_THRESHOLD)
   {
     // gearbox temperature is to high
-    this->currentEngineDiscreteStatus.flgHighGearboxTemp = true;
+    this->currentEngineDiscreteStatus.flgHighGearboxTemp.setFlag();
   }
   else
   {
     // gearbox temperature is ok
-    this->currentEngineDiscreteStatus.flgHighGearboxTemp = false;
+    this->currentEngineDiscreteStatus.flgHighGearboxTemp.resetFlag();
   }
 
   // =========================================
@@ -423,12 +423,12 @@ void AcquireData::calcEngineStatus()
   if (this->tAlternator.getValue() > ALTERNATOR_TEMPERATURE_HIGH_THRESHOLD)
   {
     // alternator temperature is to high
-    this->currentEngineDiscreteStatus.flgHighAlternatorTemp = true;
+    this->currentEngineDiscreteStatus.flgHighAlternatorTemp.setFlag();
   }
   else
   {
     // alternator temperature is ok
-    this->currentEngineDiscreteStatus.flgHighAlternatorTemp = false;
+    this->currentEngineDiscreteStatus.flgHighAlternatorTemp.resetFlag();
   }
 
   // =========================================
@@ -438,12 +438,12 @@ void AcquireData::calcEngineStatus()
   if (this->tSeaOutletWall.getValue() > SEA_WATER_TEMPERATURE_HIGH_THRESHOLD)
   {
     // sea water temperature is to high
-    this->currentEngineDiscreteStatus.flgHighSeaWaterTemp = true;
+    this->currentEngineDiscreteStatus.flgHighSeaWaterTemp.setFlag();
   }
   else
   {
     // sea water temperature is ok
-    this->currentEngineDiscreteStatus.flgHighSeaWaterTemp = false;
+    this->currentEngineDiscreteStatus.flgHighSeaWaterTemp.resetFlag();
   }
 }
 
@@ -717,18 +717,18 @@ void AcquireData::convertDataToN2k(tVolvoPentaData *n2kVolvoData)
       n2kVolvoData->battery_voltage = this->uBat.getValue();
 
       // convert the engine status
-      n2kVolvoData->engineDiscreteStatus1.Bits.LowOilLevel = this->currentEngineDiscreteStatus.flgLowOilPressure;
+      n2kVolvoData->engineDiscreteStatus1.Bits.LowOilLevel = this->currentEngineDiscreteStatus.flgLowOilPressure.isFlagSet();
 
-      n2kVolvoData->engineDiscreteStatus1.Bits.OverTemperature = this->currentEngineDiscreteStatus.flgHighCoolantTemp;
+      n2kVolvoData->engineDiscreteStatus1.Bits.OverTemperature = this->currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagSet();
       
-      n2kVolvoData->engineDiscreteStatus1.Bits.EGRSystem = this->currentEngineDiscreteStatus.flgHighExhaustTemp;
+      n2kVolvoData->engineDiscreteStatus1.Bits.EGRSystem = this->currentEngineDiscreteStatus.flgHighExhaustTemp.isFlagSet();
       
-      n2kVolvoData->engineDiscreteStatus1.Bits.CheckEngine = this->currentEngineDiscreteStatus.flgHighGearboxTemp;
+      n2kVolvoData->engineDiscreteStatus1.Bits.CheckEngine = this->currentEngineDiscreteStatus.flgHighGearboxTemp.isFlagSet();
 
-      n2kVolvoData->engineDiscreteStatus1.Bits.PreheatIndicator = this->currentEngineDiscreteStatus.flgHighSeaWaterTemp;
+      n2kVolvoData->engineDiscreteStatus1.Bits.PreheatIndicator = this->currentEngineDiscreteStatus.flgHighSeaWaterTemp.isFlagSet();
 
       // convert the alternator status
-      n2kVolvoData->alternatorDiscreteStatus1.Bits.OverTemperature = this->currentEngineDiscreteStatus.flgHighAlternatorTemp;
+      n2kVolvoData->alternatorDiscreteStatus1.Bits.OverTemperature = this->currentEngineDiscreteStatus.flgHighAlternatorTemp.isFlagSet();
 
       // unlock the resource again
       xSemaphoreGive(xMutexVolvoN2kData);

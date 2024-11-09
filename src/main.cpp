@@ -24,15 +24,17 @@
 #include <N2kMessages.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-
-#include <process_n2k.h>
-#include <process_warnings.h>
-#include <datapoint.h>
 #include <acquire_data.h>
+#include <errorflag.h>
+#include <process_n2k.h>
+#include <datapoint.h>
 #include <display_data.h>
 #include <button_interpreter.h>
-
 #include <lookUpTable.h>
+#include "process_warnings.h"
+
+// Forward declaration
+class ProcessWarnings;
 
 /// Milliseconds for updating the terminal output
 #define UPDATE_TERMINAL_PERIOD 1000

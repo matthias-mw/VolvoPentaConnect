@@ -26,10 +26,39 @@ ProcessWarnings::ProcessWarnings(AcquireData &data) : data(data)
 // Check for warnings
 void ProcessWarnings::checkWarnings()
 {
-  // Code to check for warnings
-
+  bool warningActive = false;
+  //When a flag is set and not acknowledged, the warning is active
+  if((data.currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagSet() &&
+    !data.currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagAcknowledged())||
+    (data.currentEngineDiscreteStatus.flgHighExhaustTemp.isFlagSet() &&
+    !data.currentEngineDiscreteStatus.flgHighExhaustTemp.isFlagAcknowledged())||
+    (data.currentEngineDiscreteStatus.flgHighGearboxTemp.isFlagSet() &&
+    !data.currentEngineDiscreteStatus.flgHighGearboxTemp.isFlagAcknowledged())||
+    (data.currentEngineDiscreteStatus.flgHighAlternatorTemp.isFlagSet() &&
+    !data.currentEngineDiscreteStatus.flgHighAlternatorTemp.isFlagAcknowledged())||
+    (data.currentEngineDiscreteStatus.flgHighSeaWaterTemp.isFlagSet() &&
+    !data.currentEngineDiscreteStatus.flgHighSeaWaterTemp.isFlagAcknowledged())||
+    (data.currentEngineDiscreteStatus.flgLowOilPressure.isFlagSet() &&
+    !data.currentEngineDiscreteStatus.flgLowOilPressure.isFlagAcknowledged()))
+  {
+    warningActive = true;
+  }
+  
   // operate the warning LED
-  operateWarningLED(true);
+  operateWarningLED(warningActive);
+  
+}
+
+// ********************************************************
+// Acknowledge all warnings
+void ProcessWarnings::acknowledgeAllWarnings()
+{
+  // reset all error flags
+  data.currentEngineDiscreteStatus.flgHighCoolantTemp.acknowledgeFlag();
+  data.currentEngineDiscreteStatus.flgHighExhaustTemp.acknowledgeFlag();
+  data.currentEngineDiscreteStatus.flgHighGearboxTemp.acknowledgeFlag();
+  data.currentEngineDiscreteStatus.flgHighAlternatorTemp.acknowledgeFlag();
+  data.currentEngineDiscreteStatus.flgHighSeaWaterTemp.acknowledgeFlag();
 }
 
 // ********************************************************

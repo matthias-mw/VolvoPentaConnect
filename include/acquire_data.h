@@ -16,18 +16,17 @@
 #define _acquire_data_h_
 
 #include <Arduino.h>
-#include <hardwareDef.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <Preferences.h>
-
-#include <lookUpTable.h>
-
-#include <adc_calib.h>
-#include <datapoint.h>
 #include <max6675.h>
 #include <MCP_ADC.h>
-#include "process_n2k.h"
+
+#include <Preferences.h>
+#include <adc_calib.h>
+#include <datapoint.h>
+#include <process_n2k.h>
+#include <lookUpTable.h>
+#include <errorflag.h>
 
 // ------------------------------------------------------------------
 // Calibration Data for threshold values
@@ -102,6 +101,11 @@ typedef struct tSpeedCalc{
 
 } tSpeedCalc;
 
+
+// ------------------------------------------------------------------
+// ErrorHandling for the engine
+// ------------------------------------------------------------------
+
 /*! \struct tEngineStatus 
  *  \brief Structure that handles all status bits for the engine
  *  The structure consists bits for low Oil pressure, High engine
@@ -109,19 +113,20 @@ typedef struct tSpeedCalc{
  * This will be the basis for error handling */
 typedef struct tEngineStatus{
   /** Bit for low oil pressure */
-  bool flgLowOilPressure = false;
+  ErrorFlag flgLowOilPressure;
   /** Bit for high coolant temperature */
-  bool flgHighCoolantTemp = false;
+  ErrorFlag flgHighCoolantTemp;
   /** Bit for high exhaust temperature */
-  bool flgHighExhaustTemp = false;
+  ErrorFlag flgHighExhaustTemp;
   /** Bit for high gearbox temperature */
-  bool flgHighGearboxTemp = false;
+  ErrorFlag flgHighGearboxTemp;
   /** Bit for high alternator temperature */
-  bool flgHighAlternatorTemp = false;
+  ErrorFlag flgHighAlternatorTemp;
   /** Bit for high sea water temperature */
-  bool flgHighSeaWaterTemp = false;
+  ErrorFlag flgHighSeaWaterTemp;
   
 } tEngineStatus;
+
 
 /************************************************************************//**
  * \brief Handle the interrupt triggered by the engine speed
