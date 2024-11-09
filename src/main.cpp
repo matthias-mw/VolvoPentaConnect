@@ -358,6 +358,16 @@ void taskMeasureFast(void *pvParameters)
     // calculate values
     data.calculateVolvoPentaSensors();
     data.calcEngineSeconds();
+    data.calcEngineStatus();
+
+    if(data.currentEngineDiscreteStatus.flgLowOilPressure)
+    {
+      digitalWrite(STATUS_LED_PIN, LED_PIN_ON );
+    }
+    else
+    {
+      digitalWrite(STATUS_LED_PIN, LED_PIN_OFF );
+    }
 
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);
