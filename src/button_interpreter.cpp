@@ -15,7 +15,7 @@
 
 // ********************************************************
 // Constructor
-ButtonInterpreter::ButtonInterpreter(DisplayData& lcdDisplay) : lcdDisplayObject(lcdDisplay) // Initialize lcdDisplayObject reference with lcdDisplay
+ButtonInterpreter::ButtonInterpreter(DisplayData &lcdDisplay) : lcdDisplayObject(lcdDisplay) // Initialize lcdDisplayObject reference with lcdDisplay
 {
   // Initialize the Button Interpreter
   for (int i = 0; i < NUM_BUTTONS; ++i)
@@ -113,10 +113,10 @@ void ButtonInterpreter::updateButtonState(uint8_t gpioPin)
 
 // Debugging
 #ifdef DEBUG_LEVEL
-    if (DEBUG_LEVEL > 2)
-    {
-      Serial.println("Button 1 -> Long press action...");
-    }
+      if (DEBUG_LEVEL > 2)
+      {
+        Serial.println("Button 1 -> Long press action...");
+      }
 
 #endif // DEBUG_LEVEL
     }
@@ -171,11 +171,6 @@ void ButtonInterpreter::processAllButtonState(uint8_t currentLcdPage)
 // Trigger Action for a specific button
 void ButtonInterpreter::triggerButtonAction(uint8_t buttonIndex, uint8_t currentLcdPage)
 {
-  // Function that switches the action for the button,
-  // depending on the current LCD page and if the button
-  // is pressed short or long
-  // the current LCD page and if the button is pressed short or long
-
   // =============================================
   // All actions that can be triggered by button 1
   // =============================================
@@ -187,6 +182,10 @@ void ButtonInterpreter::triggerButtonAction(uint8_t buttonIndex, uint8_t current
     {
       // show the next LCD panel page
       lcdDisplayObject.increaseLcdCurrentPage();
+
+      // Reset the backlight counter of the LCD Panel
+      lcdDisplayObject.resetLcdBacklightCounter();
+      lcdDisplayObject.updateLcdBacklight();
     }
 
     // Action if button 1 is pressed long
@@ -243,6 +242,10 @@ void ButtonInterpreter::triggerButtonAction(uint8_t buttonIndex, uint8_t current
     {
       // show the next LCD panel page
       lcdDisplayObject.increaseLcdCurrentPage();
+
+      // Reset the backlight counter of the LCD Panel
+      lcdDisplayObject.resetLcdBacklightCounter();
+      lcdDisplayObject.updateLcdBacklight();
     }
 
     // Action if button 1 is pressed long
