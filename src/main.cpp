@@ -22,14 +22,15 @@
 // NMEA2000 object
 #include <NMEA2000_CAN.h>
 #include <N2kMessages.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
 #include <process_n2k.h>
+#include <process_warnings.h>
 #include <datapoint.h>
 #include <acquire_data.h>
 #include <display_data.h>
 #include <button_interpreter.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
 
 #include <lookUpTable.h>
 
@@ -54,6 +55,8 @@ DisplayData lcdDisplayData(data);
 /// Button Interpreter class
 ButtonInterpreter buttonInterpreter (lcdDisplayData);
 
+/// Process Warnings class
+ProcessWarnings processWarnings(data);
 
 /// structure that hold all data ready for N2k sending
 tVolvoPentaData VolvoDataForN2k;
@@ -360,14 +363,9 @@ void taskMeasureFast(void *pvParameters)
     data.calcEngineSeconds();
     data.calcEngineStatus();
 
-    if(data.currentEngineDiscreteStatus.flgLowOilPressure)
-    {
-      digitalWrite(STATUS_LED_PIN, LED_PIN_ON );
-    }
-    else
-    {
-      digitalWrite(STATUS_LED_PIN, LED_PIN_OFF );
-    }
+    // check all warnings
+    processWarnings.checkWarnings();
+        
 
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);
