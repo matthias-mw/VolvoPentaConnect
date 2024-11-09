@@ -39,18 +39,6 @@
 /// Millisecond counter for Updating the Terminal Output
 static unsigned long timeUpdatedCnt = millis();
 
-/// Button 1 debounce counter
-uint16_t btn1DebounceCnt = 0;
-/// Button 1 debounce counter
-uint16_t btn2DebounceCnt = 0;
-/// LongPressButton1 is served
-bool lngPressButton1Served = false;
-/// LongPressButton2 is served
-bool lngPressButton2Served = false;
-
-/// Button Interpreter class
-ButtonInterpreter buttonInterpreter;
-
 /// Class that contains a map to convert the measured voltage into tEngine
 LookUpTable1D mapTCO(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
 
@@ -62,6 +50,10 @@ AcquireData data;
 
 /// class that contains all data for the LCD Panel
 DisplayData lcdDisplayData(data);
+
+/// Button Interpreter class
+ButtonInterpreter buttonInterpreter (lcdDisplayData);
+
 
 /// structure that hold all data ready for N2k sending
 tVolvoPentaData VolvoDataForN2k;
@@ -418,41 +410,9 @@ void taskInterpretButton(void *pvParameters)
 {
   while (1)
   {
-    // Update the Button State
-    for (int i = 0; i < NUM_BUTTONS; ++i)
-    {
-      buttonInterpreter.updateButtonState(buttonPins[i]);
-    }
-
-    // when Button1 is short pressed  
-    if (buttonInterpreter.getButtonShortPress(0))
-    {
-      // Do something
-      digitalWrite(STATUS_LED_PIN, LED_PIN_ON);
-
-      lcdDisplayData.setLcdCurrentPage(PAGE_TEMPERATURE);
-    }
-    // when Button2 is short pressed
-    if (buttonInterpreter.getButtonShortPress(1))
-    {
-      // Do something
-      lcdDisplayData.increaseLcdCurrentPage();
-    }
-
-    // when Button1 is long pressed
-    if (buttonInterpreter.getButtonLongPress(0))
-    {
-      // Do something
-      lcdDisplayData.setLcdCurrentPage(WELCOME_PAGE);
-    }
-    // when Button2 is long pressed
-    if (buttonInterpreter.getButtonLongPress(1))
-    {
-      // Do something
-      digitalWrite(STATUS_LED_PIN, LED_PIN_OFF);
-
-      lcdDisplayData.setLcdCurrentPage(PAGE_1WIRE_LIST);
-    }
+    // process the button state of all buttons
+    buttonInterpreter.processAllButtonState(lcdDisplayData.getLcdCurrentPage());
+    
     // Delay for the Button Task
     vTaskDelay(pdMS_TO_TICKS(50));
   }

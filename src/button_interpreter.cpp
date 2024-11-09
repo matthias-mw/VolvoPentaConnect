@@ -1,5 +1,5 @@
 // Doxygen Documentation
-/*! \file 	button.h
+/*! \file 	button_interpreter.cpp
  *  \brief  All Methods to interpret the buttons
  *
  * This File contains all the necessary methods to interpret the
@@ -15,8 +15,9 @@
 
 // ********************************************************
 // Constructor
-ButtonInterpreter::ButtonInterpreter()
+ButtonInterpreter::ButtonInterpreter(DisplayData& lcdDisplay) : lcdDisplayObject(lcdDisplay) // Initialize lcdDisplayObject reference with lcdDisplay
 {
+  // Initialize the Button Interpreter
   for (int i = 0; i < NUM_BUTTONS; ++i)
   {
     debounceCounters[i] = 0;
@@ -82,7 +83,6 @@ bool ButtonInterpreter::getButtonLongPress(uint8_t buttonIndex)
   return false;
 }
 
-
 // ********************************************************
 // Update the state of a specific button
 void ButtonInterpreter::updateButtonState(uint8_t gpioPin)
@@ -104,28 +104,29 @@ void ButtonInterpreter::updateButtonState(uint8_t gpioPin)
       // *********** Long Press ***********
       if (longPressServed[buttonIndex] == false)
       {
-        // Long press has been detected
+        // Long press event detected
         longPressFlags[buttonIndex] = true;
-       
+
         // Mark long press event as served
         longPressServed[buttonIndex] = true;
       }
-      
-    }
+
 // Debugging
 #ifdef DEBUG_LEVEL
-          if (DEBUG_LEVEL > 2)
-          {
-            Serial.println("Button 1 -> Long press action...");
-          }
+    if (DEBUG_LEVEL > 2)
+    {
+      Serial.println("Button 1 -> Long press action...");
+    }
 
 #endif // DEBUG_LEVEL
+    }
 
-  }// Check if the button was shortly pressed on release
-  else{
+  } // Check if the button was shortly pressed on release
+  else
+  {
 
     // *********** Short Press ***********
-    // Detect short press event
+    // Detect short press event on button release
     if ((debounceCounters[buttonIndex] >= BUTTON_DEBOUNCE) && (debounceCounters[buttonIndex] < BUTTON_LONG_PRESS))
     {
       // *********** Short Press ***********
@@ -134,20 +135,158 @@ void ButtonInterpreter::updateButtonState(uint8_t gpioPin)
 
 // Debugging
 #ifdef DEBUG_LEVEL
-        if (DEBUG_LEVEL > 2)
-        {
-          Serial.println("Button 1 -> Short press action...");
-        }
+      if (DEBUG_LEVEL > 2)
+      {
+        Serial.println("Button 1 -> Short press action...");
+      }
 
 #endif // DEBUG_LEVEL
-     }
+    }
 
     // Reset the debounce counter
     debounceCounters[buttonIndex] = 0;
     // Reset long press event
     longPressServed[buttonIndex] = false;
-
   }
-}
 
+} // End of updateButtonState
 
+// ********************************************************
+// Process the state of all buttons
+void ButtonInterpreter::processAllButtonState(uint8_t currentLcdPage)
+{
+  // Update the Button State
+  for (int i = 0; i < NUM_BUTTONS; ++i)
+  {
+    // Update the state of the button
+    updateButtonState(buttonPins[i]);
+
+    // Trigger the corresponding action for Button
+    triggerButtonAction(i, currentLcdPage);
+  }
+
+} // End of processAllButtonState
+
+// ********************************************************
+// Trigger Action for a specific button
+void ButtonInterpreter::triggerButtonAction(uint8_t buttonIndex, uint8_t currentLcdPage)
+{
+  // Function that switches the action for the button,
+  // depending on the current LCD page and if the button
+  // is pressed short or long
+  // the current LCD page and if the button is pressed short or long
+
+  // =============================================
+  // All actions that can be triggered by button 1
+  // =============================================
+  if (buttonIndex == 0)
+  {
+
+    // Action if button 1 is pressed shortly
+    if (getButtonShortPress(buttonIndex))
+    {
+      // show the next LCD panel page
+      lcdDisplayObject.increaseLcdCurrentPage();
+    }
+
+    // Action if button 1 is pressed long
+    if (getButtonLongPress(buttonIndex))
+    {
+      // switch the action depending on the current LCD page
+      switch (currentLcdPage)
+      {
+        // Separate the actions for the different LCD pages
+        // Uncomment cases wher no specefic action is needed
+        // case WELCOME_PAGE:
+        //   // do something
+        //   break;
+
+        // case PAGE_ENGINE:
+        //   // do something
+        //   break;
+
+        // case PAGE_TEMPERATURE:
+        //   // do something
+        //   break;
+
+        // case PAGE_VOLTAGE:
+        //   // do something
+        //   break;
+
+        // case PAGE_SPEED:
+        //   // do something
+        //   break;
+
+        // case PAGE_ALTERNATOR:
+        //   // do something
+        //   break;
+
+        // case PAGE_1WIRE_LIST:
+        //   // do something
+        //   break;
+
+      default:
+        // show the previous LCD panel page
+        lcdDisplayObject.setLcdCurrentPage(WELCOME_PAGE);
+        break;
+      }
+    }
+  }
+  // =============================================
+  // All actions that can be triggered by button 2
+  // =============================================
+  if (buttonIndex == 1)
+  {
+
+    // Action if button 1 is pressed shortly
+    if (getButtonShortPress(buttonIndex))
+    {
+      // show the next LCD panel page
+      lcdDisplayObject.increaseLcdCurrentPage();
+    }
+
+    // Action if button 1 is pressed long
+    if (getButtonLongPress(buttonIndex))
+    {
+      // switch the action depending on the current LCD page
+      switch (currentLcdPage)
+      {
+        // Separate the actions for the different LCD pages
+        // Uncomment cases wher no specefic action is needed
+        // case WELCOME_PAGE:
+        //   // do something
+        //   break;
+
+        // case PAGE_ENGINE:
+        //   // do something
+        //   break;
+
+        // case PAGE_TEMPERATURE:
+        //   // do something
+        //   break;
+
+        // case PAGE_VOLTAGE:
+        //   // do something
+        //   break;
+
+        // case PAGE_SPEED:
+        //   // do something
+        //   break;
+
+        // case PAGE_ALTERNATOR:
+        //   // do something
+        //   break;
+
+        // case PAGE_1WIRE_LIST:
+        //   // do something
+        //   break;
+
+      default:
+        // show the previous LCD panel page
+        lcdDisplayObject.setLcdCurrentPage(PAGE_1WIRE_LIST);
+        break;
+      }
+    }
+  }
+
+} // End of triggerButtonAction

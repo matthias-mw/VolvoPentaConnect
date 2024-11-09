@@ -1,5 +1,5 @@
 // Doxygen Documentation
-/*! \file 	button.h
+/*! \file 	button_interpreter.h
  *  \brief  All Methods to interpret the buttons
  *
  * This File contains all the necessary methods to interpret the
@@ -15,7 +15,7 @@
 
 #include <Arduino.h>
 #include <hardwareDef.h>
-
+#include <display_data.h>
 
 /// GPIO pins of the buttons. The order of the pins must
 /// match the order of the buttons.
@@ -33,7 +33,7 @@ public:
   /*!
    * \brief Constructor for ButtonInterpreter.
    */
-  ButtonInterpreter();
+  ButtonInterpreter(DisplayData &lcdDisplay);
 
   /*!
    * \brief Initialize the buttons.
@@ -54,14 +54,25 @@ public:
 
   /*!
    * \brief Update the state of a button.
-   * 
-   * This method updates the state of a button and checks for long 
+   *
+   * This method updates the state of a button and checks for long
    * presses and debounces the button.
-   * 
+   *
    * \param gpioPin The GPIO pin of the button.
    */
   void updateButtonState(uint8_t gpioPin);
 
+  /*!
+   * \brief Process the state of all buttons.
+   *
+   * This method checks the state of all buttons and triggers
+   * the corresponding actions. These actions can be different
+   * for all LCD pages.
+   *
+   * \param currentLcdPage The current LCD page.
+   *
+   */
+  void processAllButtonState(uint8_t currentLcdPage);
 
 private:
   /*!
@@ -71,11 +82,14 @@ private:
    */
   bool isButtonPressed(uint8_t gpioPin);
 
+  /// Reference to the lcdDisplayData-object.
+  DisplayData &lcdDisplayObject;
+
   /// Debounce counters for the buttons.
   uint8_t debounceCounters[NUM_BUTTONS];
 
   /// Short press flags for the buttons.
-  bool shortPressFlags[NUM_BUTTONS];  
+  bool shortPressFlags[NUM_BUTTONS];
   /// Long press flags for the buttons.
   bool longPressFlags[NUM_BUTTONS];
   ///  Long press flags for the buttons.
@@ -89,6 +103,17 @@ private:
    * \return The index of the button in the button array.
    */
   int getButtonIndex(uint8_t gpioPin);
+
+  /*!
+  * \brief Trigger Action for a specific button.
+
+  * This method triggers the action for a specific button. The action
+  * can be different for all LCD pages.
+  *
+  * \param buttonIndex The index of the button.
+  * \param currentLcdPage The current LCD page.
+  */
+  void triggerButtonAction(uint8_t buttonIndex, uint8_t currentLcdPage);
 };
 
 #endif // _button_interpreter_h_

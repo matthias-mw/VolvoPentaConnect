@@ -11,8 +11,8 @@
  * - Prozessor:         ESP32-WROOM
  * - Hardware:          az-delivery-devkit-v4
  */
-#ifndef _display_data_h_
-#define _display_data_h_
+#ifndef DISPLAY_DATA_H
+#define DISPLAY_DATA_H
 
 #include <Arduino.h>
 #include <hardwareDef.h>
@@ -126,7 +126,7 @@ private:
 
   /// LCD 4x20 object on I2C Bus
   // LiquidCrystal_PCF8574 lcd(0x3F); // set the LCD address to 0x27
-  LiquidCrystal_PCF8574 lcd; // set the LCD address to 0x27
+  LiquidCrystal_PCF8574 lcd;
   /// ID for the active page on the LCD-Panel
   uint8_t lcdCurrentPage = 0;
 
@@ -170,4 +170,4 @@ private:
   void updateLCDPanel();
 };
 
-#endif // _display_data_h_
+#endif // DISPLAY_DATA_H
