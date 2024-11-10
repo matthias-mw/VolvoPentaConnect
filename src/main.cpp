@@ -58,7 +58,7 @@ DisplayData lcdDisplayData(data);
 ProcessWarnings processWarnings(data);
 
 /// Button Interpreter class
-ButtonInterpreter buttonInterpreter (lcdDisplayData, processWarnings);
+ButtonInterpreter buttonInterpreter(lcdDisplayData, processWarnings);
 
 /// structure that hold all data ready for N2k sending
 tVolvoPentaData VolvoDataForN2k;
@@ -156,9 +156,6 @@ void setup()
   lcdDisplayData.setupLCDPanel();
   lcdDisplayData.setLcdCurrentPage(WELCOME_PAGE);
 
-  // Wait that all Sensors can settle
-  delay(1000);
-
   // Start Serial Output/Input
   Serial.begin(115200);
 
@@ -193,6 +190,9 @@ void setup()
 
   pinMode(ESP32_CAN_TX_PIN, OUTPUT);
   pinMode(ESP32_CAN_RX_PIN, INPUT);
+
+  // Wait that all Sensors can settle
+  delay(1000);
 
   // Initialize the Buttons
   buttonInterpreter.initializeButtons();
@@ -294,7 +294,6 @@ void loop()
       }
     }
 #endif // DEBUG_LEVEL
-
   }
 }
 
@@ -367,7 +366,6 @@ void taskMeasureFast(void *pvParameters)
 
     // check all warnings
     processWarnings.checkWarnings();
-        
 
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);
@@ -422,7 +420,7 @@ void taskInterpretButton(void *pvParameters)
   {
     // process the button state of all buttons
     buttonInterpreter.processAllButtonState(lcdDisplayData.getLcdCurrentPage());
-    
+
     // Delay for the Button Task
     vTaskDelay(pdMS_TO_TICKS(50));
   }
