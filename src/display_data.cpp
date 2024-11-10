@@ -15,7 +15,6 @@
 
 #include <display_data.h>
 
-
 /// Object for I2C Bus
 TwoWire WireI2C(0x3f);
 
@@ -33,7 +32,7 @@ void DisplayData::setupLCDPanel()
 {
   // Create the mutex before using it
   xMutexLCDUpdate = xSemaphoreCreateMutex();
-  
+
   WireI2C.begin(21, 22);   // custom i2c port on ESP
   WireI2C.setClock(80000); // set 80kHz (PCF8574 max speed 100kHz)
 
@@ -49,7 +48,7 @@ void DisplayData::increaseLcdCurrentPage()
   // limit the page number
   if (lcdCurrentPage > MAX_MAIN_PAGES)
   {
-    lcdCurrentPage = WELCOME_PAGE + 1;
+    setLcdCurrentPage(WELCOME_PAGE + 1);
   }
   lcdScreenRenew = true;   // reload the screen
   updateLcdContent(false); // update the content completely
@@ -106,6 +105,20 @@ void DisplayData::updateLcdContent(boolean blnUpdateDataOnly)
   char buffer[21];
   int length;
 
+  // count the number of alarms
+  uint8_t alarmCount = this->data.getActiveWarningCount();
+  // temporary buffer for alarmtext
+  char bufferAlarmTxt[21];
+  // number of alarm line
+  uint8_t alarmLine = 0;
+
+  // when there are alarms, then switch to the alarm page
+  if (alarmCount > 0)
+  {
+    lcdCurrentPage = (uint8_t)PAGE_ALARM;
+  }
+
+  // Edit the content of the LCD Panel
   switch (lcdCurrentPage)
   {
   case WELCOME_PAGE:
@@ -243,7 +256,6 @@ void DisplayData::updateLcdContent(boolean blnUpdateDataOnly)
     uint8_t i;
     uint8_t deviceCount;
     DeviceAddress address;
-    char buffer[20];
 
     // locate devices on the bus
     deviceCount = oneWireSensors.getDeviceCount();
@@ -267,6 +279,93 @@ void DisplayData::updateLcdContent(boolean blnUpdateDataOnly)
                          address[0], address[1], address[2], address[3], address[4],
                          address[5], address[6], address[7]);
         strncpy(&lcdDisplay[i + 1][0], buffer, 20);
+      }
+    }
+    break;
+
+  case PAGE_ALARM:
+    // ------------------------------
+    // Alarm Screen
+    // ------------------------------
+
+    // renew the screen always when the page is selected
+    lcdScreenRenew = true;
+
+    // count the number of alarms
+    if (alarmCount == 0)
+    {
+      // fill the screen buffer with permanent text
+      length = sprintf(buffer, "--- No Alarms ---   ");
+      strncpy(&lcdDisplay[0][0], buffer, 20);
+
+      length = sprintf(buffer, "                    ");
+      strncpy(&lcdDisplay[1][0], buffer, 20);
+
+      length = sprintf(buffer, "                    ");
+      strncpy(&lcdDisplay[2][0], buffer, 20);
+
+      length = sprintf(buffer, "                    ");
+      strncpy(&lcdDisplay[3][0], buffer, 20);
+    }
+    else
+    {
+      // fill the screen buffer with permanent text
+      length = sprintf(buffer, " Alarms Active !!! %d", alarmCount);
+      strncpy(&lcdDisplay[0][0], buffer, 20);
+
+      length = sprintf(buffer, "--------------------");
+      strncpy(&lcdDisplay[1][0], buffer, 20);
+
+      // create alarm text cooresponding to the active alarms
+      if (this->data.currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagSet())
+      {
+        length = sprintf(bufferAlarmTxt, "Overtemp Coolant    ");
+        strncpy(&lcdDisplay[2 + alarmLine][0], bufferAlarmTxt, 20);
+        alarmLine++;
+      }
+      if (this->data.currentEngineDiscreteStatus.flgLowOilPressure.isFlagSet())
+      {
+        length = sprintf(bufferAlarmTxt, "Low Oil Pressure    ");
+        strncpy(&lcdDisplay[2 + alarmLine][0], bufferAlarmTxt, 20);
+        alarmLine++;
+      }
+      if (this->data.currentEngineDiscreteStatus.flgHighExhaustTemp.isFlagSet() && (alarmCount <= 2))
+      {
+        length = sprintf(bufferAlarmTxt, "High Exhaust Temp   ");
+        strncpy(&lcdDisplay[2 + alarmLine][0], bufferAlarmTxt, 20);
+        alarmLine++;
+      }
+      if (this->data.currentEngineDiscreteStatus.flgHighGearboxTemp.isFlagSet() && (alarmCount <= 2))
+      {
+        length = sprintf(bufferAlarmTxt, "High Gearbox Temp   ");
+        strncpy(&lcdDisplay[2 + alarmLine][0], bufferAlarmTxt, 20);
+        alarmLine++;
+      }
+      if (this->data.currentEngineDiscreteStatus.flgHighAlternatorTemp.isFlagSet() && (alarmCount <= 2))
+      {
+        length = sprintf(bufferAlarmTxt, "High Alternator Temp");
+        strncpy(&lcdDisplay[2 + alarmLine][0], bufferAlarmTxt, 20);
+        alarmLine++;
+      }
+      if (this->data.currentEngineDiscreteStatus.flgHighSeaWaterTemp.isFlagSet() && (alarmCount <= 2))
+      {
+        length = sprintf(bufferAlarmTxt, "High Seawater InTemp ");
+        strncpy(&lcdDisplay[2 + alarmLine][0], bufferAlarmTxt, 20);
+        alarmLine++;
+      }
+
+      // more then 2 alarms
+      if (alarmCount > 2)
+      {
+        length = sprintf(buffer, "  %1d more Alarms     ", alarmCount - 1);
+        strncpy(&lcdDisplay[3][0], buffer, 20);
+      }
+
+      // when just 1 alarm is active
+      if (alarmCount == 1)
+      {
+        length = sprintf(buffer, "                    ");
+        strncpy(&lcdDisplay[3][0], buffer, 20);
       }
     }
     break;
@@ -312,7 +411,7 @@ void DisplayData::updateLCDPanel()
 
     if (lcdScreenRenew || fullUpdateRequired)
     {
-    
+
       // Update row 1
       this->lcd.setCursor(0, 0);
       strncpy(lcdbuf, &lcdDisplay[0][0], 20);
@@ -334,7 +433,6 @@ void DisplayData::updateLCDPanel()
       // reset count
       lcdUpdateCounter = 0;
       lcdScreenRenew = false;
-
     }
     // Update measured values more often for good response
     // Update row 4
@@ -342,7 +440,7 @@ void DisplayData::updateLCDPanel()
     strncpy(lcdbuf, &lcdDisplay[3][0], 20);
     lcdbuf[20] = '\0';
     this->lcd.print(lcdbuf); // print the line to screen
-    
+
     // increase LCD Update counter
     lcdUpdateCounter++;
 

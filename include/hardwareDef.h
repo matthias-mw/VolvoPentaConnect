@@ -24,15 +24,15 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 /// activate debug of free stacksize of the tasks
-// #define DEBUG_TASK_STACK_SIZE
+//#define DEBUG_TASK_STACK_SIZE
 
 /// activate a certain Debuglevel (0 -> lowest, 4 -> Highest)
 /// 1 --> ShowData on Serial
 /// Comment out if not needed
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 
 // Definition of Simulated Test Data for TEsting without sensors
-//#define USE_SIM_DATA
+//define USE_SIM_DATA
 
 #define SIM_DATA_UBAT_ADC_PIN 13.7
 #define SIM_DATA_MCP3201_CHN1 4.56

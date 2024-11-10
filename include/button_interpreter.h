@@ -10,16 +10,17 @@
  * - Prozessor:         ESP32-WROOM
  * - Hardware:          az-delivery-devkit-v4
  */
-#ifndef _button_interpreter_h_
-#define _button_interpreter_h_
+#ifndef BUTTON_INTERPRETER_H
+#define BUTTON_INTERPRETER_H
 
 #include <Arduino.h>
 #include <hardwareDef.h>
 #include <display_data.h>
+#include <process_warnings.h>
 
 /// GPIO pins of the buttons. The order of the pins must
 /// match the order of the buttons.
-const uint8_t buttonPins[NUM_BUTTONS] = {BUTTON1_PIN, BUTTON2_PIN};
+extern const uint8_t buttonPins[NUM_BUTTONS];
 
 /*! \class ButtonInterpreter
  *  \brief Class to interpret the buttons.
@@ -32,8 +33,10 @@ class ButtonInterpreter
 public:
   /*!
    * \brief Constructor for ButtonInterpreter.
+    * \param lcdDisplay Reference to a DisplayData object.
+    * \param processWarnings Reference to a ProcessWarnings object.
    */
-  ButtonInterpreter(DisplayData &lcdDisplay);
+  ButtonInterpreter(DisplayData &lcdDisplay, ProcessWarnings &processWarnings);
 
   /*!
    * \brief Initialize the buttons.
@@ -85,6 +88,9 @@ private:
   /// Reference to the lcdDisplayData-object.
   DisplayData &lcdDisplayObject;
 
+  /// Reference to the processWarnings-object.
+  ProcessWarnings &processWarningsObject;
+
   /// Debounce counters for the buttons.
   uint8_t debounceCounters[NUM_BUTTONS];
 
@@ -92,7 +98,7 @@ private:
   bool shortPressFlags[NUM_BUTTONS];
   /// Long press flags for the buttons.
   bool longPressFlags[NUM_BUTTONS];
-  ///  Long press flags for the buttons.
+  ///  Long press flags are served for the buttons.
   bool longPressServed[NUM_BUTTONS];
 
   /// Button press start times.
@@ -116,4 +122,4 @@ private:
   void triggerButtonAction(uint8_t buttonIndex, uint8_t currentLcdPage);
 };
 
-#endif // _button_interpreter_h_
+#endif // BUTTON_INTERPRETER_H

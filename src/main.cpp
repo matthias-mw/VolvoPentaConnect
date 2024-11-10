@@ -54,11 +54,11 @@ AcquireData data;
 /// class that contains all data for the LCD Panel
 DisplayData lcdDisplayData(data);
 
-/// Button Interpreter class
-ButtonInterpreter buttonInterpreter (lcdDisplayData);
-
 /// Process Warnings class
 ProcessWarnings processWarnings(data);
+
+/// Button Interpreter class
+ButtonInterpreter buttonInterpreter (lcdDisplayData, processWarnings);
 
 /// structure that hold all data ready for N2k sending
 tVolvoPentaData VolvoDataForN2k;

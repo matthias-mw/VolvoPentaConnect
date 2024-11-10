@@ -47,7 +47,6 @@ void ProcessWarnings::checkWarnings()
     !data.currentEngineDiscreteStatus.flgLowOilPressure.isFlagAcknowledged()))
   {
     warningActive = true;
-    Serial.println("Warning Active");
   }
   
   // operate the warning LED

@@ -447,6 +447,30 @@ void AcquireData::calcEngineStatus()
   }
 }
 
+//**********************************************
+// Count the number of active alarms
+uint8_t AcquireData::getActiveWarningCount(void)
+{
+  uint8_t alarmCount = 0;
+  // count the number of alarms
+  if (this->currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagSet())
+    alarmCount++;
+  if (this->currentEngineDiscreteStatus.flgHighExhaustTemp.isFlagSet())
+    alarmCount++;
+  if (this->currentEngineDiscreteStatus.flgHighGearboxTemp.isFlagSet())
+    alarmCount++;
+  if (this->currentEngineDiscreteStatus.flgHighAlternatorTemp.isFlagSet())
+    alarmCount++;
+  if (this->currentEngineDiscreteStatus.flgHighSeaWaterTemp.isFlagSet())
+    alarmCount++;
+  if (this->currentEngineDiscreteStatus.flgLowOilPressure.isFlagSet())
+    alarmCount++;
+
+  // return the count of active alarms
+  return alarmCount;
+}
+
+
 //==============================================================================
 //==============================================================================
 // method's for 1-Wire  measurement

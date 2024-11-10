@@ -306,6 +306,16 @@ public:
    *
    */
   void restoreNVMdata(void);
+  
+  /************************************************************************//**
+   * \brief  Get count of active warning flags
+   * This method returns the count of active warning flags from the 
+   * structure \ref tEngineStatus
+   * 
+   * \return {uint8_t} count of active warning flags
+   */
+  uint8_t getActiveWarningCount(void);
+
 
   /** Structure with all timer values for the engine speed calculation*/
   tSpeedCalc engSpeedCalc;

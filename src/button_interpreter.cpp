@@ -14,8 +14,14 @@
 #include "button_interpreter.h"
 
 // ********************************************************
-// Constructor
-ButtonInterpreter::ButtonInterpreter(DisplayData &lcdDisplay) : lcdDisplayObject(lcdDisplay) // Initialize lcdDisplayObject reference with lcdDisplay
+// GPIO pins of the buttons. The order of the pins must
+// match the order of the buttons.
+const uint8_t buttonPins[NUM_BUTTONS] = {BUTTON1_PIN, BUTTON2_PIN};
+
+// ********************************************************
+// ButtonInterpreter Constructor
+ButtonInterpreter::ButtonInterpreter(DisplayData &lcdDisplay, ProcessWarnings &processWarnings)
+    : lcdDisplayObject(lcdDisplay), processWarningsObject(processWarnings) //
 {
   // Initialize the Button Interpreter
   for (int i = 0; i < NUM_BUTTONS; ++i)
@@ -91,13 +97,13 @@ void ButtonInterpreter::updateButtonState(uint8_t gpioPin)
   if (buttonIndex < 0)
     return;
 
-  // Check if the button is pressed
+  // Check if the button is currently pressed
   if (isButtonPressed(gpioPin))
   {
     // Debounce the button
     debounceCounters[buttonIndex]++;
 
-    // Detect long press event
+    // Check if the button has been pressed long enough to be considered a long press
     if (debounceCounters[buttonIndex] >= BUTTON_LONG_PRESS)
     {
 
@@ -172,16 +178,15 @@ void ButtonInterpreter::processAllButtonState(uint8_t currentLcdPage)
 void ButtonInterpreter::triggerButtonAction(uint8_t buttonIndex, uint8_t currentLcdPage)
 {
   // =============================================
-  // All actions that can be triggered by button 1
+  // All actions that can be triggered by button 1 (Up)
   // =============================================
   if (buttonIndex == 0)
   {
-
     // Action if button 1 is pressed shortly
     if (getButtonShortPress(buttonIndex))
     {
-      // show the next LCD panel page
-      lcdDisplayObject.increaseLcdCurrentPage();
+      // show the previous LCD panel page
+      lcdDisplayObject.setLcdCurrentPage(PAGE_ALARM);
 
       // Reset the backlight counter of the LCD Panel
       lcdDisplayObject.resetLcdBacklightCounter();
@@ -225,14 +230,16 @@ void ButtonInterpreter::triggerButtonAction(uint8_t buttonIndex, uint8_t current
         //   break;
 
       default:
-        // show the previous LCD panel page
-        lcdDisplayObject.setLcdCurrentPage(WELCOME_PAGE);
+
+        // acknowledge all warnings
+        processWarningsObject.acknowledgeAllWarnings();
+
         break;
       }
     }
   }
   // =============================================
-  // All actions that can be triggered by button 2
+  // All actions that can be triggered by button 2 (Down)
   // =============================================
   if (buttonIndex == 1)
   {
@@ -264,9 +271,12 @@ void ButtonInterpreter::triggerButtonAction(uint8_t buttonIndex, uint8_t current
         //   // do something
         //   break;
 
-        // case PAGE_TEMPERATURE:
-        //   // do something
-        //   break;
+      case PAGE_TEMPERATURE:
+
+        // show LCD panel page with the list of 1Wire devices
+        lcdDisplayObject.setLcdCurrentPage(PAGE_1WIRE_LIST);
+
+        break;
 
         // case PAGE_VOLTAGE:
         //   // do something
@@ -285,8 +295,8 @@ void ButtonInterpreter::triggerButtonAction(uint8_t buttonIndex, uint8_t current
         //   break;
 
       default:
-        // show the previous LCD panel page
-        lcdDisplayObject.setLcdCurrentPage(PAGE_1WIRE_LIST);
+        // do something
+
         break;
       }
     }

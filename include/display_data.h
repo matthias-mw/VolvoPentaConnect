@@ -19,10 +19,10 @@
 #include <LiquidCrystal_PCF8574.h>
 #include <acquire_data.h>
 #include <Wire.h>
-#include <version.h> // Include the version header
+#include <version.h>
 
 /// Define max Number of Main Pages
-#define MAX_MAIN_PAGES 5
+#define MAX_MAIN_PAGES 6
 
 /// Define the Number for the Welcome Page
 #define WELCOME_PAGE 0
@@ -36,9 +36,13 @@
 #define PAGE_ALTERNATOR 4
 /// Define the Number for the Voltage Page
 #define PAGE_VOLTAGE 5
+/// Define the Number for the Alarm Page
+#define PAGE_ALARM 6
 
 /// Define the Number for the 1Wire List Page
 #define PAGE_1WIRE_LIST 10
+
+
 
 /// Define max number LCD Update cycles until fullscreen renew
 #define LCD_MAX_CYCLE_COUNT_TILL_FULL_UPDATE 20
@@ -125,7 +129,6 @@ private:
   AcquireData &data;
 
   /// LCD 4x20 object on I2C Bus
-  // LiquidCrystal_PCF8574 lcd(0x3F); // set the LCD address to 0x27
   LiquidCrystal_PCF8574 lcd;
   /// ID for the active page on the LCD-Panel
   uint8_t lcdCurrentPage = 0;
@@ -164,10 +167,10 @@ private:
    * \brief Update the LCD Panel
    *
    * This method copys the buffer lcdDisplay to the LCD Panel. It is used
-   * to update the screen with the actual content.
+   * This method copies the buffer lcdDisplay to the LCD Panel. It is used
    *
    */
   void updateLCDPanel();
 };
 
-#endif // DISPLAY_DATA_H
+#endif  // DISPLAY_DATA_H
