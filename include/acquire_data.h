@@ -16,18 +16,53 @@
 #define _acquire_data_h_
 
 #include <Arduino.h>
-#include <hardwareDef.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <Preferences.h>
-
-#include <lookUpTable.h>
-
-#include <adc_calib.h>
-#include <datapoint.h>
 #include <max6675.h>
 #include <MCP_ADC.h>
-#include "process_n2k.h"
+
+#include <Preferences.h>
+#include <adc_calib.h>
+#include <datapoint.h>
+#include <process_n2k.h>
+#include <lookUpTable.h>
+#include <errorflag.h>
+
+// ------------------------------------------------------------------
+// Calibration Data for threshold values
+// ------------------------------------------------------------------
+
+/* Enging speed in RPM above that the engine is 
+  considered to be running */
+#define ENGINE_RUN_RPM_THRESHOLD -100
+
+/* oil pressure in bar below that the engine is triggering
+ an low oil pressure alarm */
+#define OIL_PRESSURE_LOW_THRESHOLD 0.5
+
+/* coolant temperature in deg celsius above that the engine is 
+ triggering*/
+#define COOLANT_TEMPERATURE_HIGH_THRESHOLD 100
+
+/* exhaust temperature in deg celsius above that an high
+  exhaust temperature alarm is triggered */
+#define EXHAUST_TEMPERATURE_HIGH_THRESHOLD 500
+
+/* gearbox temperature in deg celsius above that an high
+  gearbox temperature alarm is triggered */
+#define GEARBOX_TEMPERATURE_HIGH_THRESHOLD 75
+
+/* alternator temperature in deg celsius above that an high
+  alternator temperature alarm is triggered */
+#define ALTERNATOR_TEMPERATURE_HIGH_THRESHOLD 135
+
+/* sea water temperature in deg celsius above that an high
+  sea water temperature alarm is triggered */
+#define SEA_WATER_TEMPERATURE_HIGH_THRESHOLD 55
+
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+
 
 /** oneWire instance to communicate with any OneWire devices */
 extern OneWire oneWire;
@@ -48,7 +83,7 @@ extern char lcdDisplay[4][20];
  * \brief Structure that handles all values to determine the time difference
  * in between of two interrupts *
  */
-typedef struct speedCalc{
+typedef struct tSpeedCalc{
     /** Start value for tick counts in between two interrupt events on GPIO pin.  */
   volatile uint64_t StartValue = 0;                   
   /** Period duration in between two interrupt events of the  GPIO pin. 
@@ -66,6 +101,31 @@ typedef struct speedCalc{
 
 } tSpeedCalc;
 
+
+// ------------------------------------------------------------------
+// ErrorHandling for the engine
+// ------------------------------------------------------------------
+
+/*! \struct tEngineStatus 
+ *  \brief Structure that handles all status bits for the engine
+ *  The structure consists bits for low Oil pressure, High engine
+ * temperature, ....
+ * This will be the basis for error handling */
+typedef struct tEngineStatus{
+  /** Bit for low oil pressure */
+  ErrorFlag flgLowOilPressure;
+  /** Bit for high coolant temperature */
+  ErrorFlag flgHighCoolantTemp;
+  /** Bit for high exhaust temperature */
+  ErrorFlag flgHighExhaustTemp;
+  /** Bit for high gearbox temperature */
+  ErrorFlag flgHighGearboxTemp;
+  /** Bit for high alternator temperature */
+  ErrorFlag flgHighAlternatorTemp;
+  /** Bit for high sea water temperature */
+  ErrorFlag flgHighSeaWaterTemp;
+  
+} tEngineStatus;
 
 
 /************************************************************************//**
@@ -103,7 +163,7 @@ void IRAM_ATTR handleAlternator2SpeedInterrupt();
 class AcquireData
 {
   /** max depth of the data history of each data point*/
-  const uint8_t _MAX_DATA_POINTS_HISTORY = 8;
+  const uint8_t MAX_DATA_POINTS_HISTORY = 8;
 
 public:
 
@@ -119,24 +179,11 @@ public:
    *
    */
   void showDataOnTerminal();
-
-  /************************************************************************//**
-   * \brief Update the Content of all LCD Pages
-   * 
-   * This method updates all LCD pages with actual data. For saving time
-   * and reducing glitches at the display, it has an option to update the 
-   * "changing" data characters and not the "static" text.
-   * 
-   * @param page                number of lcd page to be updated
-   * @param blnUpdateDataOnly   update data fields only (default = false)
-   * 
-   */
-  void updateLCDPage(uint8_t page, boolean blnUpdateDataOnly = false);
-  
+ 
   /************************************************************************//**
    * \brief List all OneWire devices
    *
-   *  Shows all OneWire Devices and there address.
+   *  Shows all OneWire Devices and their address.
    */
   void listOneWireDevices();
 
@@ -230,12 +277,21 @@ public:
    */
   void initEngineHours(uint32_t runtime = 0);
 
+  /************************************************************************//**
+   * \brief Calculate the current engine status
+   * 
+   * This method calculates the current engine status based on the
+   * measured values and stores the result in \ref currentEngineDiscreteStatus1
+   * and \ref currentEngineDiscreteStatus2
+   */
+  void calcEngineStatus(void);
+
 
   /************************************************************************//**
    * \brief Storing data into the NVM flash 
    * 
    * This method stores dedicated values into the NVM to keep values over 
-   * a power cycle. The values can bee restored by the corresponding
+   * a power cycle. The values can be restored by the corresponding
    * method \sa restoreNVMdata()
    *
    */
@@ -250,6 +306,16 @@ public:
    *
    */
   void restoreNVMdata(void);
+  
+  /************************************************************************//**
+   * \brief  Get count of active warning flags
+   * This method returns the count of active warning flags from the 
+   * structure \ref tEngineStatus
+   * 
+   * \return {uint8_t} count of active warning flags
+   */
+  uint8_t getActiveWarningCount(void);
+
 
   /** Structure with all timer values for the engine speed calculation*/
   tSpeedCalc engSpeedCalc;
@@ -264,32 +330,11 @@ public:
   tSpeedCalc alternator2SpeedCalc;
 
 
-
-
-private:
-
-  /** Object of the NVMe storage class of the ESP32 */
-  Preferences eepromDataStorage;
-
-  /** Object of the NiCr-Ni Thermocouple that handles all functions */
-  MAX6675 thermoNiCr_Ni = MAX6675(SPI_CLK_PIN, NOT_CS_THERMO_PIN, SPI_MISO_PIN);
-
-  /** Object of the Microchip 3204 10bit AD-Converter that handles all 
-   * functions */
-  MCP3204 mcp3204 = MCP3204(SPI_MISO_PIN, SPI_MOSI_PIN, SPI_CLK_PIN);  
-
-  /// OneWire Sensor Address for cooling system
-  DeviceAddress oWtSeaOutletWall = ONEWIRE_ADR_SEAOUTLETWALL;
-  /// OneWire Sensor Address for engine room system
-  DeviceAddress oWtAlternator = ONEWIRE_ADR_ALTERNATOR;
-  /// OneWire Sensor Address for gearbox system
-  DeviceAddress oWtGearbox = ONEWIRE_ADR_GEARBOX;
-
   // =========================================
-  // Erfasste oder berechnete Messwerte
+  // Erfasste oder berechnete Messwerte (public)
   // =========================================
-  /** Temperature of the gearbox measured via a uMcp3204Ch1 sensor connect
-      to the original VolvoPenta sensor */
+  /** Temperature of the engine coolant measured via a uMcp3204Ch1
+      sensor connected to the original VolvoPenta sensor */
   tDataPoint tEngine = tDataPoint(senType_adc, "tEngine", "GrdC",-99,199);
   /** Temperature of the cooling system measure via a ds1820 sensor mounted 
       at the wall of a cooling pipe*/
@@ -311,13 +356,13 @@ private:
   /** Alternator 2 speed measured via the W signal of the alternator*/
   tDataPoint nAlternator2 = tDataPoint(senType_RPM, "nAlternator2", "rpm",0,19999);
 
-  /** Batterie voltage measured at the main power source*/
+  /** Battery voltage measured at the main power source*/
   tDataPoint uBat = tDataPoint(senType_adc, "uBat", "V",0,99);
 
   /** Batterie voltage measured at the main power source*/
   tDataPoint pOil = tDataPoint(senType_adc, "pOil", "bar",0,99);
 
-  /** Voltage measure via an mcp3204 an AD Channel 1*/
+  /** Voltage measured via an MCP3204 on AD Channel 1*/
   tDataPoint uMcp3204Ch1 = tDataPoint(senType_adc, "uMcp3204Ch1", "V",0,99);
   /** Voltage measure via an mcp3204 an AD Channel 2*/
   tDataPoint uMcp3204Ch2 = tDataPoint(senType_adc, "uMcp3204Ch2", "V",0,99);
@@ -326,7 +371,7 @@ private:
   /** Voltage measure via an mcp3204 an AD Channel 4*/
   tDataPoint uMcp3204Ch4 = tDataPoint(senType_adc, "uMcp3204Ch4", "V",0,99);
 
-  /** State of Contact 1 */
+  /** State of contact 1 */
   tDataPoint flgContact1 = tDataPoint(senType_GPIO, "flgContact1", "-",0,1);
   /** State of Contact 2 */
   tDataPoint flgContact2 = tDataPoint(senType_GPIO, "flgContact2", "-",0,1);
@@ -336,9 +381,31 @@ private:
   /** Total run time of the diesel engine in seconds*/
   tDataPoint engSecond = tDataPoint(senType_virtual, "engSecond", "sec",0,360000000);
 
-  /** Overall run time [sec] of the engine retrievd from NVM*/
+  /** Status object for the current engine status. */
+  tEngineStatus currentEngineDiscreteStatus;
+  
+  private:
+
+  /** Object of the NVMe storage class of the ESP32 */
+  Preferences eepromDataStorage;
+
+  /** Object of the NiCr-Ni Thermocouple that handles all functions */
+  MAX6675 thermoNiCr_Ni = MAX6675(SPI_CLK_PIN, NOT_CS_THERMO_PIN, SPI_MISO_PIN);
+
+  /** Object of the Microchip 3204 10bit AD-Converter that handles all 
+   * functions */
+  MCP3204 mcp3204 = MCP3204(SPI_MISO_PIN, SPI_MOSI_PIN, SPI_CLK_PIN);  
+
+  /// OneWire Sensor Address for cooling system
+  DeviceAddress oWtSeaOutletWall = ONEWIRE_ADR_SEAOUTLETWALL;
+  /// OneWire Sensor Address for engine room system
+  DeviceAddress oWtAlternator = ONEWIRE_ADR_ALTERNATOR;
+  /// OneWire Sensor Address for gearbox system
+  DeviceAddress oWtGearbox = ONEWIRE_ADR_GEARBOX;
+
+  /** Overall run time [sec] of the engine retrieved from NVM*/
   double eepromStoredEngSeconds = 0;
-  /** timestamp for the last time runtime was read from NVM */
+  /** Timestamp for the last time runtime was read from NVM */
   uint32_t curRunTimeMilliLastRead = 0;
 
   /************************************************************************//**

@@ -8,15 +8,13 @@
  *
  * \author 		Matthias Werner
  * \date		10 Sep 2022
- *
+ * \version PROJECT_VERSION
  * - Prozessor:         ESP32-WROOM
  * - Hardware:          az-delivery-devkit-v4
  **************************************************************/
 
 #include <hardwareDef.h>
-
 #include <stdint.h>
-
 #include "nvs_flash.h"
 #include "nvs.h"
 
@@ -24,51 +22,25 @@
 // NMEA2000 object
 #include <NMEA2000_CAN.h>
 #include <N2kMessages.h>
-
-#include <process_n2k.h>
-#include <datapoint.h>
-#include <acquire_data.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <Wire.h>
-#include "LiquidCrystal_PCF8574.h"
-
+#include <acquire_data.h>
+#include <errorflag.h>
+#include <process_n2k.h>
+#include <datapoint.h>
+#include <display_data.h>
+#include <button_interpreter.h>
 #include <lookUpTable.h>
+#include "process_warnings.h"
+
+// Forward declaration
+class ProcessWarnings;
 
 /// Milliseconds for updating the terminal output
 #define UPDATE_TERMINAL_PERIOD 1000
 
 /// Millisecond counter for Updating the Terminal Output
 static unsigned long timeUpdatedCnt = millis();
-
-/// ID for the active page on the LCD-Panel
-static uint8_t lcdPage = 2;
-
-/// Object for I2C Bus
-TwoWire WireI2C = TwoWire(0x3f);
-
-/// LCD 4x20 object on I2C Bus
-LiquidCrystal_PCF8574 lcd(0x3F); // set the LCD address to 0x27
-
-/// Buffer for Crystal  LCD Display 4x20 (4 lines a 20 char)
-char lcdDisplay[4][20];
-
-/// LCD Panel switched to a complete new screen
-bool lcdScreenRenew = true;
-
-/// Button 1 debounce counter
-uint16_t btn1DebounceCnt = 0;
-/// Button 1 debounce counter
-uint16_t btn2DebounceCnt = 0;
-/// LongPressButton1 is served
-bool lngPressButton1Served = false;
-/// LongPressButton2 is served
-bool lngPressButton2Served = false;
-
-/// LCD Panel Updatecouter is incremented every cycle of \ref taskUpdateLCD
-uint16_t lcdUpdateCounter = 0;
-/// LCD Panel dimmer counter is used to decrease backlight during no activity
-uint32_t lcdBacklightDimCounter = 0;
 
 /// Class that contains a map to convert the measured voltage into tEngine
 LookUpTable1D mapTCO(AXIS_TCO_MES, MAP_TCO_MES, TCO_AXIS_LEN, TCO_MAP_PREC);
@@ -78,6 +50,15 @@ LookUpTable1D mapPOIL(AXIS_POIL_MES, MAP_POIL_MES, POIL_AXIS_LEN, POIL_MAP_PREC)
 
 /// class that contains all measured data
 AcquireData data;
+
+/// class that contains all data for the LCD Panel
+DisplayData lcdDisplayData(data);
+
+/// Process Warnings class
+ProcessWarnings processWarnings(data);
+
+/// Button Interpreter class
+ButtonInterpreter buttonInterpreter(lcdDisplayData, processWarnings);
 
 /// structure that hold all data ready for N2k sending
 tVolvoPentaData VolvoDataForN2k;
@@ -171,8 +152,9 @@ void setup()
   }
   ESP_ERROR_CHECK(ret);
 
-  // Wait that all Sensors can settle
-  delay(1000);
+  // Setup LCD Display
+  lcdDisplayData.setupLCDPanel();
+  lcdDisplayData.setLcdCurrentPage(WELCOME_PAGE);
 
   // Start Serial Output/Input
   Serial.begin(115200);
@@ -209,6 +191,12 @@ void setup()
   pinMode(ESP32_CAN_TX_PIN, OUTPUT);
   pinMode(ESP32_CAN_RX_PIN, INPUT);
 
+  // Wait that all Sensors can settle
+  delay(1000);
+
+  // Initialize the Buttons
+  buttonInterpreter.initializeButtons();
+
   // Start the DS18B20 sensor
   oneWireSensors.begin();
 
@@ -221,15 +209,11 @@ void setup()
   // List all connected oneWire Devices
   data.listOneWireDevices();
 
-  // Setup LCD Display
-  WireI2C.begin(21, 22);   // custom i2c port on ESP
-  WireI2C.setClock(80000); // set 80kHz (PCF8574 max speed 100kHz)
-
-  lcd.begin(20, 4, WireI2C);
-  lcd.setBacklight(255);
-
   // restore NVM Data
   data.restoreNVMdata();
+
+  // Setup LCD Display
+  lcdDisplayData.setLcdCurrentPage(PAGE_ENGINE);
 
   // Create mutex before starting tasks
   xMutexVolvoN2kData = xSemaphoreCreateMutex();
@@ -268,8 +252,8 @@ void setup()
   // Create TaskInterpretButton with priority 2 at core 0
   xTaskCreatePinnedToCore(
       taskInterpretButton,        /* Function to implement the task */
-      "TaskInterpretButton",      /* Name of the task */
-      5300,                       /* Stack size in words */
+      "taskInterpretButton",      /* Name of the task */
+      3000,                       /* Stack size in words */
       NULL,                       /* Task input parameter */
       2,                          /* Priority of the task */
       &TaskInterpretButtonHandle, /* Task handle. */
@@ -310,7 +294,6 @@ void loop()
       }
     }
 #endif // DEBUG_LEVEL
-
   }
 }
 
@@ -379,6 +362,10 @@ void taskMeasureFast(void *pvParameters)
     // calculate values
     data.calculateVolvoPentaSensors();
     data.calcEngineSeconds();
+    data.calcEngineStatus();
+
+    // check all warnings
+    processWarnings.checkWarnings();
 
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);
@@ -412,218 +399,30 @@ void taskUpdateLCD(void *pvParameters)
 
 #endif // DEBUG_TASK_STACK_SIZE
 
-    char lcdbuf[21];
+    // Update the Content of the LCD Panel for an specific page
+    // on standard just update the 4th line
+    // with the actual measured values
+    lcdDisplayData.updateLcdContent(true);
 
-    data.updateLCDPage(lcdPage);
-
-    // Update first 3 Rows with static text
-    // less often to save processor time
-    if (lcdScreenRenew || (lcdUpdateCounter > 30))
-    {
-
-      // reset count
-      lcdUpdateCounter = 0;
-      lcdScreenRenew = false;
-
-      // Update row 1
-      lcd.setCursor(0, 0);
-      strncpy(lcdbuf, &lcdDisplay[0][0], 20);
-      lcdbuf[20] = '\0';
-      lcd.print(lcdbuf); // print the line to screen
-
-      // Update row 2
-      lcd.setCursor(0, 1);
-      strncpy(lcdbuf, &lcdDisplay[1][0], 20);
-      lcdbuf[20] = '\0';
-      lcd.print(lcdbuf); // print the line to screen
-
-      // Update row 3
-      lcd.setCursor(0, 2);
-      strncpy(lcdbuf, &lcdDisplay[2][0], 20);
-      lcdbuf[20] = '\0';
-      lcd.print(lcdbuf); // print the line to screen
-    }
-
-    // Update measured values more often for good response
-    // Update row 4
-    lcd.setCursor(0, 3);
-    strncpy(lcdbuf, &lcdDisplay[3][0], 20);
-    lcdbuf[20] = '\0';
-    lcd.print(lcdbuf); // print the line to screen
+    // Update LED Backlight Brightness
+    lcdDisplayData.updateLcdBacklight();
 
     // non blocking delay for the lcd Display
-    lcdUpdateCounter++;
-    vTaskDelay(pdMS_TO_TICKS(50));
+    vTaskDelay(pdMS_TO_TICKS(100));
   }
 }
+
 //***************************************************************
 // Task to Interpret the buttons
 void taskInterpretButton(void *pvParameters)
 {
   while (1)
   {
-// just to debug the stacksize
-#ifdef DEBUG_TASK_STACK_SIZE
-    if (xSemaphoreTake(xMutexStdOut, (TickType_t)50) == pdTRUE)
-    {
-      UBaseType_t stackHighWaterMark;
-      stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-      Serial.print(millis());
-      Serial.print(" Button Task is started -> free stack: ");
-      Serial.println(stackHighWaterMark);
+    // process the button state of all buttons
+    buttonInterpreter.processAllButtonState(lcdDisplayData.getLcdCurrentPage());
 
-      xSemaphoreGive(xMutexStdOut);
-    }
-
-#endif // DEBUG_TASK_STACK_SIZE
-
-    // ============================================
-    // Check Button 1
-    // ============================================
-    if (digitalRead(BUTTON1_PIN))
-    {
-      digitalWrite(STATUS_LED_PIN, LED_PIN_ON);
-
-      // ++++++++++ Do on Button Release ++++++++++
-      // increase debounce counter
-      btn1DebounceCnt++;
-      // enable lcd backlight
-      lcdBacklightDimCounter = 0;
-      // detect long press event
-      if (btn1DebounceCnt >= BUTTON_LONG_PRESS)
-      {
-        // =========================
-        // long press action
-        // =========================
-        if (lngPressButton1Served == false)
-        {
-          
-          // ++++++++++ Only TO Set EngineHour Start +++++++
-          // Set Engine Runtime in Seconds
-          data.initEngineHours(214*60*60);
-
-          // mark long press event as served
-          lngPressButton1Served = true;
-
-// Debugging
-#ifdef DEBUG_LEVEL
-          if (DEBUG_LEVEL > 2)
-          {
-            Serial.println("Button 1 -> Long press action...");
-          }
-
-#endif // DEBUG_LEVEL
-        }
-      }
-    }
-    else
-    {
-      digitalWrite(STATUS_LED_PIN, LED_PIN_OFF);
-
-      // ++++++++++ Do on Button Release ++++++++++
-      // detect short press event
-      if ((btn1DebounceCnt >= BUTTON_DEBOUNCE) && (btn1DebounceCnt < BUTTON_LONG_PRESS))
-      {
-        // =========================
-        // short press action
-        // =========================
-        lcd.setBacklight(5);
-
-// Debugging
-#ifdef DEBUG_LEVEL
-        if (DEBUG_LEVEL > 2)
-        {
-          Serial.println("Button 1 -> Short press action...");
-        }
-
-#endif // DEBUG_LEVEL
-      }
-      // reset debounce counter
-      btn1DebounceCnt = 0;
-      // reset long press event
-      lngPressButton1Served = false;
-    }
-
-    // ============================================
-    // Check Button 2
-    // ============================================
-    if (digitalRead(BUTTON2_PIN))
-    {
-      // ++++++++++ Do on Button Release ++++++++++
-      // increase debounce counter
-      btn2DebounceCnt++;
-      // enable lcd backlight
-      lcdBacklightDimCounter = 0;
-      // detect long press event
-      if (btn2DebounceCnt >= BUTTON_LONG_PRESS)
-      {
-        // =========================
-        // long press action
-        // =========================
-        if (lngPressButton2Served == false)
-        {
-          lcdPage = 10;
-          lcdScreenRenew = true;
-
-          lngPressButton2Served = true;
-
-// Debugging
-#ifdef DEBUG_LEVEL
-          if (DEBUG_LEVEL > 2)
-          {
-            Serial.println("Button 2 -> Long press action...");
-          }
-
-#endif // DEBUG_LEVEL
-        }
-      }
-    }
-    else
-    {
-      // ++++++++++ Do on Button Release ++++++++++
-      // detect short press event
-      if ((btn2DebounceCnt >= BUTTON_DEBOUNCE) && (btn2DebounceCnt < BUTTON_LONG_PRESS))
-      {
-        // =========================
-        // short press action
-        // =========================
-        lcdPage++;
-        lcdScreenRenew = true;
-        if (lcdPage > 4)
-          lcdPage = 0;
-
-// Debugging
-#ifdef DEBUG_LEVEL
-        if (DEBUG_LEVEL > 2)
-        {
-          Serial.println("Button 2 -> Short press action...");
-        }
-
-#endif // DEBUG_LEVEL
-      }
-
-      // reset debounce counter
-      btn2DebounceCnt = 0;
-      // reset long press event
-      lngPressButton2Served = false;
-    }
-
-    // Set LED Backlight Brightness
-    if (lcdBacklightDimCounter < LCD_BACKLIGHT_OFF_COUNT)
-    {
-      // dimmed brightness to the LCD Panel
-      lcd.setBacklight(LCD_BACKLIGHT_FULL);
-    }
-    else
-    {
-      // LCD Panel backlight is off
-      lcd.setBacklight(LCD_BACKLIGHT_OFF);
-    }
-    // increase counter
-    lcdBacklightDimCounter++;
-
-    // non blocking delay for the button
-    vTaskDelay(pdMS_TO_TICKS(150));
+    // Delay for the Button Task
+    vTaskDelay(pdMS_TO_TICKS(50));
   }
 }
 

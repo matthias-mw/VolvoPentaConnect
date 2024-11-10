@@ -104,164 +104,6 @@ void AcquireData::showDataOnTerminal()
 
 //************************************************************************
 // Update the Content of all LCD Pages
-void AcquireData::updateLCDPage(uint8_t page, boolean blnUpdateDataOnly)
-{
-
-  char buffer[21];
-  int length;
-
-  switch (page)
-  {
-  case 1:
-    // ------------------------------
-    // Temperature Screen
-    // ------------------------------
-    if (!blnUpdateDataOnly)
-    { // fill the screen buffer with permanent text
-      length = sprintf(buffer, "Temperature   [GrdC]");
-      strncpy(&lcdDisplay[0][0], buffer, 20);
-
-      length = sprintf(buffer, "--------------------");
-      strncpy(&lcdDisplay[1][0], buffer, 20);
-
-      length = sprintf(buffer, "  Eng Gear  Sea  Exh");
-      strncpy(&lcdDisplay[2][0], buffer, 20);
-    }
-
-    // fill buffer with data
-    length = sprintf(buffer, "%5d%5d%5.1f%5d", (int16_t)tEngine.getValue(), (int16_t)tGearbox.getValue(), tSeaOutletWall.getValue(), (int16_t)tExhaust.getValue());
-    strncpy(&lcdDisplay[3][0], buffer, 20);
-
-    Serial.println(lcdDisplay[3]);
-
-    break;
-
-  case 2:
-
-    // ------------------------------
-    // Engine Screen
-    // ------------------------------
-    if (!blnUpdateDataOnly)
-    { // fill the screen buffer with permanent text
-      length = sprintf(buffer, "Engine Data  %6.1fh", engSecond.getValue() / 3600);
-      strncpy(&lcdDisplay[0][0], buffer, 20);
-
-      length = sprintf(buffer, "--------------------");
-      strncpy(&lcdDisplay[1][0], buffer, 20);
-
-      length = sprintf(buffer, "  rpm GrdC  bar GrdC");
-      strncpy(&lcdDisplay[2][0], buffer, 20);
-    }
-
-    // fill buffer with data
-    length = sprintf(buffer, "%5d%5d%5.1f%5d", (uint16_t)nMot.getValue(), (uint16_t)tEngine.getValue(), pOil.getValue(), (int16_t)tExhaust.getValue());
-    strncpy(&lcdDisplay[3][0], buffer, 20);
-
-    break;
-
-  case 3:
-
-    // ------------------------------
-    // Alternator Screen
-    // ------------------------------
-    if (!blnUpdateDataOnly)
-    { // fill the screen buffer with permanent text
-      length = sprintf(buffer, "Alternator  Data    ");
-      strncpy(&lcdDisplay[0][0], buffer, 20);
-
-      length = sprintf(buffer, "--------------------");
-      strncpy(&lcdDisplay[1][0], buffer, 20);
-
-      length = sprintf(buffer, "  rpm GrdC  rpm    V");
-      strncpy(&lcdDisplay[2][0], buffer, 20);
-    }
-
-    // fill buffer with data
-    length = sprintf(buffer, "%5d%5d%5d%5.1f", (uint16_t)nAlternator1.getValue(), (int16_t)tAlternator.getValue(), (uint16_t)nAlternator2.getValue(), uBat.getValue());
-    strncpy(&lcdDisplay[3][0], buffer, 20);
-
-    break;
-
-  case 4:
-
-    // ------------------------------
-    // Voltage Screen
-    // ------------------------------
-    if (!blnUpdateDataOnly)
-    { // fill the screen buffer with permanent text
-      length = sprintf(buffer, "MCP3204       %5.2fV", uBat.getValue());
-      strncpy(&lcdDisplay[0][0], buffer, 20);
-
-      length = sprintf(buffer, "--------------------");
-      strncpy(&lcdDisplay[1][0], buffer, 20);
-
-      length = sprintf(buffer, "    V    V    V    V");
-      strncpy(&lcdDisplay[2][0], buffer, 20);
-    }
-
-    // fill buffer with data
-    length = sprintf(buffer, "%5.1f%5.1f%5.1f%5.1f", uMcp3204Ch1.getValue(), uMcp3204Ch2.getValue(), uMcp3204Ch3.getValue(), uMcp3204Ch4.getValue());
-    strncpy(&lcdDisplay[3][0], buffer, 20);
-
-    break;
-
-  case 10:
-
-    uint8_t i;
-    uint8_t deviceCount;
-    DeviceAddress address;
-    char buffer[20];
-
-    // locate devices on the bus
-    deviceCount = oneWireSensors.getDeviceCount();
-    length = sprintf(buffer, "Found %1d DS18S20.    ", deviceCount);
-    strncpy(&lcdDisplay[0][0], buffer, 20);
-
-    // Print Adresses to LCD Display
-    for (int i = 0; i < 3; i++)
-    {
-      if (i >= deviceCount)
-      {
-        // clear line
-        length = sprintf(buffer, "                    ");
-        strncpy(&lcdDisplay[i + 1][0], buffer, 20);
-      }
-      else
-      {
-        // show the address
-        oneWireSensors.getAddress(address, i);
-        length = sprintf(buffer, "> 0x%02x%02x%02x%02x%02x%02x%02x%02x",
-                         address[0], address[1], address[2], address[3], address[4],
-                         address[5], address[6], address[7]);
-        strncpy(&lcdDisplay[i + 1][0], buffer, 20);
-      }
-    }
-    break;
-
-  default:
-
-    // ------------------------------
-    // Speed Screen
-    // ------------------------------
-    if (!blnUpdateDataOnly)
-    { // fill the screen buffer with permanent text
-      length = sprintf(buffer, "Speed        [U/min]");
-      strncpy(&lcdDisplay[0][0], buffer, 20);
-
-      length = sprintf(buffer, "--------------------");
-      strncpy(&lcdDisplay[1][0], buffer, 20);
-
-      length = sprintf(buffer, "  Eng Gear Alt1 Alt2");
-      strncpy(&lcdDisplay[2][0], buffer, 20);
-    }
-
-    // fill buffer with data
-    length = sprintf(buffer, "%5d%5d%5d%5d", (uint16_t)nMot.getValue(), (uint16_t)nShaft.getValue(), (uint16_t)nAlternator1.getValue(), (uint16_t)nAlternator2.getValue());
-    strncpy(&lcdDisplay[3][0], buffer, 20);
-
-    break;
-  }
-}
 
 //****************************************
 // Stores the data into a Datapoint
@@ -510,6 +352,124 @@ void AcquireData::calculateVolvoPentaSensors()
   mapPOIL.LookUpValue(voltage, &result);
   this->_StoreData(this->pOil, result, millis());
 }
+
+//**********************************************
+// Calculate the current engine status bits
+void AcquireData::calcEngineStatus()
+{
+  // =========================================
+  // check if the Oilpressure is below OIL_PRESSURE_LOW_THRESHOLD
+  // =========================================
+  if (this->nMot.getValue() > ENGINE_RUN_RPM_THRESHOLD && this->pOil.getValue() < OIL_PRESSURE_LOW_THRESHOLD)
+  {
+    // oil pressure is to low
+    this->currentEngineDiscreteStatus.flgLowOilPressure.setFlag();
+  }
+  else
+  {
+    // oil pressure is ok
+    this->currentEngineDiscreteStatus.flgLowOilPressure.resetFlag();
+  }
+
+  // =========================================
+  // check if the Coolant temperature is above 
+  // COOLANT_TEMPERATURE_HIGH_THRESHOLD
+  // =========================================
+  if (this->tEngine.getValue() > COOLANT_TEMPERATURE_HIGH_THRESHOLD)
+  {
+    // coolant temperature is to high
+    this->currentEngineDiscreteStatus.flgHighCoolantTemp.setFlag();
+  }
+  else
+  {
+    // coolant temperature is ok
+    this->currentEngineDiscreteStatus.flgHighCoolantTemp.resetFlag();
+  }
+
+  // =========================================
+  // check if the Exhaust temperature is above
+  // EXHAUST_TEMPERATURE_HIGH_THRESHOLD
+  // =========================================
+  if (this->tExhaust.getValue() > EXHAUST_TEMPERATURE_HIGH_THRESHOLD)
+  {
+    // exhaust temperature is to high
+    this->currentEngineDiscreteStatus.flgHighExhaustTemp.setFlag();
+  }
+  else
+  {
+    // exhaust temperature is ok
+    this->currentEngineDiscreteStatus.flgHighExhaustTemp.resetFlag();
+  }
+
+  // =========================================
+  // check if the Gearbox temperature is above
+  // GEARBOX_TEMPERATURE_HIGH_THRESHOLD
+  // =========================================
+  if (this->tGearbox.getValue() > GEARBOX_TEMPERATURE_HIGH_THRESHOLD)
+  {
+    // gearbox temperature is to high
+    this->currentEngineDiscreteStatus.flgHighGearboxTemp.setFlag();
+  }
+  else
+  {
+    // gearbox temperature is ok
+    this->currentEngineDiscreteStatus.flgHighGearboxTemp.resetFlag();
+  }
+
+  // =========================================
+  // check if the Alternator temperature is above
+  // ALTERNATOR_TEMPERATURE_HIGH_THRESHOLD
+  // =========================================
+  if (this->tAlternator.getValue() > ALTERNATOR_TEMPERATURE_HIGH_THRESHOLD)
+  {
+    // alternator temperature is to high
+    this->currentEngineDiscreteStatus.flgHighAlternatorTemp.setFlag();
+  }
+  else
+  {
+    // alternator temperature is ok
+    this->currentEngineDiscreteStatus.flgHighAlternatorTemp.resetFlag();
+  }
+
+  // =========================================
+  // check if the Sea Water temperature is above
+  // SEA_WATER_TEMPERATURE_HIGH_THRESHOLD
+  // =========================================
+  if (this->tSeaOutletWall.getValue() > SEA_WATER_TEMPERATURE_HIGH_THRESHOLD)
+  {
+    // sea water temperature is to high
+    this->currentEngineDiscreteStatus.flgHighSeaWaterTemp.setFlag();
+  }
+  else
+  {
+    // sea water temperature is ok
+    this->currentEngineDiscreteStatus.flgHighSeaWaterTemp.resetFlag();
+  }
+}
+
+//**********************************************
+// Count the number of active alarms
+uint8_t AcquireData::getActiveWarningCount(void)
+{
+  uint8_t alarmCount = 0;
+  // count the number of alarms
+  if (this->currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagSet())
+    alarmCount++;
+  if (this->currentEngineDiscreteStatus.flgHighExhaustTemp.isFlagSet())
+    alarmCount++;
+  if (this->currentEngineDiscreteStatus.flgHighGearboxTemp.isFlagSet())
+    alarmCount++;
+  if (this->currentEngineDiscreteStatus.flgHighAlternatorTemp.isFlagSet())
+    alarmCount++;
+  if (this->currentEngineDiscreteStatus.flgHighSeaWaterTemp.isFlagSet())
+    alarmCount++;
+  if (this->currentEngineDiscreteStatus.flgLowOilPressure.isFlagSet())
+    alarmCount++;
+
+  // return the count of active alarms
+  return alarmCount;
+}
+
 
 //==============================================================================
 //==============================================================================
@@ -778,10 +738,21 @@ void AcquireData::convertDataToN2k(tVolvoPentaData *n2kVolvoData)
       n2kVolvoData->alternator1_speed = this->nAlternator1.getValue();
       n2kVolvoData->alternator2_speed = this->nAlternator2.getValue();
 
-      n2kVolvoData->batterie_voltage = this->uBat.getValue();
+      n2kVolvoData->battery_voltage = this->uBat.getValue();
 
-      n2kVolvoData->flg_coolant_temperature_ok = false;
-      n2kVolvoData->flg_engine_oel_pressure_ok = false;
+      // convert the engine status
+      n2kVolvoData->engineDiscreteStatus1.Bits.LowOilLevel = this->currentEngineDiscreteStatus.flgLowOilPressure.isFlagSet();
+
+      n2kVolvoData->engineDiscreteStatus1.Bits.OverTemperature = this->currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagSet();
+      
+      n2kVolvoData->engineDiscreteStatus1.Bits.EGRSystem = this->currentEngineDiscreteStatus.flgHighExhaustTemp.isFlagSet();
+      
+      n2kVolvoData->engineDiscreteStatus1.Bits.CheckEngine = this->currentEngineDiscreteStatus.flgHighGearboxTemp.isFlagSet();
+
+      n2kVolvoData->engineDiscreteStatus1.Bits.PreheatIndicator = this->currentEngineDiscreteStatus.flgHighSeaWaterTemp.isFlagSet();
+
+      // convert the alternator status
+      n2kVolvoData->alternatorDiscreteStatus1.Bits.OverTemperature = this->currentEngineDiscreteStatus.flgHighAlternatorTemp.isFlagSet();
 
       // unlock the resource again
       xSemaphoreGive(xMutexVolvoN2kData);

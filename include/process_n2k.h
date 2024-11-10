@@ -11,8 +11,8 @@
  * - Prozessor:         ESP32-WROOM
  * - Hardware:          az-delivery-devkit-v4
 */
-#ifndef _process_n2k_
-#define _process_n2k_
+#ifndef PROCESS_N2K_H
+#define PROCESS_N2K_H
 
 #include <Arduino.h>
 #include <versionInfo.h>
@@ -41,17 +41,13 @@ typedef struct VolvoPentaData{
   double engine_coolant_temperature = 0;
   /// engine coolant temperature at the pipe in kelvin
   double engine_coolant_temperature_wall = 0;
-  /// status that the coolant temperature has not exceeded limits
-  bool flg_coolant_temperature_ok = false;
   /// engine oel pressure in Pascal
   double engine_oel_pressure = 0;
-  /// status engine oel pressure is ok
-  bool flg_engine_oel_pressure_ok = false;
   /// voltage of the starter batterie in volt
-  double batterie_voltage = 0;
+  double battery_voltage = 0;
   /// Alternator 1 temperature in kelvin
   double alternator1_temperature = 0;
-  /// exhaust gat temperature in kelvin
+  /// exhaust gas temperature in kelvin
   double exhaust_temperature = 0;
   /// gearbox temperature in kelvin
   double gearbox_temperature = 0;
@@ -65,6 +61,12 @@ typedef struct VolvoPentaData{
   double alternator2_speed = 0;
   /// engine hours run in seconds
   double engine_seconds = 0;
+  /// engine status bits (1)
+  tN2kEngineDiscreteStatus1 engineDiscreteStatus1;
+  /// engine status bits (2)
+  tN2kEngineDiscreteStatus2 engineDiscreteStatus2;
+  /// alternator status bits (1)
+  tN2kEngineDiscreteStatus1 alternatorDiscreteStatus1;
 
 }tVolvoPentaData;
 
@@ -74,6 +76,7 @@ typedef struct VolvoPentaData{
  * This method sets up all the necessary information for the NMEA2000 
  * communication, such as manufacturer and device informations.
  *
+ * \return void
  */
 void setupN2K();
 
@@ -84,6 +87,7 @@ void setupN2K();
  * defined in \ref N2KUpdatePeriodFast 
  *
  * \param data contains all measured engine data
+ * \return void
  */
 void SendN2kEngineParmFast(VolvoPentaData *data);
 
@@ -97,4 +101,4 @@ void SendN2kEngineParmFast(VolvoPentaData *data);
  */
 void SendN2kEngineParmSlow(VolvoPentaData *data);
 
-#endif //_process_n2k_
+#endif // PROCESS_N2K_H
