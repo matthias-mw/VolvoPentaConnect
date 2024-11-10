@@ -30,18 +30,24 @@ void ProcessWarnings::checkWarnings()
   //When a flag is set and not acknowledged, the warning is active
   if((data.currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagSet() &&
     !data.currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagAcknowledged())||
+
     (data.currentEngineDiscreteStatus.flgHighExhaustTemp.isFlagSet() &&
     !data.currentEngineDiscreteStatus.flgHighExhaustTemp.isFlagAcknowledged())||
+
     (data.currentEngineDiscreteStatus.flgHighGearboxTemp.isFlagSet() &&
     !data.currentEngineDiscreteStatus.flgHighGearboxTemp.isFlagAcknowledged())||
+
     (data.currentEngineDiscreteStatus.flgHighAlternatorTemp.isFlagSet() &&
     !data.currentEngineDiscreteStatus.flgHighAlternatorTemp.isFlagAcknowledged())||
+
     (data.currentEngineDiscreteStatus.flgHighSeaWaterTemp.isFlagSet() &&
     !data.currentEngineDiscreteStatus.flgHighSeaWaterTemp.isFlagAcknowledged())||
+
     (data.currentEngineDiscreteStatus.flgLowOilPressure.isFlagSet() &&
     !data.currentEngineDiscreteStatus.flgLowOilPressure.isFlagAcknowledged()))
   {
     warningActive = true;
+    Serial.println("Warning Active");
   }
   
   // operate the warning LED
@@ -53,12 +59,13 @@ void ProcessWarnings::checkWarnings()
 // Acknowledge all warnings
 void ProcessWarnings::acknowledgeAllWarnings()
 {
-  // reset all error flags
+  // Acknowledge all warnings
   data.currentEngineDiscreteStatus.flgHighCoolantTemp.acknowledgeFlag();
   data.currentEngineDiscreteStatus.flgHighExhaustTemp.acknowledgeFlag();
   data.currentEngineDiscreteStatus.flgHighGearboxTemp.acknowledgeFlag();
   data.currentEngineDiscreteStatus.flgHighAlternatorTemp.acknowledgeFlag();
   data.currentEngineDiscreteStatus.flgHighSeaWaterTemp.acknowledgeFlag();
+  data.currentEngineDiscreteStatus.flgLowOilPressure.acknowledgeFlag();
 }
 
 // ********************************************************
@@ -89,5 +96,10 @@ void ProcessWarnings::operateWarningLED(bool warningActive)
       // save the last time the LED was toggled
       warningLedCounter = currentMillis;
     }
+  }
+  else
+  {
+    // Turn off the LED
+    digitalWrite(STATUS_LED_PIN, LED_PIN_OFF);
   }
 }

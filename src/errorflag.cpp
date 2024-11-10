@@ -13,13 +13,55 @@
 
 #include <errorflag.h>
 
-
 // ********************************************************
 // Constructor
 ErrorFlag::ErrorFlag()
 {
-    // Initialization code
-    flagStatus = false;
-    flagSetTimeStamp = 0;
+  // Initialization code
+  resetFlag();
 }
 
+// ********************************************************
+// Acknowledge the error flag
+void ErrorFlag::acknowledgeFlag()
+{
+  flagIsAcknowledged = true;
+}
+
+// ********************************************************
+// Set the error flag
+void ErrorFlag::setFlag()
+{ 
+  flagStatus = true;
+  flagSetTimeStamp = millis();
+}
+
+// ********************************************************
+// Reset the error flag
+void ErrorFlag::resetFlag()
+{
+  flagStatus = false;
+  flagSetTimeStamp = 0;
+  flagIsAcknowledged = false;
+}
+
+// ********************************************************
+// Check if the error flag is set
+bool ErrorFlag::isFlagSet()
+{
+  return flagStatus;
+}
+
+// ********************************************************
+// Check if the error flag is acknowledged
+bool ErrorFlag::isFlagAcknowledged()
+{
+  return flagIsAcknowledged;
+}
+
+// ********************************************************
+// Get the timestamp when the error flag was set
+unsigned long ErrorFlag::getTimeStampWhenSet()
+{
+  return flagSetTimeStamp;
+}
