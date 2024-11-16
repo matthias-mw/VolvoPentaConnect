@@ -57,48 +57,48 @@ void AcquireData::showDataOnTerminal()
   // while (i-- > 0)
   //   Serial.println();
 
-  // tSeaOutletWall.printDatapointFull();
-  // tGearbox.printDatapointFull();
-  // tAlternator.printDatapointFull();
-  // uBat.printDatapointFull();
-  // nMot.printDatapointFull();
-  // nShaft.printDatapointFull();
-  // nAlternator1.printDatapointFull();
-  // nAlternator2.printDatapointFull();
-  // tExhaust.printDatapointFull();
-  // uMcp3204Ch1.printDatapointFull();
-  // uMcp3204Ch2.printDatapointFull();
-  // uMcp3204Ch3.printDatapointFull();
-  // uMcp3204Ch4.printDatapointFull();
-  // flgContact1.printDatapointFull();
-  // flgContact2.printDatapointFull();
-  // flgContact3.printDatapointFull();
+  // tSeaOutletWall.prinDataPointFull();
+  // tGearbox.prinDataPointFull();
+  // tAlternator.prinDataPointFull();
+  // uBat.prinDataPointFull();
+  // nMot.prinDataPointFull();
+  // nShaft.prinDataPointFull();
+  // nAlternator1.prinDataPointFull();
+  // nAlternator2.prinDataPointFull();
+  // tExhaust.prinDataPointFull();
+  // uMcp3204Ch1.prinDataPointFull();
+  // uMcp3204Ch2.prinDataPointFull();
+  // uMcp3204Ch3.prinDataPointFull();
+  // uMcp3204Ch4.prinDataPointFull();
+  // flgContact1.prinDataPointFull();
+  // flgContact2.prinDataPointFull();
+  // flgContact3.prinDataPointFull();
 
-  engSecond.printDatapointShort();
+  engSecond.prinDataPointShort();
   Serial.println();
 
-  tSeaOutletWall.printDatapointShort();
-  tGearbox.printDatapointShort();
-  tAlternator.printDatapointShort();
-  tExhaust.printDatapointShort();
+  tSeaOutletWall.prinDataPointShort();
+  tGearbox.prinDataPointShort();
+  tAlternator.prinDataPointShort();
+  tExhaust.prinDataPointShort();
   Serial.println();
 
-  nMot.printDatapointShort();
-  nShaft.printDatapointShort();
-  nAlternator1.printDatapointShort();
-  nAlternator2.printDatapointShort();
+  nMot.prinDataPointShort();
+  nShaft.prinDataPointShort();
+  nAlternator1.prinDataPointShort();
+  nAlternator2.prinDataPointShort();
   Serial.println();
 
-  uBat.printDatapointShort();
-  uMcp3204Ch1.printDatapointShort();
-  uMcp3204Ch2.printDatapointShort();
-  uMcp3204Ch3.printDatapointShort();
-  uMcp3204Ch4.printDatapointShort();
+  uBat.prinDataPointShort();
+  uMcp3204Ch1.prinDataPointShort();
+  uMcp3204Ch2.prinDataPointShort();
+  uMcp3204Ch3.prinDataPointShort();
+  uMcp3204Ch4.prinDataPointShort();
   Serial.println();
 
-  flgContact1.printDatapointShort();
-  flgContact2.printDatapointShort();
-  flgContact3.printDatapointShort();
+  flgContact1.prinDataPointShort();
+  flgContact2.prinDataPointShort();
+  flgContact3.prinDataPointShort();
   Serial.println();
 }
 
@@ -107,7 +107,7 @@ void AcquireData::showDataOnTerminal()
 
 //****************************************
 // Stores the data into a Datapoint
-void AcquireData::_StoreData(tDataPoint &db, double value, uint32_t timestamp)
+void AcquireData::_StoreData(DataPoint &db, double value, uint32_t timestamp)
 {
   // Update the Value of the Datapoint
   db.updateValue(value, timestamp);

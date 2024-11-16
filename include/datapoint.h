@@ -52,7 +52,7 @@ typedef enum
 } tSensorTyp;
 
 /*! ************************************************************************
- * \class tDataPoint
+ * \class DataPoint
  * \brief This gives an object for a Datapoint
  * 
  * This object is used to store all the necessary information for a datapoint
@@ -62,7 +62,7 @@ typedef enum
  * in the history buffer.
  * 
  */
-class tDataPoint
+class DataPoint
 {
 public:
     /*! ************************************************************************
@@ -74,7 +74,7 @@ public:
      * \param min_value Lower limit of the value
      * \param max_value Upper limit of the value
      */
-    tDataPoint(tSensorTyp senType, String name = "na", String unit = "-", double min_value = -9999, double max_value = 9999);
+    DataPoint(tSensorTyp senType, String name = "na", String unit = "-", double min_value = -9999, double max_value = 9999);
 
     /*! ************************************************************************
      * \brief Get the Name of this Datapoint
@@ -141,7 +141,7 @@ public:
      * \return true
      * \return false
      */
-    bool printDatapointFull();
+    bool prinDataPointFull();
 
     /*! ************************************************************************
      * \brief Printing Short Infos of a Datapoint
@@ -152,7 +152,7 @@ public:
      * \return true
      * \return false
      */
-    bool printDatapointShort();
+    bool prinDataPointShort();
 
 private:
 

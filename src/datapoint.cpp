@@ -17,7 +17,7 @@
 // *****************************************************************************
 // Constructor
 // *****************************************************************************
-tDataPoint::tDataPoint(tSensorTyp senType, String name, String unit, double min_value, double max_value)
+DataPoint::DataPoint(tSensorTyp senType, String name, String unit, double min_value, double max_value)
 {
   uint8_t i;
 
@@ -41,7 +41,7 @@ tDataPoint::tDataPoint(tSensorTyp senType, String name, String unit, double min_
 // *****************************************************************************
 // Get the Name of this Datapoint
 // *****************************************************************************
-String tDataPoint::getName()
+String DataPoint::getName()
 {
   return this->signalName;
 }
@@ -49,7 +49,7 @@ String tDataPoint::getName()
 // *****************************************************************************
 // Get the Unit of this Datapoint
 // *****************************************************************************
-String tDataPoint::getUnit()
+String DataPoint::getUnit()
 {
   return this->signalUnit;
 }
@@ -57,7 +57,7 @@ String tDataPoint::getUnit()
 // *****************************************************************************
 // Update the value of the Datapoint
 // *****************************************************************************
-bool tDataPoint::updateValue(double new_value, uint32_t new_timestamp)
+bool DataPoint::updateValue(double new_value, uint32_t new_timestamp)
 {
   uint8_t k;
   double mean = 0;
@@ -126,7 +126,7 @@ bool tDataPoint::updateValue(double new_value, uint32_t new_timestamp)
 // *****************************************************************************
 // Get the Value of the datapoint object
 // *****************************************************************************
-double tDataPoint::getValue(){
+double DataPoint::getValue(){
 
   double tmpValue = 0;
 
@@ -160,7 +160,7 @@ double tDataPoint::getValue(){
 // *****************************************************************************
 // Get the Value Mean of the Datapoint object
 // *****************************************************************************
-double tDataPoint::getValueMean(){
+double DataPoint::getValueMean(){
 
   double tmpValue = 0;
 
@@ -193,7 +193,7 @@ double tDataPoint::getValueMean(){
 // *****************************************************************************
 // Printing all the Infos of a Datapoint
 // *****************************************************************************
-bool tDataPoint::printDatapointFull()
+bool DataPoint::prinDataPointFull()
 {
 
   uint8_t k;
@@ -243,7 +243,7 @@ bool tDataPoint::printDatapointFull()
 // *****************************************************************************
 // Printing Short Infos of a Datapoint
 // *****************************************************************************
-bool tDataPoint::printDatapointShort()
+bool DataPoint::prinDataPointShort()
 {
 
   uint8_t k;

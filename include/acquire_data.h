@@ -167,7 +167,7 @@ void IRAM_ATTR handleAlternator2SpeedInterrupt();
  * corresponding data points. It also calculates the engine status and
  * engine hours. It holds all the necessary methods to measure the data
  * and convert them into N2k data. The data is stored in data points from
- * the type \ref tDataPoint.
+ * the type \ref DataPoint.
  * 
  */
 class AcquireData
@@ -339,51 +339,51 @@ public:
   // =========================================
   /** Temperature of the engine coolant measured via a uMcp3204Ch1
       sensor connected to the original VolvoPenta sensor */
-  tDataPoint tEngine = tDataPoint(senType_adc, "tEngine", "GrdC", -99, 199);
+  DataPoint tEngine = DataPoint(senType_adc, "tEngine", "GrdC", -99, 199);
   /** Temperature of the cooling system measure via a ds1820 sensor mounted
       at the wall of a cooling pipe*/
-  tDataPoint tSeaOutletWall = tDataPoint(senType_ds1820, "tSeaOutletWall", "GrdC", -99, 199);
+  DataPoint tSeaOutletWall = DataPoint(senType_ds1820, "tSeaOutletWall", "GrdC", -99, 199);
   /** Temperature of the balmar alternator measured via a ds1820 sensor*/
-  tDataPoint tAlternator = tDataPoint(senType_ds1820, "tAlternator", "GrdC", -99, 199);
+  DataPoint tAlternator = DataPoint(senType_ds1820, "tAlternator", "GrdC", -99, 199);
   /** Temperature of the gearbox measured via a ds1820 sensor mounted
       at the wall of the transmission */
-  tDataPoint tGearbox = tDataPoint(senType_ds1820, "tGearbox", "GrdC", -99, 199);
+  DataPoint tGearbox = DataPoint(senType_ds1820, "tGearbox", "GrdC", -99, 199);
   /** Exhaust gas temperature measured via a NiCr-Ni thermocouple */
-  tDataPoint tExhaust = tDataPoint(senType_max6675, "tExhaust", "GrdC", -99, 999);
+  DataPoint tExhaust = DataPoint(senType_max6675, "tExhaust", "GrdC", -99, 999);
 
   /** Engine speed measured via an hall sensor at the crankshaft*/
-  tDataPoint nMot = tDataPoint(senType_RPM, "nMot", "rpm", 0, 9999);
+  DataPoint nMot = DataPoint(senType_RPM, "nMot", "rpm", 0, 9999);
   /** Shaft speed measured via an hall sensor at the pro shaft */
-  tDataPoint nShaft = tDataPoint(senType_RPM, "nShaft", "rpm", 0, 9999);
+  DataPoint nShaft = DataPoint(senType_RPM, "nShaft", "rpm", 0, 9999);
   /** Alternator 1 speed measured via the W signal of the alternator*/
-  tDataPoint nAlternator1 = tDataPoint(senType_RPM, "nAlternator1", "rpm", 0, 19999);
+  DataPoint nAlternator1 = DataPoint(senType_RPM, "nAlternator1", "rpm", 0, 19999);
   /** Alternator 2 speed measured via the W signal of the alternator*/
-  tDataPoint nAlternator2 = tDataPoint(senType_RPM, "nAlternator2", "rpm", 0, 19999);
+  DataPoint nAlternator2 = DataPoint(senType_RPM, "nAlternator2", "rpm", 0, 19999);
 
   /** Battery voltage measured at the main power source*/
-  tDataPoint uBat = tDataPoint(senType_adc, "uBat", "V", 0, 99);
+  DataPoint uBat = DataPoint(senType_adc, "uBat", "V", 0, 99);
 
   /** Batterie voltage measured at the main power source*/
-  tDataPoint pOil = tDataPoint(senType_adc, "pOil", "bar", 0, 99);
+  DataPoint pOil = DataPoint(senType_adc, "pOil", "bar", 0, 99);
 
   /** Voltage measured via an MCP3204 on AD Channel 1*/
-  tDataPoint uMcp3204Ch1 = tDataPoint(senType_adc, "uMcp3204Ch1", "V", 0, 99);
+  DataPoint uMcp3204Ch1 = DataPoint(senType_adc, "uMcp3204Ch1", "V", 0, 99);
   /** Voltage measure via an mcp3204 an AD Channel 2*/
-  tDataPoint uMcp3204Ch2 = tDataPoint(senType_adc, "uMcp3204Ch2", "V", 0, 99);
+  DataPoint uMcp3204Ch2 = DataPoint(senType_adc, "uMcp3204Ch2", "V", 0, 99);
   /** Voltage measure via an mcp3204 an AD Channel 3*/
-  tDataPoint uMcp3204Ch3 = tDataPoint(senType_adc, "uMcp3204Ch3", "V", 0, 99);
+  DataPoint uMcp3204Ch3 = DataPoint(senType_adc, "uMcp3204Ch3", "V", 0, 99);
   /** Voltage measure via an mcp3204 an AD Channel 4*/
-  tDataPoint uMcp3204Ch4 = tDataPoint(senType_adc, "uMcp3204Ch4", "V", 0, 99);
+  DataPoint uMcp3204Ch4 = DataPoint(senType_adc, "uMcp3204Ch4", "V", 0, 99);
 
   /** State of contact 1 */
-  tDataPoint flgContact1 = tDataPoint(senType_GPIO, "flgContact1", "-", 0, 1);
+  DataPoint flgContact1 = DataPoint(senType_GPIO, "flgContact1", "-", 0, 1);
   /** State of Contact 2 */
-  tDataPoint flgContact2 = tDataPoint(senType_GPIO, "flgContact2", "-", 0, 1);
+  DataPoint flgContact2 = DataPoint(senType_GPIO, "flgContact2", "-", 0, 1);
   /** State of Contact 3 */
-  tDataPoint flgContact3 = tDataPoint(senType_GPIO, "flgContact3", "-", 0, 1);
+  DataPoint flgContact3 = DataPoint(senType_GPIO, "flgContact3", "-", 0, 1);
 
   /** Total run time of the diesel engine in seconds*/
-  tDataPoint engSecond = tDataPoint(senType_virtual, "engSecond", "sec", 0, 360000000);
+  DataPoint engSecond = DataPoint(senType_virtual, "engSecond", "sec", 0, 360000000);
 
   /** Status object for the current engine status. */
   tEngineStatus currentEngineDiscreteStatus;
@@ -420,7 +420,7 @@ private:
    * \param value     Measured Value
    * \param timestamp Timestamp in ms of the measurement
    */
-  void _StoreData(tDataPoint &db, double value, uint32_t timestamp);
+  void _StoreData(DataPoint &db, double value, uint32_t timestamp);
 
   /*! ************************************************************************
    * \brief  Calculate Revolutions per Minute
