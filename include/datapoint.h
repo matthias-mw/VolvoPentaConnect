@@ -20,7 +20,7 @@
 
 #define MAX_HISTORY_BUFFER_SIZE 10
 
-/************************************************************************ //**
+/*! ************************************************************************
  * \enum   tSensorTyp
  * \brief  Specifies the typ of Sensor use for data acquisition
  */
@@ -51,57 +51,63 @@ typedef enum
     senType_none
 } tSensorTyp;
 
-/************************************************************************ //**
+/*! ************************************************************************
  * \class tDataPoint
  * \brief This gives an object for a Datapoint
  * 
- * This object 
+ * This object is used to store all the necessary information for a datapoint
+ * like name, unit, value, history and mean value. It also provides methods
+ * to update the value and calculate the mean value. The mean value is
+ * calculated over a defined number \ref MAX_HISTORY_BUFFER_SIZE of values 
+ * in the history buffer.
+ * 
  */
 class tDataPoint
 {
 public:
-    /*********************************************************************//**
+    /*! ************************************************************************
      * \brief Construct a new t Data Point object
      *
      * \param senType   Type of Sensor used (\ref tSensorTyp)
      * \param name      Datapoint name (eG. batteryvoltage)
      * \param unit      Datapoint unit (eG. V)
-     *      
+     * \param min_value Lower limit of the value
+     * \param max_value Upper limit of the value
      */
     tDataPoint(tSensorTyp senType, String name = "na", String unit = "-", double min_value = -9999, double max_value = 9999);
 
-    /*********************************************************************//**
+    /*! ************************************************************************
      * \brief Get the Name of this Datapoint
      *
      * \return String name of datapoint
      */
     String getName();
 
-    /*********************************************************************//**
+    /*! ************************************************************************
      * \brief Get the Unit of this Datapoint
      *
      * \return String unit of datapoint
      */
     String getUnit();
 
-    /**********************************************************************//**
+    /*! ************************************************************************
      * \brief Get the Value of the datapoint object
      * 
      * This method returns the current value of the datapoint.
      * 
-     * The method is protected by a semaphore \ref xMutexDataLock to make 
+     * The method is protected by a semaphore to make 
      * sure that reading and writing of the datapoint is consistent in
      * multithreading operations
      *
      * \return double 
      */double getValue();
 
-    /**********************************************************************//**
+    /*! ************************************************************************
      * \brief Get the Value Mean of the Datapoint object
      * 
      * This method returns the mean value of the datapoint.
      * 
-     * The method is protected by a semaphore \ref xMutexDataLock to make 
+     * The method is protected by a semaphore to make 
      * sure that reading and writing of the datapoint is consistent in
      * multithreading operations
      *
@@ -109,13 +115,13 @@ public:
      */
     double getValueMean();
     
-    /********************************************************************* //**
+    /*! ************************************************************************
      * \brief Update the value of the Datapoint
      * 
      * This method updates the value and the timestamp of an datapoint and
      * calculates all other values (eg history and mean) inside the datapoint.
      * 
-     * The method is protected by a semaphore \ref xMutexDataLock to make 
+     * The method is protected by a semaphore to make 
      * sure that reading and writing of the datapoint is consistent in
      * multithreading operations
      *
@@ -126,7 +132,7 @@ public:
      */
     bool updateValue(double new_value, uint32_t new_timestamp);
 
-    /******************************************************************** //**
+    /*! ************************************************************************
      * \brief Printing all the Infos of a Datapoint
      * 
      * This Method prints all informations of the Datapoint to the serial
@@ -137,7 +143,7 @@ public:
      */
     bool printDatapointFull();
 
-    /******************************************************************** //**
+    /*! ************************************************************************
      * \brief Printing Short Infos of a Datapoint
      * 
      * This Method prints a short version of the informations of the 
@@ -172,8 +178,8 @@ private:
     /// upper limit of the value
     double value_limit_max = 9999;
 
-    /* semaphore handle to ensure data consistency while reading and 
-    writing in parallel tasks */
+    /// semaphore handle to ensure data consistency while reading and 
+    /// writing in parallel tasks
     SemaphoreHandle_t xMutexDataLock = NULL;  // Create a mutex object
     
 };

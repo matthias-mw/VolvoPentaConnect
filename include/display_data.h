@@ -58,13 +58,13 @@ extern SemaphoreHandle_t xMutexLCDUpdate;
 class DisplayData
 {
 public:
-  /*!
+  /*! ************************************************************************
    * \brief Constructor for DisplayData.
    * \param data Reference to an AcquireData object.
    */
   DisplayData(AcquireData &data);
 
-  /*********************************************************************** //**
+  /*! ************************************************************************
    * \brief Setup the LCD Panel
    *
    * This method sets up the LCD Panel and initializes the display.
@@ -72,7 +72,7 @@ public:
    */
   void setupLCDPanel();
 
-  /*********************************************************************** //**
+  /*! ************************************************************************
    * \brief Update the Content of all LCD Pages
    *
    * This method updates all LCD pages with actual data. For saving time
@@ -84,7 +84,7 @@ public:
    */
   void updateLcdContent(boolean blnUpdateDataOnly = false);
 
-  /*********************************************************************** //**
+  /*! ************************************************************************
    * \brief Set the current page for the LCD Panel
    *
    * This method sets number of the current page of the LCD Panel and
@@ -93,7 +93,7 @@ public:
    */
   void setLcdCurrentPage(uint8_t page);
 
-  /*********************************************************************** //**
+  /*! ************************************************************************
    * \brief Get the current page of the LCD Panel
    *
    * This method returns the number of the current page of the LCD Panel.
@@ -102,7 +102,7 @@ public:
    */
   uint8_t getLcdCurrentPage() { return lcdCurrentPage; }
 
-  /*********************************************************************** //**
+  /*! ************************************************************************
    * \brief Increase the current page of the LCD Panel by One
    *
    * This method increases the number of the current page of the LCD Panel
@@ -111,13 +111,13 @@ public:
    */
   void increaseLcdCurrentPage();
 
-  /*********************************************************************** //**
+  /*! ************************************************************************
    * \brief Update the backlight of the LCD Panel
    * This method sets the backlight of the LCD Panel
    */
   void updateLcdBacklight();
 
-  /*********************************************************************** //**
+  /*! ************************************************************************
    * \brief Reset the backlight Counter of the LCD Panel
    *
    * This method sets the backlight counter of the LCD Panel.
@@ -145,7 +145,7 @@ private:
   /// LCD Panel dimmer counter is used to decrease backlight during no activity
   uint32_t lcdBacklightDimCounter = 0;
 
-  /*********************************************************************** //**
+  /*! ************************************************************************
    * \brief Set the backlight of the LCD Panel to full brightness
    *
    * This method sets the backlight of the LCD Panel to full brightness
@@ -154,7 +154,7 @@ private:
    */
   void setBacklightFull();
 
-  /*********************************************************************** //**
+  /*! ************************************************************************
    * \brief Set the backlight of the LCD Panel to off
    *
    * This method sets the backlight of the LCD Panel to off
@@ -163,7 +163,7 @@ private:
    */
   void setBacklightOff();
   
-  /*********************************************************************** //**
+  /*! ************************************************************************
    * \brief Update the LCD Panel
    *
    * This method copys the buffer lcdDisplay to the LCD Panel. It is used

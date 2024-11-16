@@ -20,15 +20,15 @@
 #include <NMEA2000.h>
 #include <N2kMessages.h>
 
-// Publish the extern NMEA2000 Object from <NMEA2000_CAN.h>
+/// NMEA2000 Object from <NMEA2000_CAN.h>
 extern tNMEA2000 &NMEA2000;
-// Publish Mutex for protecting data integrity of \ref VolvoDataForN2k
+/// Mutex for protecting data integrity of \ref VolvoDataForN2k
 extern SemaphoreHandle_t xMutexVolvoN2kData;
 
-// List here messages your device will transmit.
+/// List of messages the device will transmit.
 const unsigned long TransmitMessages[] PROGMEM={127493L,127489L,127488L,130316L,0};
 
-/************************************************************************//**
+/*! ************************************************************************
  * \struct  VolvoPentaData
  * \brief   Structure contains all data ready to be send to N2K bus
  *
@@ -70,32 +70,30 @@ typedef struct VolvoPentaData{
 
 }tVolvoPentaData;
 
-/************************************************************************//**
+/*! ************************************************************************
  * \brief Setup for the Nk2 Module
  * 
  * This method sets up all the necessary information for the NMEA2000 
  * communication, such as manufacturer and device informations.
  *
- * \return void
  */
 void setupN2K();
 
-/************************************************************************//**
+/*! ************************************************************************
  * \brief Sends out all the messages in a fast timeframe
  * 
- * This method sends out all N2k Messages in a fast timeframe. The period is 
- * defined in \ref N2KUpdatePeriodFast 
+ * This method sends out all N2k Messages in a fast task \ref taskMeasureFast
+ * which measures all fast signals and sends them out.
  *
  * \param data contains all measured engine data
- * \return void
  */
 void SendN2kEngineParmFast(VolvoPentaData *data);
 
-/************************************************************************//**
+/*! ************************************************************************
  * \brief Sends out all the messages in a slow timeframe
  * 
- * This method sends out all N2k Messages in a slow timeframe. The period is 
- * defined in \ref N2KUpdatePeriodSlow
+ * This method sends out all N2k Messages in a slow task which measures
+ * all Onewire Sensors  in \ref taskMeasureOneWire
  *
  * \param data contains all measured engine data
  */

@@ -18,7 +18,7 @@
 #include <stdint.h>
 
 
-/************************************************************************ //**
+/*! ************************************************************************
  * \class LookUpTable1D
  * \brief This gives an object for a LookUpTable1D
  * 
@@ -29,7 +29,7 @@
 class LookUpTable1D
 {
 public:
-  /************************************************************************//**
+  /*! ************************************************************************
   * \brief Constructor for the 1D-LookUpTable
   *
   * \param axis     Pointer to the axis (stored const in memory)
@@ -40,7 +40,7 @@ public:
   LookUpTable1D(const uint32_t *axis, const uint32_t *table, uint8_t length, 
                 uint8_t fixed_point_decimals = 2);
 
-  /************************************************************************//**
+  /*! ************************************************************************
    * \brief Look Up the value in the LookUpTable (fixed point)
    * 
    * This method gives you the corresponding result for the value with is 
@@ -48,13 +48,13 @@ public:
    * limits aof the table is respected.
    * 
    * \param val           Value to look up for
-   * \param result[out]   result of the lookup in double
+   * \param result        result of the lookup in double
    * \return true   value found in between the min/max values of this axis
    * \return false  value exceeds the min/max value
    */
   bool LookUpValue (uint32_t val, uint32_t * result);
 
-  /************************************************************************//**
+  /*! ************************************************************************
    * \brief Look Up the value in the LookUpTable (double)
    * 
    * This method gives you the corresponding result for the value with is 
@@ -62,7 +62,7 @@ public:
    * limits aof the table is respected.
    * 
    * \param val           Value to look up for
-   * \param result[out]   result of the lookup in double
+   * \param result        result of the lookup in double
    * \return true   value found in between the min/max values of this axis
    * \return false  value exceeds the min/max value
    */
@@ -90,7 +90,7 @@ private:
   /** pointer to the map in static memory*/
   const uint32_t *m_table;
 
-  /************************************************************************//**
+  /*! ************************************************************************
    * \brief Find the corresponding position on the Axis
    * 
    * This Method searches for the position of the value inside the axis. The
@@ -105,7 +105,7 @@ private:
    */
   bool LookUpAxisPos(uint32_t x_value);
 
-  /************************************************************************//**
+  /*! ************************************************************************
    * \brief Look Up the value in the LookUp Table
    * 
    * This method is looking for the matching result for a given value for the 
