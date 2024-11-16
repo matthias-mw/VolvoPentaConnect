@@ -67,75 +67,75 @@ SemaphoreHandle_t xMutexVolvoN2kData = NULL;
 /// Mutex for protection stdout
 SemaphoreHandle_t xMutexStdOut = NULL;
 
-/************************************************************************
+/*! ************************************************************************
  * \brief Task Handle for task measuring fast signals
  */
 TaskHandle_t TaskMeasureFastHandle;
-/************************************************************************
+/*! ************************************************************************
  * \brief Task Handle for task measuring oneWire signals
  */
 TaskHandle_t TaskMeasureOneWireHandle;
 
-/************************************************************************
+/*! ************************************************************************
  * \brief Task Handle for task LCD Panel Update
  */
 TaskHandle_t TaskUpdateLCDHandle;
 
-/************************************************************************
+/*! ************************************************************************
  * \brief Task Handle for task Button Interpretation
  */
 TaskHandle_t TaskInterpretButtonHandle;
 
-/************************************************************************
+/*! ************************************************************************
  * \brief Task Handle for Data storage permanent
  */
 TaskHandle_t TaskInterpretStorePermanentData;
 
-/************************************************************************
+/*! ************************************************************************
  * \brief Task for measuring oneWire signals
  *
  * This tasks measures all oneWire signals, converts them to N2K format
  * and sends out corresponding N2K messages \ref SendN2kEngineParmSlow.
  *
- * \param parameter {type}
+ * \param pvParameters
  */
-void taskMeasureOneWire(void *parameter);
+void taskMeasureOneWire(void *pvParameters);
 
-/************************************************************************
+/*! ************************************************************************
  * \brief Task for measuring fast signals
  *
  * This tasks measures all fast signals, converts them to N2K format
  * and sends out corresponding N2K messages \ref SendN2kEngineParmFast.
  *
- * \param parameter {type}
+ * \param pvParameters
  */
 void taskMeasureFast(void *pvParameters);
 
-/************************************************************************
+/*! ************************************************************************
  * \brief Task for LCD Panel update
  *
  * This tasks will update the LCD Panel.
  *
- * \param parameter {type}
+ * \param pvParameters
  */
 void taskUpdateLCD(void *pvParameters);
 
-/************************************************************************
+/*! ************************************************************************
  * \brief Task for Button Interpretation
  *
  * This tasks will check the buttons continuously and issues certain
  * commands from the user interaction.
  *
- * \param parameter {type}
+ * \param pvParameters
  */
 void taskInterpretButton(void *pvParameters);
 
-/************************************************************************
+/*! ************************************************************************
  * \brief Task for permanent Data storage
  *
  * This tasks will store all the data which is need permanent
  *
- * \param parameter {type}
+ * \param pvParameters
  */
 void taskStorePermanentData(void *pvParameters);
 
@@ -299,7 +299,7 @@ void loop()
 
 //***************************************************************
 // Task to measure and send OneWire Data on a regular basis
-void taskMeasureOneWire(void *parameter)
+void taskMeasureOneWire(void *pvParameters)
 {
 
   while (1)
