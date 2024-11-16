@@ -1,6 +1,6 @@
-# Projektname
+# Mainpage  {#mainpage}
 
-VolvoPenta Connect
+VolvoPenta Connect --- Connecting an VolvoPenta D2 55 to the NMEA2000 network
 
 ## Description
 
