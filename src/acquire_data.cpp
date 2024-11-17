@@ -57,48 +57,48 @@ void AcquireData::showDataOnTerminal()
   // while (i-- > 0)
   //   Serial.println();
 
-  // tSeaOutletWall.prinDataPointFull();
-  // tGearbox.prinDataPointFull();
-  // tAlternator.prinDataPointFull();
-  // uBat.prinDataPointFull();
-  // nMot.prinDataPointFull();
-  // nShaft.prinDataPointFull();
-  // nAlternator1.prinDataPointFull();
-  // nAlternator2.prinDataPointFull();
-  // tExhaust.prinDataPointFull();
-  // uMcp3204Ch1.prinDataPointFull();
-  // uMcp3204Ch2.prinDataPointFull();
-  // uMcp3204Ch3.prinDataPointFull();
-  // uMcp3204Ch4.prinDataPointFull();
-  // flgContact1.prinDataPointFull();
-  // flgContact2.prinDataPointFull();
-  // flgContact3.prinDataPointFull();
+  // tSeaOutletWall.printDatapointFull();
+  // tGearbox.printDatapointFull();
+  // tAlternator.printDatapointFull();
+  // uBat.printDatapointFull();
+  // nMot.printDatapointFull();
+  // nShaft.printDatapointFull();
+  // nAlternator1.printDatapointFull();
+  // nAlternator2.printDatapointFull();
+  // tExhaust.printDatapointFull();
+  // uMcp3204Ch1.printDatapointFull();
+  // uMcp3204Ch2.printDatapointFull();
+  // uMcp3204Ch3.printDatapointFull();
+  // uMcp3204Ch4.printDatapointFull();
+  // flgContact1.printDatapointFull();
+  // flgContact2.printDatapointFull();
+  // flgContact3.printDatapointFull();
 
-  engSecond.prinDataPointShort();
+  engSecond.printDatapointShort();
   Serial.println();
 
-  tSeaOutletWall.prinDataPointShort();
-  tGearbox.prinDataPointShort();
-  tAlternator.prinDataPointShort();
-  tExhaust.prinDataPointShort();
+  tSeaOutletWall.printDatapointShort();
+  tGearbox.printDatapointShort();
+  tAlternator.printDatapointShort();
+  tExhaust.printDatapointShort();
   Serial.println();
 
-  nMot.prinDataPointShort();
-  nShaft.prinDataPointShort();
-  nAlternator1.prinDataPointShort();
-  nAlternator2.prinDataPointShort();
+  nMot.printDatapointShort();
+  nShaft.printDatapointShort();
+  nAlternator1.printDatapointShort();
+  nAlternator2.printDatapointShort();
   Serial.println();
 
-  uBat.prinDataPointShort();
-  uMcp3204Ch1.prinDataPointShort();
-  uMcp3204Ch2.prinDataPointShort();
-  uMcp3204Ch3.prinDataPointShort();
-  uMcp3204Ch4.prinDataPointShort();
+  uBat.printDatapointShort();
+  uMcp3204Ch1.printDatapointShort();
+  uMcp3204Ch2.printDatapointShort();
+  uMcp3204Ch3.printDatapointShort();
+  uMcp3204Ch4.printDatapointShort();
   Serial.println();
 
-  flgContact1.prinDataPointShort();
-  flgContact2.prinDataPointShort();
-  flgContact3.prinDataPointShort();
+  flgContact1.printDatapointShort();
+  flgContact2.printDatapointShort();
+  flgContact3.printDatapointShort();
   Serial.println();
 }
 

@@ -6,7 +6,7 @@
  * related information.
  *
  * \author 	Matthias Werner
- * \date		Sep 2023
+ * \date		November 2024
  *
  * - Hardware:          az-delivery-devkit-v4
  * - Prozessor:         ESP32-WROOM
@@ -25,13 +25,13 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 /// Major version number of the software project
-#define SW_VERSION_MAJOR 0
+#define SW_VERSION_MAJOR 1
 /// Minor version number of the software project
-#define SW_VERSION_MINOR 2
+#define SW_VERSION_MINOR 1
 /// Patch version number of the software project
 #define SW_VERSION_PATCH 0
 /// Date for current version of the software project
-#define SW_VERSION_DATE  "05-2024"
+#define SW_VERSION_DATE  "11-2024"
 
 
 /// Major version number of the hardware project

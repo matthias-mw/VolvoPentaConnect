@@ -365,7 +365,12 @@ void taskMeasureFast(void *pvParameters)
     data.calcEngineStatus();
 
     // check all warnings
-    processWarnings.checkWarnings();
+    processWarnings.checkAndProcessWarnings();
+    if (processWarnings.isWarningActive())
+    {
+      // acknowledge all warnings
+      lcdDisplayData.setLcdCurrentPage(PAGE_ALARM);
+    }
 
     // convert data
     data.convertDataToN2k(&VolvoDataForN2k);

@@ -112,11 +112,11 @@ void DisplayData::updateLcdContent(boolean blnUpdateDataOnly)
   // number of alarm line
   uint8_t alarmLine = 0;
 
-  // when there are alarms, then switch to the alarm page
-  if (alarmCount > 0)
-  {
-    lcdCurrentPage = (uint8_t)PAGE_ALARM;
-  }
+  // // when there are alarms, then switch to the alarm page
+  // if (alarmCount > 0)&&()
+  // {
+  //   lcdCurrentPage = (uint8_t)PAGE_ALARM;
+  // }
 
   // Edit the content of the LCD Panel
   switch (lcdCurrentPage)
@@ -135,7 +135,8 @@ void DisplayData::updateLcdContent(boolean blnUpdateDataOnly)
     length = sprintf(buffer, "by Matthias Werner  ");
     strncpy(&lcdDisplay[2][0], buffer, 20);
 
-    length = sprintf(buffer, "      Version %6s", PROJECT_VERSION);
+    length = sprintf(buffer, "      Version %d.%d.%d ", 
+              SW_VERSION_MAJOR, SW_VERSION_MINOR, SW_VERSION_PATCH);
     strncpy(&lcdDisplay[3][0], buffer, 20);
 
     break;

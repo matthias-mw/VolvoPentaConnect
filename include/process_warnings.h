@@ -45,10 +45,11 @@ public:
      * \brief checks and processes all warnings.
      *
      * This method check and processes all warnings from the 
-     * data acquisition object.
+     * data acquisition object. It checks if a warning is active
+     * and if so, it operates the warning LED.
      * 
      */
-    void checkWarnings();
+    void checkAndProcessWarnings();
 
     /*!
      * \brief acknowledge all warnings
@@ -57,6 +58,16 @@ public:
      * 
      */
     void acknowledgeAllWarnings();
+
+    /*! 
+     * \brief Checks if there is an active warning.
+     * This method checks if there is an active warning which is
+     * not acknowledged.
+     * 
+     * \return {bool} True if there is an active warning which is
+     * not acknowledged.
+     */
+    bool isWarningActive() { return warningActive; }
 
 private:
     
@@ -74,6 +85,9 @@ private:
 
     /// state of the warning LED
     bool warningLedState = false;
+
+    /// there is an active warning
+    bool warningActive = false;
 
     /// Reference to an AcquireData object with all the sensor data.
     AcquireData &data;

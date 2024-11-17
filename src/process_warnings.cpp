@@ -18,15 +18,15 @@
 ProcessWarnings::ProcessWarnings(AcquireData &data) : data(data)
 {
   // Initialization code
+  warningActive = false;
 
 
 }
 
 // ********************************************************
 // Check for warnings
-void ProcessWarnings::checkWarnings()
+void ProcessWarnings::checkAndProcessWarnings()
 {
-  bool warningActive = false;
   //When a flag is set and not acknowledged, the warning is active
   if((data.currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagSet() &&
     !data.currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagAcknowledged())||
@@ -46,11 +46,15 @@ void ProcessWarnings::checkWarnings()
     (data.currentEngineDiscreteStatus.flgLowOilPressure.isFlagSet() &&
     !data.currentEngineDiscreteStatus.flgLowOilPressure.isFlagAcknowledged()))
   {
-    warningActive = true;
+    this->warningActive = true;
+  }
+  else
+  {
+    this->warningActive = false;
   }
   
   // operate the warning LED
-  operateWarningLED(warningActive);
+  operateWarningLED(this->warningActive );
   
 }
 

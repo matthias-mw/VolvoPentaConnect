@@ -19,7 +19,7 @@
 #include <LiquidCrystal_PCF8574.h>
 #include <acquire_data.h>
 #include <Wire.h>
-#include <version.h>
+#include <versionInfo.h>
 
 /// Define max Number of Main Pages
 #define MAX_MAIN_PAGES 6
