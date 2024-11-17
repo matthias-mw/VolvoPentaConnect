@@ -55,6 +55,9 @@ void ProcessWarnings::checkAndProcessWarnings()
   
   // operate the warning LED
   operateWarningLED(this->warningActive );
+
+  // operate the warning buzzer
+  operateWarningBuzzer(this->warningActive);
   
 }
 
@@ -104,5 +107,22 @@ void ProcessWarnings::operateWarningLED(bool warningActive)
   {
     // Turn off the LED
     digitalWrite(STATUS_LED_PIN, LED_PIN_OFF);
+  }
+}
+
+// ********************************************************
+// Operate the warning buzzer
+void ProcessWarnings::operateWarningBuzzer(bool warningActive)
+{
+  // Code to operate the warning buzzer
+  if (warningActive)
+  {
+    // Turn on the buzzer
+    digitalWrite(WARNING_BUZZER_PIN, BUZZER_PIN_ON);
+  }
+  else
+  {
+    // Turn off the buzzer
+    digitalWrite(WARNING_BUZZER_PIN, BUZZER_PIN_OFF);
   }
 }

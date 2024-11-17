@@ -83,7 +83,11 @@
 #define BUTTON_LONG_PRESS 15
 
 /// GPIO where the WARNING is connected (Active High)
-#define WARNING_OUTPUT_PIN 14
+#define WARNING_BUZZER_PIN 14
+/// Warning Buzzer on
+#define BUZZER_PIN_ON 1
+/// Warning Buzzer off
+#define BUZZER_PIN_OFF 0
 
 /// GPIO where the Relay Contact Output is connected (Active High)
 #define RELAY_OUTPUT_PIN 4

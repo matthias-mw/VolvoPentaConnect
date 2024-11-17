@@ -165,8 +165,8 @@ void setup()
   pinMode(BUTTON1_PIN, INPUT);
   pinMode(BUTTON2_PIN, INPUT);
 
-  pinMode(WARNING_OUTPUT_PIN, OUTPUT);
-  digitalWrite(WARNING_OUTPUT_PIN, LOW);
+  pinMode(WARNING_BUZZER_PIN, OUTPUT);
+  digitalWrite(WARNING_BUZZER_PIN, LOW);
   pinMode(RELAY_OUTPUT_PIN, OUTPUT);
   digitalWrite(RELAY_OUTPUT_PIN, LOW);
 
