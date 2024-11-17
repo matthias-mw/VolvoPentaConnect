@@ -193,7 +193,7 @@ double DataPoint::getValueMean(){
 // *****************************************************************************
 // Printing all the Infos of a Datapoint
 // *****************************************************************************
-bool DataPoint::prinDataPointFull()
+bool DataPoint::printDatapointFull()
 {
 
   uint8_t k;
@@ -243,7 +243,7 @@ bool DataPoint::prinDataPointFull()
 // *****************************************************************************
 // Printing Short Infos of a Datapoint
 // *****************************************************************************
-bool DataPoint::prinDataPointShort()
+bool DataPoint::printDatapointShort()
 {
 
   uint8_t k;

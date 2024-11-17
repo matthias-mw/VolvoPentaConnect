@@ -141,7 +141,7 @@ public:
      * \return true
      * \return false
      */
-    bool prinDataPointFull();
+    bool printDatapointFull();
 
     /*! ************************************************************************
      * \brief Printing Short Infos of a Datapoint
@@ -152,7 +152,7 @@ public:
      * \return true
      * \return false
      */
-    bool prinDataPointShort();
+    bool printDatapointShort();
 
 private:
 
