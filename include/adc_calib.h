@@ -32,7 +32,8 @@ const uint8_t TCO_AXIS_LEN = 8;
 const uint8_t TCO_MAP_PREC = 2;
 /** axis consists values in volt for the cooling water temperature map*/
 const uint32_t axis_v_tco_mes[TCO_AXIS_LEN] = {20, 115, 170, 300, 380, 480, 600, 720};
-/** table consists values in gradC for the cooling water temperature map*/
+/** table consists values in gradC (*100) for the cooling 
+ *  water temperature map*/
 const uint32_t map_tco_mes[TCO_AXIS_LEN] = {12000, 10000, 9000, 7100, 5800, 4000, 2000, 0};
 
 /** ALIAS for \ref axis_v_tco_mes*/
@@ -50,7 +51,7 @@ const uint8_t POIL_AXIS_LEN = 4;
 const uint8_t POIL_MAP_PREC = 2;
 /** axis consists values in volt for the oil pressure map*/
 const uint32_t axis_v_poil_mes[POIL_AXIS_LEN] = {60, 390, 510, 710};
-/** table consists values in gradC for the oil pressure map*/
+/** table consists values in bar (*100) for the oil pressure map*/
 const uint32_t map_poil_mes[POIL_AXIS_LEN] = {0, 300, 400, 600};
 
 /** ALIAS for \ref axis_v_poil_mes*/

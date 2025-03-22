@@ -69,10 +69,9 @@ void SendN2kEngineParmFast(VolvoPentaData *n2kVolvoData)
 
   static unsigned char EngineInstance = 0;
   static unsigned char EngineInstanceAlt1 = 1;
-  
+
   // Data not measured now
   double EngineOilTemp = N2kDoubleNA;
-
 
   // Check if the semaphore used for data protection is initialized
   if (xMutexVolvoN2kData != NULL)
@@ -89,46 +88,42 @@ void SendN2kEngineParmFast(VolvoPentaData *n2kVolvoData)
       NMEA2000.SendMsg(N2kMsg);
 
       // send engine dynamic data
-      SetN2kEngineDynamicParam(N2kMsg, EngineInstance, 
-                               n2kVolvoData->engine_oel_pressure, 
-                               EngineOilTemp, 
-                               n2kVolvoData->engine_coolant_temperature, 
-                               n2kVolvoData->battery_voltage, 
-                               N2kDoubleNA, 
-                               n2kVolvoData->engine_seconds, 
-                               N2kDoubleNA, 
-                               N2kDoubleNA, 
-                               N2kInt8NA, 
+      SetN2kEngineDynamicParam(N2kMsg, EngineInstance,
+                               n2kVolvoData->engine_oel_pressure,
+                               EngineOilTemp,
+                               n2kVolvoData->engine_coolant_temperature,
+                               n2kVolvoData->battery_voltage,
+                               N2kDoubleNA,
+                               n2kVolvoData->engine_seconds,
+                               N2kDoubleNA,
+                               N2kDoubleNA,
                                N2kInt8NA,
-                               n2kVolvoData->engineDiscreteStatus1, 
+                               N2kInt8NA,
+                               n2kVolvoData->engineDiscreteStatus1,
                                n2kVolvoData->engineDiscreteStatus2);
       NMEA2000.SendMsg(N2kMsg);
 
-      // send Balmar Alternator Data as "Instance 1"
-      SetN2kEngineDynamicParam(N2kMsg, EngineInstanceAlt1, 
-                               N2kDoubleNA, 
-                               N2kDoubleNA, 
-                               n2kVolvoData->alternator1_temperature, 
-                               N2kDoubleNA, 
-                               N2kDoubleNA, 
-                               N2kDoubleNA, 
-                               N2kDoubleNA, 
-                               N2kDoubleNA, 
-                               N2kInt8NA, 
-                               N2kInt8NA, 
-                               n2kVolvoData->alternatorDiscreteStatus1, 
-                               0);
-      NMEA2000.SendMsg(N2kMsg);
-
-      // send Balmar Alternator Speed as "Instance 1"
-      SetN2kEngineParamRapid(N2kMsg, EngineInstanceAlt1, 
-                             n2kVolvoData->alternator1_speed, 
-                             0, 
+      // send Balmar Alternator Speed (rapid) as "Instance 1"
+      SetN2kEngineParamRapid(N2kMsg, EngineInstanceAlt1,
+                             n2kVolvoData->alternator1_speed,
+                             0,
                              0);
       NMEA2000.SendMsg(N2kMsg);
-      NMEA2000.SendMsg(N2kMsg);
-      // send Balmar Alternator Data as "Instance 1"
-      SetN2kEngineParamRapid(N2kMsg, EngineInstanceAlt1, n2kVolvoData->alternator1_speed, 0 , 0);
+
+      // send Balmar Alternator Data (dynamic) as "Instance 1"
+      SetN2kEngineDynamicParam(N2kMsg, EngineInstanceAlt1,
+                               N2kDoubleNA,
+                               N2kDoubleNA,
+                               n2kVolvoData->alternator1_temperature,
+                               N2kDoubleNA,
+                               N2kDoubleNA,
+                               N2kDoubleNA,
+                               N2kDoubleNA,
+                               N2kDoubleNA,
+                               N2kInt8NA,
+                               N2kInt8NA,
+                               n2kVolvoData->alternatorDiscreteStatus1,
+                               0);
       NMEA2000.SendMsg(N2kMsg);
 
       // send gearbox data
@@ -145,7 +140,7 @@ void SendN2kEngineParmFast(VolvoPentaData *n2kVolvoData)
 void SendN2kEngineParmSlow(VolvoPentaData *n2kVolvoData)
 {
   tN2kMsg N2kMsg;
-    // Attempt to obtain the semaphore. If unavailable, wait 5ms to see if it becomes free.
+  // Attempt to obtain the semaphore. If unavailable, wait 5ms to see if it becomes free.
   if (xMutexVolvoN2kData != NULL)
   {
     // See if we can obtain the semaphore. If the semaphore is not
