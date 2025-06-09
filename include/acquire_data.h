@@ -34,7 +34,7 @@
 
 /*! Enging speed in RPM above that the engine is
   considered to be running */
-#define ENGINE_RUN_RPM_THRESHOLD -100
+#define ENGINE_RUN_RPM_THRESHOLD 100
 
 /*! oil pressure in bar below that the engine is triggering
  an low oil pressure alarm */
@@ -46,7 +46,7 @@
 
 /*! exhaust temperature in deg celsius above that an high
   exhaust temperature alarm is triggered */
-#define EXHAUST_TEMPERATURE_HIGH_THRESHOLD 500
+#define EXHAUST_TEMPERATURE_HIGH_THRESHOLD 400
 
 /*! gearbox temperature in deg celsius above that an high
   gearbox temperature alarm is triggered */
