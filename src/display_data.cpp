@@ -179,7 +179,7 @@ void DisplayData::updateLcdContent(boolean blnUpdateDataOnly)
     }
 
     // fill buffer with data
-    length = sprintf(buffer, "%5d%5d%4.1f%5d", (int16_t)this->data.tEngine.getValue(), (int16_t)this->data.tGearbox.getValue(), this->data.tSeaOutletWall.getValue(), (int16_t)this->data.tExhaust.getValue());
+    length = sprintf(buffer, "%5d%5d%5.1f%5d", (int16_t)this->data.tEngine.getValue(), (int16_t)this->data.tGearbox.getValue(), this->data.tSeaOutletWall.getValue(), (int16_t)this->data.tExhaust.getValue());
     strncpy(&lcdDisplay[3][0], buffer, 20);
 
     break;

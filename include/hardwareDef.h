@@ -29,7 +29,7 @@
 /// activate a certain Debuglevel (0 -> lowest, 4 -> Highest)
 /// 1 --> ShowData on Serial
 /// Comment out if not needed
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 
 // Definition of Simulated Test Data for TEsting without sensors
 //define USE_SIM_DATA
@@ -130,8 +130,8 @@
 #define ONEWIRE_ADR_GEARBOX                        \
   {                                                \
     /* Original Address */                         \
-    /* 0x28, 0xFF, 0x64, 0x1F, 0x42, 0x64, 0x35, 0x7A */ \
-    0x28, 0xff, 0x64, 0x1f, 0x76, 0x63, 0xff, 0xe0 \
+    0x28, 0xFF, 0x64, 0x1F, 0x42, 0x64, 0x35, 0x7A \
+    /* 0x28, 0xff, 0x64, 0x1f, 0x76, 0x63, 0xff, 0xe0 */\
   }
 
 // --------> Analog PINs <-----------------
