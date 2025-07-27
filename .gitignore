@@ -6,3 +6,5 @@
 include/.~lock.Sensor_Kalibrierung.ods#
 build/
 
+lib/NMEA2000
+lib/NMEA2000_esp32

@@ -32,7 +32,7 @@
 #define DEBUG_LEVEL 1
 
 // Definition of Simulated Test Data for TEsting without sensors
-//#define USE_SIM_DATA
+#define USE_SIM_DATA
 
 #define SIM_DATA_UBAT_ADC_PIN 13.7
 #define SIM_DATA_MCP3201_CHN1 2.8   // Engine Coolant Temperature
