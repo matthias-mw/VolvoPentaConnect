@@ -19,46 +19,50 @@ ProcessWarnings::ProcessWarnings(AcquireData &data) : data(data)
 {
   // Initialization code
   warningActive = false;
-
-
 }
 
 // ********************************************************
 // Check for warnings
 void ProcessWarnings::checkAndProcessWarnings()
 {
-  //When a flag is set and not acknowledged, the warning is active
-  if((data.currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagSet() &&
-    !data.currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagAcknowledged())||
+  // When a flag is set and not acknowledged, the warning is active
+  if ((data.currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagSet() &&
+       !data.currentEngineDiscreteStatus.flgHighCoolantTemp.isFlagAcknowledged()) ||
 
-    (data.currentEngineDiscreteStatus.flgHighExhaustTemp.isFlagSet() &&
-    !data.currentEngineDiscreteStatus.flgHighExhaustTemp.isFlagAcknowledged())||
+      (data.currentEngineDiscreteStatus.flgHighExhaustTemp.isFlagSet() &&
+       !data.currentEngineDiscreteStatus.flgHighExhaustTemp.isFlagAcknowledged()) ||
 
-    (data.currentEngineDiscreteStatus.flgHighGearboxTemp.isFlagSet() &&
-    !data.currentEngineDiscreteStatus.flgHighGearboxTemp.isFlagAcknowledged())||
+      (data.currentEngineDiscreteStatus.flgHighGearboxTemp.isFlagSet() &&
+       !data.currentEngineDiscreteStatus.flgHighGearboxTemp.isFlagAcknowledged()) ||
 
-    (data.currentEngineDiscreteStatus.flgHighAlternatorTemp.isFlagSet() &&
-    !data.currentEngineDiscreteStatus.flgHighAlternatorTemp.isFlagAcknowledged())||
+      (data.currentEngineDiscreteStatus.flgHighAlternatorTemp.isFlagSet() &&
+       !data.currentEngineDiscreteStatus.flgHighAlternatorTemp.isFlagAcknowledged()) ||
 
-    (data.currentEngineDiscreteStatus.flgHighSeaWaterTemp.isFlagSet() &&
-    !data.currentEngineDiscreteStatus.flgHighSeaWaterTemp.isFlagAcknowledged())||
+      (data.currentEngineDiscreteStatus.flgHighSeaWaterTemp.isFlagSet() &&
+       !data.currentEngineDiscreteStatus.flgHighSeaWaterTemp.isFlagAcknowledged()) ||
 
-    (data.currentEngineDiscreteStatus.flgLowOilPressure.isFlagSet() &&
-    !data.currentEngineDiscreteStatus.flgLowOilPressure.isFlagAcknowledged()))
+      (data.currentEngineDiscreteStatus.flgLowOilPressure.isFlagSet() &&
+       !data.currentEngineDiscreteStatus.flgLowOilPressure.isFlagAcknowledged()))
   {
-    this->warningActive = true;
+    // Debounce the warning
+    this->warningDebounce++;
+
+    if (this->warningDebounce > WARNING_DEBOUNCE_CNT)
+    {
+      this->warningActive = true;
+    }
   }
   else
   {
     this->warningActive = false;
+    this->warningDebounce = 0;
   }
-  
+
   // operate the warning LED
-  operateWarningLED(this->warningActive );
+  operateWarningLED(this->warningActive);
 
   // operate the warning buzzer
   operateWarningBuzzer(this->warningActive);
-  
 }
 
 // ********************************************************

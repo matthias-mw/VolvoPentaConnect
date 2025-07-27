@@ -96,6 +96,9 @@ private:
     /// there is an active warning
     bool warningActive = false;
 
+    /// bedounce value for the warning
+    uint32_t warningDebounce = 0;
+
     /// Reference to an AcquireData object with all the sensor data.
     AcquireData &data;
 };

@@ -60,6 +60,8 @@
   sea water temperature alarm is triggered */
 #define SEA_WATER_TEMPERATURE_HIGH_THRESHOLD 55
 
+/*! a debounce counter for the activation of the warning*/
+#define WARNING_DEBOUNCE_CNT 10
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 
