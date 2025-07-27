@@ -32,13 +32,13 @@
 #define DEBUG_LEVEL 1
 
 // Definition of Simulated Test Data for TEsting without sensors
-//define USE_SIM_DATA
+//#define USE_SIM_DATA
 
 #define SIM_DATA_UBAT_ADC_PIN 13.7
-#define SIM_DATA_MCP3201_CHN1 4.56
+#define SIM_DATA_MCP3201_CHN1 2.8   // Engine Coolant Temperature
 #define SIM_DATA_MCP3201_CHN2 1.7
-#define SIM_DATA_MCP3201_CHN3 8.4
-#define SIM_DATA_MCP3201_CHN4 3.9
+#define SIM_DATA_MCP3201_CHN3 5.1   // Oil Pressure
+#define SIM_DATA_MCP3201_CHN4 8.9
 #define SIM_DATA_EXHAUST 456
 #define SIM_DATA_1WIRE_CH1 45.7
 #define SIM_DATA_1WIRE_CH2 23.6
@@ -46,7 +46,7 @@
 #define SIM_DATA_ENG_SPEED 2112
 #define SIM_DATA_SHAFT_SPEED 358
 #define SIM_DATA_ALT1_SPEED 1890
-#define SIM_DATA_ALT2_SPEED 15000
+#define SIM_DATA_ALT2_SPEED 8352
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //      -----  generell Definitions ----
