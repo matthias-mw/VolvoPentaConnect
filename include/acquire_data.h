@@ -42,7 +42,7 @@
 
 /*! coolant temperature in deg celsius above that the engine is
  triggering*/
-#define COOLANT_TEMPERATURE_HIGH_THRESHOLD 100
+#define COOLANT_TEMPERATURE_HIGH_THRESHOLD 105
 
 /*! exhaust temperature in deg celsius above that an high
   exhaust temperature alarm is triggered */
@@ -54,11 +54,11 @@
 
 /*! alternator temperature in deg celsius above that an high
   alternator temperature alarm is triggered */
-#define ALTERNATOR_TEMPERATURE_HIGH_THRESHOLD 135
+#define ALTERNATOR_TEMPERATURE_HIGH_THRESHOLD 130
 
 /*! sea water temperature in deg celsius above that an high
   sea water temperature alarm is triggered */
-#define SEA_WATER_TEMPERATURE_HIGH_THRESHOLD 55
+#define SEA_WATER_TEMPERATURE_HIGH_THRESHOLD 75
 
 /*! a debounce counter for the activation of the warning*/
 #define WARNING_DEBOUNCE_CNT 10

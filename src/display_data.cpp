@@ -350,7 +350,7 @@ void DisplayData::updateLcdContent(boolean blnUpdateDataOnly)
       }
       if (this->data.currentEngineDiscreteStatus.flgHighSeaWaterTemp.isFlagSet() && (alarmCount <= 2))
       {
-        length = sprintf(bufferAlarmTxt, "High Seawater InTemp ");
+        length = sprintf(bufferAlarmTxt, "High Seawater InTemp");
         strncpy(&lcdDisplay[2 + alarmLine][0], bufferAlarmTxt, 20);
         alarmLine++;
       }
