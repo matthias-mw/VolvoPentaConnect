@@ -13,8 +13,7 @@
  *
  * ************************************************************
  * \version
- *	1.0		
- *
+ *	1.2.0   *
  *************************************************************/
 
 #ifndef _versionInfo_H_
@@ -27,13 +26,11 @@
 /// Major version number of the software project
 #define SW_VERSION_MAJOR 1
 /// Minor version number of the software project
-#define SW_VERSION_MINOR 1
+#define SW_VERSION_MINOR 2
 /// Patch version number of the software project
 #define SW_VERSION_PATCH 0
 /// Date for current version of the software project
-#define SW_VERSION_DATE  "11-2024"
-
-
+#define SW_VERSION_DATE  "08-2025"
 /// Major version number of the hardware project
 #define HW_VERSION_MAJOR 1
 /// Description of the hardware project
